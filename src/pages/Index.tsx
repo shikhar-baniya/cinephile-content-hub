@@ -8,7 +8,7 @@ import StatsCards from "@/components/StatsCards";
 import AddMovieDialog from "@/components/AddMovieDialog";
 import { Movie } from "@/components/MovieCard";
 
-// Sample data for demonstration
+// Sample data with real movie posters
 const sampleMovies: Movie[] = [
   {
     id: "1",
@@ -18,17 +18,17 @@ const sampleMovies: Movie[] = [
     platform: "HBO Max",
     rating: 9,
     status: "watched",
-    poster: "https://images.unsplash.com/photo-1489599894652-aba9c665dcaa?w=300&h=450&fit=crop"
+    poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg"
   },
   {
     id: "2",
     title: "Inception",
-    genre: "Sci-Fi",
+    genre: "Sci-Fi", 
     releaseYear: 2010,
     platform: "Netflix",
     rating: 8,
     status: "watched",
-    poster: "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=300&h=450&fit=crop"
+    poster: "https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg"
   },
   {
     id: "3",
@@ -38,7 +38,7 @@ const sampleMovies: Movie[] = [
     platform: "Prime Video",
     rating: 0,
     status: "want-to-watch",
-    poster: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=450&fit=crop"
+    poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg"
   },
   {
     id: "4",
@@ -48,7 +48,7 @@ const sampleMovies: Movie[] = [
     platform: "Disney+",
     rating: 8,
     status: "watched",
-    poster: "https://images.unsplash.com/photo-1485095329183-d0797cdc5676?w=300&h=450&fit=crop"
+    poster: "https://image.tmdb.org/t/p/w500/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg"
   },
   {
     id: "5",
@@ -58,7 +58,7 @@ const sampleMovies: Movie[] = [
     platform: "Netflix",
     rating: 0,
     status: "watching",
-    poster: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=450&fit=crop"
+    poster: "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg"
   },
   {
     id: "6",
@@ -68,7 +68,7 @@ const sampleMovies: Movie[] = [
     platform: "Cinema",
     rating: 9,
     status: "watched",
-    poster: "https://images.unsplash.com/photo-1478720568477-b2709d01a0fc?w=300&h=450&fit=crop"
+    poster: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
   }
 ];
 
@@ -116,25 +116,28 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <Header
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onAddMovie={() => setShowAddDialog(true)}
       />
       
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">
-            Welcome back, <span className="gradient-text">Cinephile</span>
+      <main className="container mx-auto px-4 py-6">
+        {/* Hero Section - Mobile Optimized */}
+        <div className="mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold mb-2">
+            My <span className="gradient-text">CineTracker</span>
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm md:text-base">
             Track your movie journey and discover your watching patterns
           </p>
         </div>
 
+        {/* Stats Cards - Mobile Grid */}
         <StatsCards movies={movies} />
 
+        {/* Filters - Mobile Responsive */}
         <FilterBar
           statusFilter={statusFilter}
           genreFilter={genreFilter}
@@ -147,10 +150,21 @@ const Index = () => {
           platforms={platforms}
         />
 
+        {/* Movie Collection */}
         <div className="mb-6">
-          <h3 className="text-xl font-semibold mb-4">
-            Your Collection ({filteredMovies.length})
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg md:text-xl font-semibold">
+              Your Collection ({filteredMovies.length})
+            </h3>
+            {filteredMovies.length !== movies.length && (
+              <button
+                onClick={clearFilters}
+                className="text-sm text-primary hover:text-primary/80 transition-colors"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
           <MovieGrid
             movies={filteredMovies}
             onMovieClick={setSelectedMovie}

@@ -3,7 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Cinema-themed design system with dark gradients */
+/* Cinema-themed design system with enhanced mobile gradients */
 
 @layer base {
   :root {
@@ -49,39 +49,64 @@
     background-attachment: fixed;
   }
 
-  /* Custom scrollbar */
+  /* Enhanced scrollbar styling */
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-secondary;
+    @apply bg-secondary/50;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-primary/50 rounded-full;
+    @apply bg-primary/60 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary/70;
+    @apply bg-primary/80;
+  }
+
+  /* Line clamp utility */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 
 @layer components {
   .movie-card {
-    @apply bg-gradient-to-br from-card/80 to-card/60 backdrop-blur-sm border border-border/50 rounded-xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-primary/20 hover:border-primary/30;
+    @apply bg-gradient-to-br from-card/90 to-card/60 backdrop-blur-sm border border-border/40 rounded-2xl p-3 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/40;
   }
 
   .glass-effect {
-    @apply bg-card/20 backdrop-blur-md border border-border/30;
+    @apply bg-card/30 backdrop-blur-xl border border-border/30;
   }
 
   .gradient-text {
-    @apply bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary via-purple-400 to-pink-400 bg-clip-text text-transparent;
   }
 
   .floating-card {
-    @apply bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-lg border border-border/40 shadow-2xl shadow-primary/10;
+    @apply bg-gradient-to-br from-card/95 to-card/80 backdrop-blur-xl border border-border/30 shadow-2xl shadow-primary/5 rounded-2xl;
+  }
+
+  /* Mobile-optimized card hover effects */
+  @media (max-width: 768px) {
+    .movie-card:hover {
+      @apply scale-100 shadow-lg;
+    }
+  }
+
+  /* Enhanced button styles */
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90 text-white font-medium rounded-xl px-6 py-3 shadow-lg hover:shadow-primary/25 transition-all duration-200;
+  }
+
+  /* Mobile navigation styles */
+  .mobile-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border/40 p-4;
   }
 }
 
@@ -92,6 +117,10 @@
 
   .animate-slide-up {
     animation: slideUp 0.4s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
   }
 
   @keyframes fadeIn {
@@ -114,5 +143,52 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Enhanced mobile spacing */
+  .mobile-container {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Gradient overlays for mobile cards */
+  .card-gradient-overlay {
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%);
+  }
+}
+
+/* Mobile-specific enhancements */
+@media (max-width: 640px) {
+  .movie-card {
+    @apply p-2;
+  }
+  
+  .floating-card {
+    @apply rounded-xl;
+  }
+  
+  .container {
+    @apply px-3;
+  }
+}
+
+/* Enhanced mobile responsiveness */
+@media (max-width: 480px) {
+  .gradient-text {
+    @apply text-lg;
+  }
+  
+  .movie-card {
+    @apply rounded-xl;
   }
 }

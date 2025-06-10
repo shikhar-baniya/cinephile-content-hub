@@ -1,12 +1,15 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Search, Loader2 } from "lucide-react";
 import { Movie } from "./MovieCard";
+import { searchMoviesAndShows, formatMovieData, formatTVData, TMDbMovie, TMDbTVShow } from "@/services/movieService";
 
 interface AddMovieDialogProps {
   open: boolean;
@@ -26,6 +29,58 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
     notes: ""
   });
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{movies: TMDbMovie[], shows: TMDbTVShow[]}>({ movies: [], shows: [] });
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Auto-search when user types
+  useEffect(() => {
+    if (searchQuery.length > 2) {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+      
+      searchTimeoutRef.current = setTimeout(async () => {
+        setIsSearching(true);
+        const results = await searchMoviesAndShows(searchQuery);
+        setSearchResults(results);
+        setIsSearching(false);
+        setShowResults(true);
+      }, 500);
+    } else {
+      setShowResults(false);
+      setSearchResults({ movies: [], shows: [] });
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  const handleSelectMovie = (movie: TMDbMovie) => {
+    const movieData = formatMovieData(movie);
+    setFormData({
+      ...formData,
+      ...movieData
+    });
+    setSearchQuery(movie.title);
+    setShowResults(false);
+  };
+
+  const handleSelectShow = (show: TMDbTVShow) => {
+    const showData = formatTVData(show);
+    setFormData({
+      ...formData,
+      ...showData
+    });
+    setSearchQuery(show.name);
+    setShowResults(false);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.genre || !formData.platform) return;
@@ -41,6 +96,8 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
       poster: "",
       notes: ""
     });
+    setSearchQuery("");
+    setShowResults(false);
     onOpenChange(false);
   };
 
@@ -57,18 +114,95 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-lg border-border/40">
+      <DialogContent className="sm:max-w-[500px] bg-card/95 backdrop-blur-lg border-border/40 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="gradient-text">Add New Movie</DialogTitle>
+          <DialogTitle className="gradient-text">Add New Movie/Series</DialogTitle>
         </DialogHeader>
+        
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Search Box */}
+          <div className="space-y-2">
+            <Label htmlFor="search">Search Movie/Series</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for movies or TV shows..."
+                className="pl-10 bg-background/50 border-border/60"
+              />
+              {isSearching && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+              )}
+            </div>
+          </div>
+
+          {/* Search Results */}
+          {showResults && (searchResults.movies.length > 0 || searchResults.shows.length > 0) && (
+            <div className="max-h-48 overflow-y-auto space-y-2 border border-border/60 rounded-lg p-3 bg-background/30">
+              <Label className="text-sm font-medium">Search Results</Label>
+              
+              {searchResults.movies.slice(0, 3).map((movie) => (
+                <div
+                  key={`movie-${movie.id}`}
+                  className="flex items-center gap-3 p-2 rounded-lg bg-card/50 hover:bg-card/70 cursor-pointer transition-colors"
+                  onClick={() => handleSelectMovie(movie)}
+                >
+                  {movie.poster_path && (
+                    <img
+                      src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+                      alt={movie.title}
+                      className="w-12 h-16 object-cover rounded"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{movie.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {movie.release_date ? new Date(movie.release_date).getFullYear() : ''} • Movie
+                    </p>
+                    <Badge variant="outline" className="text-xs mt-1">
+                      ★ {movie.vote_average.toFixed(1)}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+
+              {searchResults.shows.slice(0, 3).map((show) => (
+                <div
+                  key={`show-${show.id}`}
+                  className="flex items-center gap-3 p-2 rounded-lg bg-card/50 hover:bg-card/70 cursor-pointer transition-colors"
+                  onClick={() => handleSelectShow(show)}
+                >
+                  {show.poster_path && (
+                    <img
+                      src={`https://image.tmdb.org/t/p/w92${show.poster_path}`}
+                      alt={show.name}
+                      className="w-12 h-16 object-cover rounded"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{show.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {show.first_air_date ? new Date(show.first_air_date).getFullYear() : ''} • TV Series
+                    </p>
+                    <Badge variant="outline" className="text-xs mt-1">
+                      ★ {show.vote_average.toFixed(1)}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Manual Form Fields */}
           <div className="space-y-2">
             <Label htmlFor="title">Title *</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Enter movie title"
+              placeholder="Enter movie/series title"
               className="bg-background/50 border-border/60"
               required
             />
@@ -147,18 +281,18 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="poster">Poster URL (optional)</Label>
+            <Label htmlFor="poster">Poster URL</Label>
             <Input
               id="poster"
               value={formData.poster}
               onChange={(e) => setFormData({ ...formData, poster: e.target.value })}
-              placeholder="https://example.com/poster.jpg"
+              placeholder="Auto-filled from search or enter manually"
               className="bg-background/50 border-border/60"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
+            <Label htmlFor="notes">Notes/Review</Label>
             <Textarea
               id="notes"
               value={formData.notes}
@@ -174,7 +308,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
               Cancel
             </Button>
             <Button type="submit" className="bg-primary hover:bg-primary/90">
-              Add Movie
+              Add to Collection
             </Button>
           </div>
         </form>
