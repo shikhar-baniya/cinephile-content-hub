@@ -1,5 +1,5 @@
 
-import { Home, Film, tv, activity } from "lucide-react";
+import { Home, Film, Tv, Activity } from "lucide-react";
 
 interface MobileNavigationProps {
   activeTab: string;
@@ -10,8 +10,8 @@ const MobileNavigation = ({ activeTab, onTabChange }: MobileNavigationProps) => 
   const navItems = [
     { id: "home", icon: Home },
     { id: "movies", icon: Film },
-    { id: "series", icon: tv },
-    { id: "analytics", icon: activity }
+    { id: "series", icon: Tv },
+    { id: "analytics", icon: Activity }
   ];
 
   return (
