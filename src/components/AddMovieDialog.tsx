@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
   const [formData, setFormData] = useState({
     title: "",
     genre: "",
+    category: "Movie" as Movie['category'],
     releaseYear: new Date().getFullYear(),
     platform: "",
     rating: 5,
@@ -41,6 +41,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
       setFormData({
         title: "",
         genre: "",
+        category: "Movie",
         releaseYear: new Date().getFullYear(),
         platform: "",
         rating: 5,
@@ -108,7 +109,12 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
       return;
     }
     
-    onAddMovie(formData);
+    const movieWithTimestamp = {
+      ...formData,
+      createdAt: new Date().toISOString()
+    };
+    
+    onAddMovie(movieWithTimestamp);
     onOpenChange(false);
   };
 
@@ -221,6 +227,20 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
+              <Label htmlFor="category">Category *</Label>
+              <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value as Movie['category'] })}>
+                <SelectTrigger className="bg-background/50 border-border/60">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent className="bg-card/95 backdrop-blur-lg border-border/40">
+                  <SelectItem value="Movie">Movie</SelectItem>
+                  <SelectItem value="Series">Series</SelectItem>
+                  <SelectItem value="Short-Film">Short Film</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="genre">Genre *</Label>
               <Select value={formData.genre} onValueChange={(value) => setFormData({ ...formData, genre: value })}>
                 <SelectTrigger className="bg-background/50 border-border/60">
@@ -233,7 +253,9 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="year">Release Year</Label>
               <Input
@@ -246,20 +268,20 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
                 max={new Date().getFullYear() + 5}
               />
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="platform">Platform *</Label>
-            <Select value={formData.platform} onValueChange={(value) => setFormData({ ...formData, platform: value })}>
-              <SelectTrigger className="bg-background/50 border-border/60">
-                <SelectValue placeholder="Select platform" />
-              </SelectTrigger>
-              <SelectContent className="bg-card/95 backdrop-blur-lg border-border/40">
-                {platforms.map((platform) => (
-                  <SelectItem key={platform} value={platform}>{platform}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Label htmlFor="platform">Platform *</Label>
+              <Select value={formData.platform} onValueChange={(value) => setFormData({ ...formData, platform: value })}>
+                <SelectTrigger className="bg-background/50 border-border/60">
+                  <SelectValue placeholder="Select platform" />
+                </SelectTrigger>
+                <SelectContent className="bg-card/95 backdrop-blur-lg border-border/40">
+                  {platforms.map((platform) => (
+                    <SelectItem key={platform} value={platform}>{platform}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

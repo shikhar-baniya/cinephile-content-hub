@@ -6,6 +6,7 @@ export interface Movie {
   id: string;
   title: string;
   genre: string;
+  category: "Movie" | "Series" | "Short-Film";
   releaseYear: number;
   platform: string;
   rating: number;
@@ -13,6 +14,7 @@ export interface Movie {
   poster?: string;
   watchDate?: string;
   notes?: string;
+  createdAt: string;
 }
 
 interface MovieCardProps {
@@ -45,10 +47,10 @@ const MovieCard = ({ movie, onClick }: MovieCardProps) => {
 
   return (
     <div 
-      className="movie-card cursor-pointer group animate-fade-in"
+      className="movie-card cursor-pointer group animate-fade-in h-80"
       onClick={() => onClick(movie)}
     >
-      <div className="aspect-[2/3] bg-gradient-to-br from-secondary to-secondary/50 rounded-lg mb-3 overflow-hidden relative">
+      <div className="aspect-[2/3] bg-gradient-to-br from-secondary to-secondary/50 rounded-lg mb-3 overflow-hidden relative h-48">
         {movie.poster ? (
           <img 
             src={movie.poster} 
@@ -67,8 +69,8 @@ const MovieCard = ({ movie, onClick }: MovieCardProps) => {
         </div>
       </div>
       
-      <div className="space-y-2">
-        <h3 className="font-semibold text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+      <div className="space-y-2 h-28 flex flex-col">
+        <h3 className="font-semibold text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors flex-1">
           {movie.title}
         </h3>
         

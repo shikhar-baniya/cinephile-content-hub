@@ -31,9 +31,8 @@ const Header = ({ searchQuery, onSearchChange, onAddMovie }: HeaderProps) => {
                 className="pl-10 bg-background/50 border-border/60 focus:border-primary/50"
               />
             </div>
-            <Button onClick={onAddMovie} className="bg-primary hover:bg-primary/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Movie
+            <Button onClick={onAddMovie} size="icon" className="bg-primary hover:bg-primary/90">
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
         </div>

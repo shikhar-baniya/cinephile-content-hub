@@ -16,61 +16,73 @@ const sampleMovies: Movie[] = [
     id: "1",
     title: "The Dark Knight",
     genre: "Action",
+    category: "Movie",
     releaseYear: 2008,
     platform: "HBO Max",
     rating: 9,
     status: "watched",
-    poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg"
+    poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+    createdAt: "2024-01-15T10:30:00Z"
   },
   {
     id: "2",
     title: "Inception",
     genre: "Sci-Fi", 
+    category: "Movie",
     releaseYear: 2010,
     platform: "Netflix",
     rating: 8,
     status: "watched",
-    poster: "https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg"
+    poster: "https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
+    createdAt: "2024-01-20T14:15:00Z"
   },
   {
     id: "3",
     title: "Dune: Part Two",
     genre: "Sci-Fi",
+    category: "Movie",
     releaseYear: 2024,
     platform: "Prime Video",
     rating: 0,
     status: "want-to-watch",
-    poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg"
+    poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+    createdAt: "2024-02-01T09:00:00Z"
   },
   {
     id: "4",
     title: "The Grand Budapest Hotel",
     genre: "Comedy",
+    category: "Movie",
     releaseYear: 2014,
     platform: "Disney+",
     rating: 8,
     status: "watched",
-    poster: "https://image.tmdb.org/t/p/w500/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg"
+    poster: "https://image.tmdb.org/t/p/w500/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg",
+    createdAt: "2024-01-25T16:45:00Z"
   },
   {
     id: "5",
     title: "Stranger Things 4",
     genre: "Horror",
+    category: "Series",
     releaseYear: 2022,
     platform: "Netflix",
     rating: 0,
     status: "watching",
-    poster: "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg"
+    poster: "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
+    createdAt: "2024-01-18T12:20:00Z"
   },
   {
     id: "6",
     title: "Oppenheimer",
     genre: "Drama",
+    category: "Movie",
     releaseYear: 2023,
     platform: "Cinema",
     rating: 9,
     status: "watched",
-    poster: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
+    poster: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+    createdAt: "2024-02-05T18:30:00Z"
   }
 ];
 

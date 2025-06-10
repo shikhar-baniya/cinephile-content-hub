@@ -25,9 +25,9 @@ const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
       .sort((a, b) => b.rating - a.rating)
       .slice(0, 6);
 
-    // Get recently added (last 6 movies)
+    // Get recently added (by createdAt date)
     const recentlyAdded = [...movies]
-      .sort((a, b) => parseInt(b.id) - parseInt(a.id))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 6);
 
     // Get currently watching
@@ -41,24 +41,21 @@ const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
     };
   }, [movies]);
 
-  const CollectionRow = ({ title, movies, subtitle }: { title: string; movies: Movie[]; subtitle?: string }) => {
+  const CollectionRow = ({ title, movies }: { title: string; movies: Movie[] }) => {
     if (movies.length === 0) return null;
 
     return (
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-semibold">{title}</h3>
-            {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
-          </div>
+          <h3 className="text-lg font-semibold">{title}</h3>
           <Badge variant="outline" className="text-xs">
             {movies.length} {movies.length === 1 ? 'item' : 'items'}
           </Badge>
         </div>
         
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
           {movies.map((movie) => (
-            <div key={movie.id} className="flex-shrink-0 w-32">
+            <div key={movie.id} className="flex-shrink-0 w-36">
               <MovieCard movie={movie} onClick={onMovieClick} />
             </div>
           ))}
@@ -70,22 +67,19 @@ const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
   return (
     <div className="space-y-6">
       <CollectionRow 
-        title="Most Rated" 
-        movies={collections.mostWatched}
-        subtitle="Your highest rated movies"
+        title="Recently Added" 
+        movies={collections.recentlyAdded}
       />
       
       <CollectionRow 
-        title="Recently Added" 
-        movies={collections.recentlyAdded}
-        subtitle="Latest additions to your collection"
+        title="Most Rated" 
+        movies={collections.mostWatched}
       />
       
       {collections.currentlyWatching.length > 0 && (
         <CollectionRow 
           title="Currently Watching" 
           movies={collections.currentlyWatching}
-          subtitle="Movies and series you're watching now"
         />
       )}
       
@@ -97,7 +91,6 @@ const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
             key={genre}
             title={genre}
             movies={genreMovies.slice(0, 6)}
-            subtitle={`${genreMovies.length} ${genre.toLowerCase()} ${genreMovies.length === 1 ? 'movie' : 'movies'}`}
           />
         ))}
     </div>
