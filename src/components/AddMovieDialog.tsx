@@ -35,6 +35,24 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
   const [showResults, setShowResults] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setFormData({
+        title: "",
+        genre: "",
+        releaseYear: new Date().getFullYear(),
+        platform: "",
+        rating: 5,
+        status: "want-to-watch",
+        poster: "",
+        notes: ""
+      });
+      setSearchQuery("");
+      setShowResults(false);
+    }
+  }, [open]);
+
   // Auto-search when user types
   useEffect(() => {
     if (searchQuery.length > 2) {
@@ -83,21 +101,14 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.genre || !formData.platform) return;
+    console.log('Form submitted with data:', formData);
+    
+    if (!formData.title.trim() || !formData.genre || !formData.platform) {
+      console.log('Form validation failed:', { title: formData.title, genre: formData.genre, platform: formData.platform });
+      return;
+    }
     
     onAddMovie(formData);
-    setFormData({
-      title: "",
-      genre: "",
-      releaseYear: new Date().getFullYear(),
-      platform: "",
-      rating: 5,
-      status: "want-to-watch",
-      poster: "",
-      notes: ""
-    });
-    setSearchQuery("");
-    setShowResults(false);
     onOpenChange(false);
   };
 
