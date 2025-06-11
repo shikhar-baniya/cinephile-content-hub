@@ -10,8 +10,19 @@ interface GenreCollectionsProps {
 
 const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
   const collections = useMemo(() => {
+    // Add safety check for movies array
+    if (!movies || !Array.isArray(movies)) {
+      return {
+        byGenre: {},
+        mostWatched: [],
+        recentlyAdded: [],
+        currentlyWatching: []
+      };
+    }
+
     // Group by genre
     const byGenre = movies.reduce((acc, movie) => {
+      if (!movie || !movie.genre) return acc;
       if (!acc[movie.genre]) {
         acc[movie.genre] = [];
       }
@@ -21,17 +32,22 @@ const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
 
     // Get most watched movies (highest rated watched movies)
     const mostWatched = movies
-      .filter(m => m.status === "watched" && m.rating >= 8)
-      .sort((a, b) => b.rating - a.rating)
+      .filter(m => m && m.status === "watched" && typeof m.rating === 'number' && m.rating >= 8)
+      .sort((a, b) => (b.rating || 0) - (a.rating || 0))
       .slice(0, 6);
 
     // Get recently added (by createdAt date)
     const recentlyAdded = [...movies]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .filter(m => m && m.createdAt)
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateB - dateA;
+      })
       .slice(0, 6);
 
     // Get currently watching
-    const currentlyWatching = movies.filter(m => m.status === "watching");
+    const currentlyWatching = movies.filter(m => m && m.status === "watching");
 
     return {
       byGenre,
@@ -42,7 +58,7 @@ const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
   }, [movies]);
 
   const CollectionRow = ({ title, movies }: { title: string; movies: Movie[] }) => {
-    if (movies.length === 0) return null;
+    if (!movies || movies.length === 0) return null;
 
     return (
       <div className="mb-8">
