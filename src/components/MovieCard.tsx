@@ -47,10 +47,10 @@ const MovieCard = ({ movie, onClick }: MovieCardProps) => {
 
   return (
     <div 
-      className="movie-card cursor-pointer group animate-fade-in h-80"
+      className="movie-card cursor-pointer group animate-fade-in"
       onClick={() => onClick(movie)}
     >
-      <div className="aspect-[2/3] bg-gradient-to-br from-secondary to-secondary/50 rounded-lg mb-3 overflow-hidden relative h-48">
+      <div className="aspect-[2/3] bg-gradient-to-br from-secondary to-secondary/50 rounded-lg mb-3 overflow-hidden relative">
         {movie.poster ? (
           <img 
             src={movie.poster} 
@@ -69,8 +69,8 @@ const MovieCard = ({ movie, onClick }: MovieCardProps) => {
         </div>
       </div>
       
-      <div className="space-y-2 h-28 flex flex-col">
-        <h3 className="font-semibold text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors flex-1">
+      <div className="space-y-2 min-h-0">
+        <h3 className="font-semibold text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors">
           {movie.title}
         </h3>
         
@@ -83,10 +83,10 @@ const MovieCard = ({ movie, onClick }: MovieCardProps) => {
         </div>
         
         <div className="flex items-center justify-between">
-          <Badge variant="outline" className="text-xs border-border/60">
+          <Badge variant="outline" className="text-xs border-border/60 truncate max-w-[70%]">
             {movie.genre}
           </Badge>
-          <span className="text-xs text-muted-foreground">{movie.platform}</span>
+          <span className="text-xs text-muted-foreground truncate max-w-[50%]">{movie.platform}</span>
         </div>
       </div>
     </div>

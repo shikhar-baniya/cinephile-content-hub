@@ -1,5 +1,5 @@
 
-import { Film, Search, Plus } from "lucide-react";
+import { Film, Search, Plus, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -7,9 +7,10 @@ interface HeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onAddMovie: () => void;
+  onSignOut: () => void;
 }
 
-const Header = ({ searchQuery, onSearchChange, onAddMovie }: HeaderProps) => {
+const Header = ({ searchQuery, onSearchChange, onAddMovie, onSignOut }: HeaderProps) => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 glass-effect">
       <div className="container mx-auto px-4 py-4">
@@ -33,6 +34,9 @@ const Header = ({ searchQuery, onSearchChange, onAddMovie }: HeaderProps) => {
             </div>
             <Button onClick={onAddMovie} size="icon" className="bg-primary hover:bg-primary/90">
               <Plus className="h-4 w-4" />
+            </Button>
+            <Button onClick={onSignOut} size="icon" variant="outline">
+              <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>
