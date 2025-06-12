@@ -4,16 +4,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, Calendar, Play, Eye, Clock, Film, Edit, Trash2 } from "lucide-react";
 import { Movie } from "./MovieCard";
+import { movieService } from "@/services/databaseService";
+import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
 
 interface MovieDetailDialogProps {
   movie: Movie | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEdit?: (movie: Movie) => void;
-  onDelete?: (movieId: string) => void;
+  onDelete?: () => void;
 }
 
 const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete }: MovieDetailDialogProps) => {
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+
   if (!movie) return null;
 
   const getStatusIcon = () => {
@@ -46,6 +52,35 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete }: Movi
         return "Currently Watching";
       case "want-to-watch":
         return "Want to Watch";
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!movie?.id) return;
+    
+    setIsDeleting(true);
+    
+    try {
+      await movieService.deleteMovie(movie.id);
+      
+      toast({
+        title: "Success",
+        description: "Movie deleted from your collection!",
+      });
+      
+      if (onDelete) {
+        onDelete();
+      }
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('Error deleting movie:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete movie. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -127,12 +162,15 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete }: Movi
                 Edit
               </Button>
             )}
-            {onDelete && (
-              <Button variant="destructive" onClick={() => onDelete(movie.id)} className="gap-2">
-                <Trash2 className="h-4 w-4" />
-                Delete
-              </Button>
-            )}
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete} 
+              className="gap-2"
+              disabled={isDeleting}
+            >
+              <Trash2 className="h-4 w-4" />
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
           </div>
         </div>
       </DialogContent>

@@ -7,14 +7,18 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Movie } from "./MovieCard";
+import { movieService } from "@/services/databaseService";
+import { useToast } from "@/components/ui/use-toast";
 
 interface AddMovieDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddMovie: (movie: Omit<Movie, 'id'>) => void;
+  onAddMovie: () => void;
 }
 
 const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps) => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     genre: "",
@@ -44,22 +48,47 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
     }
   }, [open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Form submitted with data:', formData);
     
     if (!formData.title.trim() || !formData.genre || !formData.platform) {
       console.log('Form validation failed:', { title: formData.title, genre: formData.genre, platform: formData.platform });
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields (Title, Genre, Platform)",
+        variant: "destructive",
+      });
       return;
     }
     
-    const movieWithTimestamp = {
-      ...formData,
-      createdAt: new Date().toISOString()
-    };
+    setIsSubmitting(true);
     
-    onAddMovie(movieWithTimestamp);
-    onOpenChange(false);
+    try {
+      const movieWithTimestamp = {
+        ...formData,
+        createdAt: new Date().toISOString()
+      };
+      
+      await movieService.addMovie(movieWithTimestamp);
+      
+      toast({
+        title: "Success",
+        description: "Movie added to your collection!",
+      });
+      
+      onAddMovie();
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('Error adding movie:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add movie. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const genres = [
@@ -205,11 +234,11 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90">
-              Add to Collection
+            <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+              {isSubmitting ? "Adding..." : "Add to Collection"}
             </Button>
           </div>
         </form>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
@@ -22,6 +23,11 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [genreFilter, setGenreFilter] = useState("all");
+  const [platformFilter, setPlatformFilter] = useState("all");
 
   // Check for existing session on mount
   useEffect(() => {
@@ -66,6 +72,19 @@ const Index = () => {
       );
     }
 
+    // Apply filter bar filters
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(movie => movie?.status === statusFilter);
+    }
+    
+    if (genreFilter !== "all") {
+      filtered = filtered.filter(movie => movie?.genre === genreFilter);
+    }
+    
+    if (platformFilter !== "all") {
+      filtered = filtered.filter(movie => movie?.platform === platformFilter);
+    }
+
     // Apply tab filter
     switch (activeTab) {
       case "movies":
@@ -83,7 +102,7 @@ const Index = () => {
     }
 
     setFilteredMovies(filtered);
-  }, [movies, searchQuery, activeTab]);
+  }, [movies, searchQuery, activeTab, statusFilter, genreFilter, platformFilter]);
 
   const handleAddMovie = async () => {
     await refetch();
@@ -94,6 +113,21 @@ const Index = () => {
     await refetch();
     setSelectedMovie(null);
   };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setGenreFilter("all");
+    setPlatformFilter("all");
+  };
+
+  // Get unique genres and platforms for filter options
+  const uniqueGenres = Array.from(new Set(movies?.map(movie => movie.genre).filter(Boolean))) || [];
+  const uniquePlatforms = Array.from(new Set(movies?.map(movie => movie.platform).filter(Boolean))) || [];
 
   // Show loading screen
   if (loading) {
@@ -129,7 +163,17 @@ const Index = () => {
       default:
         return (
           <div className="space-y-6">
-            <FilterBar />
+            <FilterBar 
+              statusFilter={statusFilter}
+              genreFilter={genreFilter}
+              platformFilter={platformFilter}
+              onStatusChange={setStatusFilter}
+              onGenreChange={setGenreFilter}
+              onPlatformChange={setPlatformFilter}
+              onClearFilters={clearFilters}
+              genres={uniqueGenres}
+              platforms={uniquePlatforms}
+            />
             <MovieGrid movies={filteredMovies} onMovieClick={setSelectedMovie} />
           </div>
         );
@@ -143,6 +187,7 @@ const Index = () => {
           searchQuery={searchQuery} 
           onSearchChange={setSearchQuery}
           onAddMovie={() => setShowAddDialog(true)}
+          onSignOut={handleSignOut}
         />
         
         {renderContent()}
@@ -151,15 +196,15 @@ const Index = () => {
         
         <AddMovieDialog 
           open={showAddDialog} 
-          onClose={() => setShowAddDialog(false)}
-          onMovieAdded={handleAddMovie}
+          onOpenChange={setShowAddDialog}
+          onAddMovie={handleAddMovie}
         />
         
         {selectedMovie && (
           <MovieDetailDialog 
             movie={selectedMovie} 
             open={!!selectedMovie}
-            onClose={() => setSelectedMovie(null)}
+            onOpenChange={() => setSelectedMovie(null)}
             onDelete={handleDeleteMovie}
           />
         )}
