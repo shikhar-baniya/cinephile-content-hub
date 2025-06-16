@@ -9,6 +9,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Movie } from "./MovieCard";
 import { movieService } from "@/services/databaseService";
 import { useToast } from "@/components/ui/use-toast";
+import MovieSearchInput from "./MovieSearchInput";
+import MultiSelectGenre from "./MultiSelectGenre";
+
+interface MovieSearchResult {
+  title: string;
+  year: number;
+  genre: string[];
+  poster?: string;
+  type: "movie" | "series";
+}
 
 interface AddMovieDialogProps {
   open: boolean;
@@ -21,14 +31,15 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
-    genre: "",
+    genre: [] as string[],
     category: "Movie" as Movie['category'],
     releaseYear: new Date().getFullYear(),
     platform: "",
     rating: 5,
     status: "want-to-watch" as Movie['status'],
     poster: "",
-    notes: ""
+    notes: "",
+    season: ""
   });
 
   // Reset form when dialog closes
@@ -36,23 +47,35 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
     if (!open) {
       setFormData({
         title: "",
-        genre: "",
+        genre: [],
         category: "Movie",
         releaseYear: new Date().getFullYear(),
         platform: "",
         rating: 5,
         status: "want-to-watch",
         poster: "",
-        notes: ""
+        notes: "",
+        season: ""
       });
     }
   }, [open]);
+
+  const handleMovieSelect = (movie: MovieSearchResult) => {
+    setFormData(prev => ({
+      ...prev,
+      title: movie.title,
+      genre: movie.genre,
+      releaseYear: movie.year,
+      category: movie.type === "movie" ? "Movie" : "Series",
+      poster: movie.poster || ""
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Form submitted with data:', formData);
     
-    if (!formData.title.trim() || !formData.genre || !formData.platform) {
+    if (!formData.title.trim() || formData.genre.length === 0 || !formData.platform) {
       console.log('Form validation failed:', { title: formData.title, genre: formData.genre, platform: formData.platform });
       toast({
         title: "Validation Error",
@@ -67,6 +90,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
     try {
       const movieWithTimestamp = {
         ...formData,
+        genre: formData.genre.join(", "), // Convert array to comma-separated string
         createdAt: new Date().toISOString()
       };
       
@@ -112,13 +136,11 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Title *</Label>
-            <Input
-              id="title"
+            <MovieSearchInput
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Enter movie/series title"
-              className="bg-background/50 border-border/60"
-              required
+              onChange={(value) => setFormData({ ...formData, title: value })}
+              onMovieSelect={handleMovieSelect}
+              placeholder="Search for movies/series..."
             />
           </div>
 
@@ -137,19 +159,27 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="genre">Genre *</Label>
-              <Select value={formData.genre} onValueChange={(value) => setFormData({ ...formData, genre: value })}>
-                <SelectTrigger className="bg-background/50 border-border/60">
-                  <SelectValue placeholder="Select genre" />
-                </SelectTrigger>
-                <SelectContent className="bg-card/95 backdrop-blur-lg border-border/40">
-                  {genres.map((genre) => (
-                    <SelectItem key={genre} value={genre}>{genre}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {formData.category === "Series" && (
+              <div className="space-y-2">
+                <Label htmlFor="season">Season</Label>
+                <Input
+                  id="season"
+                  value={formData.season}
+                  onChange={(e) => setFormData({ ...formData, season: e.target.value })}
+                  placeholder="e.g., Season 1, S1"
+                  className="bg-background/50 border-border/60"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="genre">Genres *</Label>
+            <MultiSelectGenre
+              selectedGenres={formData.genre}
+              onGenreChange={(genres) => setFormData({ ...formData, genre: genres })}
+              availableGenres={genres}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

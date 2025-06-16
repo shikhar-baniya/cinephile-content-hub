@@ -11,7 +11,7 @@ interface GenreCollectionsProps {
 const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
   const collections = useMemo(() => {
     // Add safety check for movies array
-    if (!movies || !Array.isArray(movies)) {
+    if (!movies || !Array.isArray(movies) || movies.length === 0) {
       return {
         byGenre: {},
         mostWatched: [],
@@ -20,13 +20,20 @@ const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
       };
     }
 
-    // Group by genre
+    // Group by genre (handle comma-separated genres)
     const byGenre = movies.reduce((acc, movie) => {
       if (!movie || !movie.genre) return acc;
-      if (!acc[movie.genre]) {
-        acc[movie.genre] = [];
-      }
-      acc[movie.genre].push(movie);
+      
+      // Split comma-separated genres and process each one
+      const movieGenres = movie.genre.split(',').map(g => g.trim());
+      
+      movieGenres.forEach(genre => {
+        if (!acc[genre]) {
+          acc[genre] = [];
+        }
+        acc[genre].push(movie);
+      });
+      
       return acc;
     }, {} as Record<string, Movie[]>);
 
@@ -63,7 +70,7 @@ const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
     return (
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">{title}</h3>
+          <h3 className="text-lg font-semibold text-white">{title}</h3>
           <Badge variant="outline" className="text-xs">
             {movies.length} {movies.length === 1 ? 'item' : 'items'}
           </Badge>
@@ -80,6 +87,15 @@ const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
     );
   };
 
+  // Don't render anything if no movies
+  if (!movies || movies.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">No movies in your collection yet. Add some movies to see collections!</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <CollectionRow 
@@ -88,7 +104,7 @@ const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
       />
       
       <CollectionRow 
-        title="Most Rated" 
+        title="Highly Rated" 
         movies={collections.mostWatched}
       />
       
@@ -101,11 +117,11 @@ const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
       
       {Object.entries(collections.byGenre)
         .sort(([,a], [,b]) => b.length - a.length)
-        .slice(0, 3)
+        .slice(0, 4)
         .map(([genre, genreMovies]) => (
           <CollectionRow 
             key={genre}
-            title={genre}
+            title={`${genre} Collection`}
             movies={genreMovies.slice(0, 6)}
           />
         ))}
