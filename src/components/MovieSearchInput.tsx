@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
@@ -27,45 +27,63 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
   const [searchResults, setSearchResults] = useState<MovieSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const searchContent = useCallback(async (searchValue: string) => {
+    if (searchValue.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log('Searching for:', searchValue);
+      const { movies, shows } = await searchMoviesAndShows(searchValue);
+      
+      // Format and combine results
+      const formattedMovies = movies.slice(0, 3).map(movie => ({
+        title: movie.title,
+        year: movie.release_date ? new Date(movie.release_date).getFullYear() : new Date().getFullYear(),
+        genre: [formatMovieData(movie).genre],
+        poster: formatMovieData(movie).poster || undefined,
+        type: "movie" as const
+      }));
+
+      const formattedShows = shows.slice(0, 3).map(show => ({
+        title: show.name,
+        year: show.first_air_date ? new Date(show.first_air_date).getFullYear() : new Date().getFullYear(),
+        genre: [formatTVData(show).genre],
+        poster: formatTVData(show).poster || undefined,
+        type: "series" as const
+      }));
+
+      const results = [...formattedMovies, ...formattedShows];
+      console.log('Search results:', results);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Error searching movies:', error);
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const searchContent = async () => {
-      if (value.length > 2) {
-        setIsLoading(true);
-        try {
-          const { movies, shows } = await searchMoviesAndShows(value);
-          
-          // Format and combine results
-          const formattedMovies = movies.slice(0, 3).map(movie => ({
-            title: movie.title,
-            year: movie.release_date ? new Date(movie.release_date).getFullYear() : new Date().getFullYear(),
-            genre: [formatMovieData(movie).genre],
-            poster: formatMovieData(movie).poster || undefined,
-            type: "movie" as const
-          }));
+    const debounceTimer = setTimeout(() => {
+      searchContent(value);
+    }, 500); // Increased debounce time for better performance
 
-          const formattedShows = shows.slice(0, 3).map(show => ({
-            title: show.name,
-            year: show.first_air_date ? new Date(show.first_air_date).getFullYear() : new Date().getFullYear(),
-            genre: [formatTVData(show).genre],
-            poster: formatTVData(show).poster || undefined,
-            type: "series" as const
-          }));
-
-          setSearchResults([...formattedMovies, ...formattedShows]);
-        } catch (error) {
-          console.error('Error searching movies:', error);
-          setSearchResults([]);
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
-        setSearchResults([]);
-      }
-    };
-
-    const debounceTimer = setTimeout(searchContent, 300);
     return () => clearTimeout(debounceTimer);
-  }, [value]);
+  }, [value, searchContent]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    onChange(newValue);
+    
+    if (newValue.length >= 3 && !open) {
+      setOpen(true);
+    } else if (newValue.length < 3) {
+      setOpen(false);
+    }
+  };
 
   const handleSelect = (movie: MovieSearchResult) => {
     onChange(movie.title);
@@ -81,10 +99,14 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
         <div className="relative">
           <Input
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={handleInputChange}
             placeholder={placeholder}
             className="bg-background/50 border-border/60"
-            onFocus={() => setOpen(true)}
+            onFocus={() => {
+              if (value.length >= 3) {
+                setOpen(true);
+              }
+            }}
           />
           <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         </div>
@@ -97,14 +119,14 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
                 Searching...
               </div>
             )}
-            {!isLoading && searchResults.length === 0 && value.length > 2 && (
+            {!isLoading && searchResults.length === 0 && value.length >= 3 && (
               <CommandEmpty>No movies/series found.</CommandEmpty>
             )}
             {!isLoading && searchResults.length > 0 && (
               <CommandGroup>
                 {searchResults.map((movie, index) => (
                   <CommandItem
-                    key={index}
+                    key={`${movie.title}-${index}`}
                     onSelect={() => handleSelect(movie)}
                     className="cursor-pointer"
                   >

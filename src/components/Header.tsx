@@ -32,7 +32,8 @@ const Header = ({ searchQuery, onSearchChange, onAddMovie, onSignOut }: HeaderPr
                 className="pl-10 bg-background/50 border-border/60 focus:border-primary/50"
               />
             </div>
-            <Button onClick={onAddMovie} size="icon" className="bg-primary hover:bg-primary/90">
+            {/* Hide Add button on mobile since it's in bottom navigation */}
+            <Button onClick={onAddMovie} size="icon" className="bg-primary hover:bg-primary/90 hidden md:flex">
               <Plus className="h-4 w-4" />
             </Button>
             <Button onClick={onSignOut} size="icon" variant="outline">

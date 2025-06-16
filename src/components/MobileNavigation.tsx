@@ -1,15 +1,17 @@
 
-import { Home, Film, Tv, Activity } from "lucide-react";
+import { Home, Film, Tv, Activity, Plus } from "lucide-react";
 
 interface MobileNavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onAddMovie: () => void;
 }
 
-const MobileNavigation = ({ activeTab, onTabChange }: MobileNavigationProps) => {
+const MobileNavigation = ({ activeTab, onTabChange, onAddMovie }: MobileNavigationProps) => {
   const navItems = [
     { id: "home", icon: Home },
     { id: "movies", icon: Film },
+    { id: "add", icon: Plus, isAction: true },
     { id: "series", icon: Tv },
     { id: "analytics", icon: Activity }
   ];
@@ -20,9 +22,11 @@ const MobileNavigation = ({ activeTab, onTabChange }: MobileNavigationProps) => 
         {navItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => onTabChange(item.id)}
+            onClick={() => item.isAction ? onAddMovie() : onTabChange(item.id)}
             className={`p-3 rounded-full transition-all duration-300 ${
-              activeTab === item.id
+              item.isAction
+                ? "bg-gradient-to-r from-green-500 via-green-600 to-green-700 text-white shadow-lg scale-110"
+                : activeTab === item.id
                 ? "bg-gradient-to-r from-primary via-purple-500 to-pink-500 text-white shadow-lg scale-110"
                 : "text-muted-foreground hover:text-foreground hover:bg-background/20"
             }`}

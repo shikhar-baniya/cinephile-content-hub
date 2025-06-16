@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
@@ -10,6 +9,7 @@ import AddMovieDialog from "@/components/AddMovieDialog";
 import MovieDetailDialog from "@/components/MovieDetailDialog";
 import MobileNavigation from "@/components/MobileNavigation";
 import AuthComponent from "@/components/AuthComponent";
+import MovieCarousel from "@/components/MovieCarousel";
 import { Movie } from "@/components/MovieCard";
 import { movieService } from "@/services/databaseService";
 import { supabase } from "@/integrations/supabase/client";
@@ -157,7 +157,20 @@ const Index = () => {
         return (
           <div className="space-y-6">
             <StatsCards movies={movies || []} />
-            <GenreCollections movies={movies || []} onMovieClick={setSelectedMovie} />
+          </div>
+        );
+      case "home":
+        return (
+          <div className="space-y-6">
+            {/* Mobile Carousel */}
+            <div className="md:hidden">
+              <MovieCarousel movies={movies || []} onMovieClick={setSelectedMovie} />
+            </div>
+            
+            {/* Desktop/Tablet Collections */}
+            <div className="hidden md:block">
+              <GenreCollections movies={movies || []} onMovieClick={setSelectedMovie} />
+            </div>
           </div>
         );
       default:
@@ -192,7 +205,11 @@ const Index = () => {
         
         {renderContent()}
         
-        <MobileNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+        <MobileNavigation 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+          onAddMovie={() => setShowAddDialog(true)}
+        />
         
         <AddMovieDialog 
           open={showAddDialog} 
