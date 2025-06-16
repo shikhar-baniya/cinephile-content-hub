@@ -15,11 +15,42 @@ const HeroCarousel = ({ movies, onMovieClick }: HeroCarouselProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   // Get featured movies (highly rated or recently added)
-  const featuredMovies = movies
-    .filter(movie => movie.poster && (movie.rating >= 7 || movie.status === "watching"))
+  const featuredMovies = (movies || [])
+    .filter(movie => {
+      // Extra validation
+      const isValid = movie && 
+                     movie.id && 
+                     movie.title && 
+                     movie.poster && 
+                     (movie.rating >= 7 || movie.status === "watching");
+      
+      if (process.env.NODE_ENV === 'development' && !isValid && movie) {
+        console.warn('HeroCarousel: Filtering out invalid movie', {
+          id: movie.id,
+          title: movie.title,
+          poster: !!movie.poster,
+          rating: movie.rating,
+          status: movie.status
+        });
+      }
+      
+      return isValid;
+    })
     .slice(0, 5);
 
+  // Reset currentIndex when featuredMovies changes or becomes empty
   useEffect(() => {
+    if (featuredMovies.length === 0) {
+      setCurrentIndex(0);
+    } else if (currentIndex >= featuredMovies.length) {
+      setCurrentIndex(0);
+    }
+  }, [featuredMovies.length, currentIndex]);
+
+  useEffect(() => {
+    // Don't start auto-play if there are no featured movies
+    if (featuredMovies.length <= 1) return;
+
     const timer = setInterval(() => {
       if (!isAnimating && featuredMovies.length > 1) {
         nextSlide();
@@ -30,34 +61,49 @@ const HeroCarousel = ({ movies, onMovieClick }: HeroCarouselProps) => {
   }, [currentIndex, isAnimating, featuredMovies.length]);
 
   const nextSlide = () => {
-    if (isAnimating) return;
+    if (isAnimating || featuredMovies.length === 0) return;
     setIsAnimating(true);
     setCurrentIndex((prev) => (prev + 1) % featuredMovies.length);
     setTimeout(() => setIsAnimating(false), 300);
   };
 
   const prevSlide = () => {
-    if (isAnimating) return;
+    if (isAnimating || featuredMovies.length === 0) return;
     setIsAnimating(true);
     setCurrentIndex((prev) => (prev - 1 + featuredMovies.length) % featuredMovies.length);
     setTimeout(() => setIsAnimating(false), 300);
   };
 
+  // Early return if no featured movies or empty array
   if (!featuredMovies || featuredMovies.length === 0) {
     return null;
   }
 
-  const currentMovie = featuredMovies[currentIndex];
+  // Ensure currentIndex is within bounds and valid
+  const safeCurrentIndex = Math.max(0, Math.min(currentIndex, featuredMovies.length - 1));
+  const currentMovie = featuredMovies[safeCurrentIndex];
+
+  // Additional safety check for currentMovie
+  if (!currentMovie || !currentMovie.id || !currentMovie.title) {
+    console.warn('HeroCarousel: Invalid currentMovie', { currentMovie, featuredMovies, currentIndex, safeCurrentIndex });
+    return null;
+  }
 
   return (
     <div className="relative h-96 md:h-[500px] overflow-hidden rounded-2xl mb-6">
       {/* Background Image */}
       <div className="absolute inset-0">
-        <img
-          src={currentMovie.poster}
-          alt={currentMovie.title}
-          className="w-full h-full object-cover"
-        />
+        {currentMovie.poster ? (
+          <img
+            src={currentMovie.poster}
+            alt={currentMovie.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+            <div className="text-white/50 text-6xl">🎬</div>
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
       </div>

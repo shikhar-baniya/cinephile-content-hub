@@ -2,11 +2,12 @@
 import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, Calendar, Play, Eye, Clock, Film, Edit, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Star, Calendar, Play, Eye, Clock, Film, Edit, Trash2, RefreshCw } from "lucide-react";
 import { Movie } from "./MovieCard";
 import { movieService } from "@/services/databaseService";
 import { useToast } from "@/components/ui/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface MovieDetailDialogProps {
   movie: Movie | null;
@@ -14,44 +15,94 @@ interface MovieDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   onEdit?: (movie: Movie) => void;
   onDelete?: () => void;
+  onUpdate?: () => void;
 }
 
-const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete }: MovieDetailDialogProps) => {
+const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpdate }: MovieDetailDialogProps) => {
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<Movie['status']>(movie?.status || 'want-to-watch');
+
+  // Update current status when movie changes
+  useEffect(() => {
+    if (movie) {
+      setCurrentStatus(movie.status);
+    }
+  }, [movie]);
 
   if (!movie) return null;
 
-  const getStatusIcon = () => {
-    switch (movie.status) {
+  const getStatusIcon = (status: Movie['status'] = currentStatus) => {
+    switch (status) {
       case "watched":
         return <Eye className="h-4 w-4" />;
       case "watching":
         return <Play className="h-4 w-4" />;
       case "want-to-watch":
         return <Clock className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
     }
   };
 
-  const getStatusColor = () => {
-    switch (movie.status) {
+  const getStatusColor = (status: Movie['status'] = currentStatus) => {
+    switch (status) {
       case "watched":
         return "bg-green-500/20 text-green-400 border-green-500/30";
       case "watching":
         return "bg-blue-500/20 text-blue-400 border-blue-500/30";
       case "want-to-watch":
         return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+      default:
+        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
     }
   };
 
-  const getStatusText = () => {
-    switch (movie.status) {
+  const getStatusText = (status: Movie['status'] = currentStatus) => {
+    switch (status) {
       case "watched":
         return "Watched";
       case "watching":
         return "Currently Watching";
       case "want-to-watch":
         return "Want to Watch";
+      default:
+        return "Want to Watch";
+    }
+  };
+
+  const handleStatusUpdate = async (newStatus: Movie['status']) => {
+    if (!movie?.id || newStatus === currentStatus || isUpdating) return;
+    
+    setIsUpdating(true);
+    
+    try {
+      await movieService.updateMovie(movie.id, { status: newStatus });
+      
+      setCurrentStatus(newStatus);
+      
+      toast({
+        title: "Success",
+        description: "Movie status updated successfully!",
+      });
+      
+      if (onUpdate) {
+        onUpdate();
+      }
+    } catch (error: any) {
+      console.error('Error updating movie status:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update movie status. Please try again.",
+        variant: "destructive",
+      });
+      // Reset to original status on error
+      if (movie?.status) {
+        setCurrentStatus(movie.status);
+      }
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -110,10 +161,47 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete }: Movi
               
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <Badge className={`${getStatusColor()} text-sm`}>
-                    {getStatusIcon()}
-                    <span className="ml-1">{getStatusText()}</span>
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className={`${getStatusColor(currentStatus)} text-sm`}>
+                      {getStatusIcon(currentStatus)}
+                      <span className="ml-1">{getStatusText(currentStatus)}</span>
+                    </Badge>
+                    {isUpdating && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
+                  </div>
+                </div>
+                
+                {/* Status Change Section */}
+                <div className="flex items-center gap-3 pt-2">
+                  <span className="text-sm font-medium text-muted-foreground">Change Status:</span>
+                  <Select
+                    value={currentStatus}
+                    onValueChange={handleStatusUpdate}
+                    disabled={isUpdating}
+                  >
+                    <SelectTrigger className="w-auto min-w-[140px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="want-to-watch">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-yellow-500" />
+                          Want to Watch
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="watching">
+                        <div className="flex items-center gap-2">
+                          <Play className="h-4 w-4 text-blue-500" />
+                          Currently Watching
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="watched">
+                        <div className="flex items-center gap-2">
+                          <Eye className="h-4 w-4 text-green-500" />
+                          Watched
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">

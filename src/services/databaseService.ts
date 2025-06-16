@@ -92,6 +92,39 @@ export const movieService = {
     };
   },
 
+  async updateMovie(movieId: string, updates: Partial<Omit<DatabaseMovie, 'id' | 'user_id' | 'created_at'>>): Promise<Movie> {
+    const { data, error } = await supabase
+      .from('movies')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', movieId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating movie:', error);
+      throw error;
+    }
+
+    return {
+      id: data.id,
+      title: data.title,
+      genre: data.genre,
+      category: data.category as "Movie" | "Series" | "Short-Film",
+      releaseYear: data.release_year,
+      platform: data.platform,
+      rating: data.rating,
+      status: data.status as "watched" | "watching" | "want-to-watch",
+      poster: data.poster,
+      watchDate: data.watch_date,
+      notes: data.notes,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  },
+
   async deleteMovie(movieId: string): Promise<void> {
     const { error } = await supabase
       .from('movies')

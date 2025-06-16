@@ -16,6 +16,10 @@ import { Movie } from "@/components/MovieCard";
 import { movieService } from "@/services/databaseService";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import PageTransition from "@/components/PageTransition";
+import LoadingBar from "@/components/LoadingBar";
+import FuturisticBackground from "@/components/FuturisticBackground";
 
 const Index = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -26,6 +30,7 @@ const Index = () => {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedGenre, setSelectedGenre] = useState("All");
+  const [isPageTransitioning, setIsPageTransitioning] = useState(false);
   
   // Filter states
   const [statusFilter, setStatusFilter] = useState("all");
@@ -65,7 +70,13 @@ const Index = () => {
       return;
     }
 
-    let filtered = [...movies];
+    // Filter out any invalid/undefined movies first
+    let filtered = movies.filter(movie => 
+      movie && 
+      typeof movie === 'object' && 
+      movie.id && 
+      movie.title
+    );
 
     // Apply search filter
     if (searchQuery) {
@@ -144,8 +155,13 @@ const Index = () => {
   // Show loading screen
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="text-white text-lg">Loading...</div>
+      <div className="min-h-screen relative flex items-center justify-center">
+        <FuturisticBackground />
+        <div className="relative z-10 text-center">
+          <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-white text-lg font-medium">Loading your cinematic universe...</div>
+          <div className="text-white/60 text-sm mt-2">Preparing your movies and series</div>
+        </div>
       </div>
     );
   }
@@ -176,7 +192,12 @@ const Index = () => {
           <div className="space-y-6">
             {/* Hero Carousel for Mobile */}
             <div className="md:hidden">
-              <HeroCarousel movies={filteredMovies || []} onMovieClick={setSelectedMovie} />
+              <ErrorBoundary>
+                <HeroCarousel 
+                  movies={(filteredMovies || []).filter(movie => movie && movie.id && movie.title)} 
+                  onMovieClick={setSelectedMovie} 
+                />
+              </ErrorBoundary>
               <GenreFilterBar 
                 genres={uniqueGenres}
                 selectedGenre={selectedGenre}
@@ -211,9 +232,28 @@ const Index = () => {
     }
   };
 
+  const handleTabChange = (tab: string) => {
+    if (tab !== activeTab) {
+      setIsPageTransitioning(true);
+      setActiveTab(tab);
+      
+      // Reset transition state after animation
+      setTimeout(() => {
+        setIsPageTransitioning(false);
+      }, 300);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <div className="container mx-auto px-4 py-6 pb-24 md:pb-6">
+    <div className="min-h-screen relative">
+      <ErrorBoundary fallback={
+        <div className="fixed inset-0 -z-10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
+      }>
+        <FuturisticBackground />
+      </ErrorBoundary>
+      <LoadingBar isLoading={isPageTransitioning} />
+      
+      <div className="relative z-10 container mx-auto px-4 py-6 pb-24 md:pb-6">
         <Header 
           searchQuery={searchQuery} 
           onSearchChange={setSearchQuery}
@@ -221,11 +261,13 @@ const Index = () => {
           onSignOut={handleSignOut}
         />
         
-        {renderContent()}
+        <PageTransition triggerKey={activeTab}>
+          {renderContent()}
+        </PageTransition>
         
         <MobileNavigation 
           activeTab={activeTab} 
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
           onAddMovie={() => setShowAddDialog(true)}
         />
         
@@ -241,6 +283,7 @@ const Index = () => {
             open={!!selectedMovie}
             onOpenChange={() => setSelectedMovie(null)}
             onDelete={handleDeleteMovie}
+            onUpdate={refetch}
           />
         )}
       </div>
