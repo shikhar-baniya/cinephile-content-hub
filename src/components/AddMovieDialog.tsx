@@ -140,7 +140,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
               value={formData.title}
               onChange={(value) => setFormData({ ...formData, title: value })}
               onMovieSelect={handleMovieSelect}
-              placeholder="Search for movies/series..."
+              placeholder="Search for movies/series on TMDB..."
             />
           </div>
 
