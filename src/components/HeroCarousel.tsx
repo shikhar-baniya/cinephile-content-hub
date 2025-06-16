@@ -82,11 +82,32 @@ const HeroCarousel = ({ movies, onMovieClick }: HeroCarouselProps) => {
 
           <Button 
             onClick={() => onMovieClick(currentMovie)}
-            className="bg-white text-black hover:bg-white/90 font-semibold"
+            className="bg-white text-black hover:bg-white/90 font-semibold mb-4"
           >
             <Play className="h-4 w-4 mr-2" />
             View Details
           </Button>
+
+          {/* Dots Indicator - moved below button and centered */}
+          {featuredMovies.length > 1 && (
+            <div className="flex justify-center gap-2">
+              {featuredMovies.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    if (!isAnimating) {
+                      setIsAnimating(true);
+                      setCurrentIndex(index);
+                      setTimeout(() => setIsAnimating(false), 300);
+                    }
+                  }}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    index === currentIndex ? 'bg-white' : 'bg-white/50'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -110,25 +131,6 @@ const HeroCarousel = ({ movies, onMovieClick }: HeroCarouselProps) => {
           </button>
         </>
       )}
-
-      {/* Dots Indicator */}
-      <div className="absolute bottom-20 left-6 flex gap-2">
-        {featuredMovies.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => {
-              if (!isAnimating) {
-                setIsAnimating(true);
-                setCurrentIndex(index);
-                setTimeout(() => setIsAnimating(false), 300);
-              }
-            }}
-            className={`w-2 h-2 rounded-full transition-all ${
-              index === currentIndex ? 'bg-white' : 'bg-white/50'
-            }`}
-          />
-        ))}
-      </div>
     </div>
   );
 };

@@ -26,11 +26,11 @@ const MovieCard = ({ movie, onClick }: MovieCardProps) => {
   const getStatusIcon = () => {
     switch (movie.status) {
       case "watched":
-        return <Eye className="h-4 w-4" />;
+        return <Eye className="h-3 w-3" />;
       case "watching":
-        return <Play className="h-4 w-4" />;
+        return <Play className="h-3 w-3" />;
       case "want-to-watch":
-        return <Clock className="h-4 w-4" />;
+        return <Clock className="h-3 w-3" />;
     }
   };
 
@@ -50,7 +50,7 @@ const MovieCard = ({ movie, onClick }: MovieCardProps) => {
       className="movie-card cursor-pointer group animate-fade-in h-full flex flex-col"
       onClick={() => onClick(movie)}
     >
-      <div className="aspect-[2/3] bg-gradient-to-br from-secondary to-secondary/50 rounded-lg mb-3 overflow-hidden relative flex-shrink-0">
+      <div className="relative aspect-[2/3] bg-gradient-to-br from-secondary to-secondary/50 rounded-2xl mb-3 overflow-hidden flex-shrink-0">
         {movie.poster ? (
           <img 
             src={movie.poster} 
@@ -58,35 +58,57 @@ const MovieCard = ({ movie, onClick }: MovieCardProps) => {
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Film className="h-12 w-12 text-muted-foreground" />
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900/50 via-blue-900/50 to-pink-900/50">
+            <Film className="h-12 w-12 text-white/60" />
           </div>
         )}
-        <div className="absolute top-2 right-2">
-          <Badge className={`${getStatusColor()} text-xs`}>
+        
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Status badge */}
+        <div className="absolute top-3 right-3">
+          <Badge className={`${getStatusColor()} text-xs px-2 py-1`}>
             {getStatusIcon()}
           </Badge>
         </div>
+
+        {/* Rating */}
+        <div className="absolute top-3 left-3">
+          <div className="flex items-center gap-1 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1">
+            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+            <span className="text-white text-xs font-medium">{movie.rating}</span>
+          </div>
+        </div>
+
+        {/* Genre tags at bottom */}
+        <div className="absolute bottom-3 left-3 right-3">
+          <div className="flex flex-wrap gap-1">
+            {movie.genre.split(',').slice(0, 2).map((genre, index) => (
+              <Badge 
+                key={index} 
+                className="text-xs bg-white/20 text-white border-white/30 backdrop-blur-sm"
+              >
+                #{genre.trim().toLowerCase()}
+              </Badge>
+            ))}
+          </div>
+        </div>
       </div>
       
-      <div className="space-y-2 flex-grow flex flex-col">
-        <h3 className="font-semibold text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors flex-grow">
+      <div className="space-y-2 flex-grow flex flex-col px-1">
+        <h3 className="font-bold text-white text-sm leading-tight line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-primary group-hover:via-purple-500 group-hover:to-pink-500 transition-all duration-300">
           {movie.title}
         </h3>
         
-        <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto">
-          <span>{movie.releaseYear}</span>
-          <div className="flex items-center gap-1">
-            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-            <span>{movie.rating}/10</span>
-          </div>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <Badge variant="outline" className="text-xs border-border/60 truncate max-w-[70%]">
-            {movie.genre.split(',')[0].trim()}
-          </Badge>
-          <span className="text-xs text-muted-foreground truncate max-w-[50%]">{movie.platform}</span>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            {movie.releaseYear}
+          </span>
+          <span className="text-xs text-muted-foreground/80 truncate max-w-[60%]">
+            {movie.platform}
+          </span>
         </div>
       </div>
     </div>
