@@ -23,11 +23,11 @@ const MobileNavigation = ({ activeTab, onTabChange, onAddMovie }: MobileNavigati
           <button
             key={item.id}
             onClick={() => item.isAction ? onAddMovie() : onTabChange(item.id)}
-            className={`p-3 rounded-full transition-all duration-300 ${
+            className={`p-2.5 rounded-full transition-all duration-300 ${
               item.isAction
-                ? "bg-gradient-to-r from-green-500 via-green-600 to-green-700 text-white shadow-lg scale-110"
+                ? "text-muted-foreground hover:text-foreground hover:bg-background/20"
                 : activeTab === item.id
-                ? "bg-gradient-to-r from-primary via-purple-500 to-pink-500 text-white shadow-lg scale-110"
+                ? "text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-pink-500 scale-110"
                 : "text-muted-foreground hover:text-foreground hover:bg-background/20"
             }`}
           >

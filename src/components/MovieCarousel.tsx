@@ -15,7 +15,10 @@ const MovieCarousel = ({ movies, onMovieClick }: MovieCarouselProps) => {
       return {
         recentlyAdded: [],
         highlyRated: [],
-        currentlyWatching: []
+        currentlyWatching: [],
+        wantToWatch: [],
+        byCategory: {},
+        byGenre: {}
       };
     }
 
@@ -38,10 +41,37 @@ const MovieCarousel = ({ movies, onMovieClick }: MovieCarouselProps) => {
     // Get currently watching
     const currentlyWatching = movies.filter(m => m && m.status === "watching").slice(0, 10);
 
+    // Get want to watch
+    const wantToWatch = movies.filter(m => m && m.status === "want-to-watch").slice(0, 10);
+
+    // Group by category
+    const byCategory = movies.reduce((acc, movie) => {
+      if (!movie || !movie.category) return acc;
+      if (!acc[movie.category]) {
+        acc[movie.category] = [];
+      }
+      acc[movie.category].push(movie);
+      return acc;
+    }, {} as Record<string, Movie[]>);
+
+    // Group by genre (first genre only for simplicity)
+    const byGenre = movies.reduce((acc, movie) => {
+      if (!movie || !movie.genre) return acc;
+      const primaryGenre = movie.genre.split(',')[0].trim();
+      if (!acc[primaryGenre]) {
+        acc[primaryGenre] = [];
+      }
+      acc[primaryGenre].push(movie);
+      return acc;
+    }, {} as Record<string, Movie[]>);
+
     return {
       recentlyAdded,
       highlyRated,
-      currentlyWatching
+      currentlyWatching,
+      wantToWatch,
+      byCategory,
+      byGenre
     };
   }, [movies]);
 
@@ -68,7 +98,9 @@ const MovieCarousel = ({ movies, onMovieClick }: MovieCarouselProps) => {
             {movies.map((movie) => (
               <CarouselItem key={movie.id} className="pl-2 md:pl-4 basis-36">
                 <div className="p-1">
-                  <MovieCard movie={movie} onClick={onMovieClick} />
+                  <div className="h-64">
+                    <MovieCard movie={movie} onClick={onMovieClick} />
+                  </div>
                 </div>
               </CarouselItem>
             ))}
@@ -110,6 +142,39 @@ const MovieCarousel = ({ movies, onMovieClick }: MovieCarouselProps) => {
           badgeCount={collections.currentlyWatching.length}
         />
       )}
+
+      {collections.wantToWatch.length > 0 && (
+        <CarouselSection 
+          title="Want to Watch" 
+          movies={collections.wantToWatch}
+          badgeCount={collections.wantToWatch.length}
+        />
+      )}
+
+      {Object.entries(collections.byCategory)
+        .filter(([, categoryMovies]) => categoryMovies.length > 1)
+        .slice(0, 2)
+        .map(([category, categoryMovies]) => (
+          <CarouselSection 
+            key={category}
+            title={`${category}s`}
+            movies={categoryMovies.slice(0, 10)}
+            badgeCount={categoryMovies.length}
+          />
+        ))}
+
+      {Object.entries(collections.byGenre)
+        .sort(([,a], [,b]) => b.length - a.length)
+        .filter(([, genreMovies]) => genreMovies.length > 2)
+        .slice(0, 3)
+        .map(([genre, genreMovies]) => (
+          <CarouselSection 
+            key={genre}
+            title={`${genre} Collection`}
+            movies={genreMovies.slice(0, 10)}
+            badgeCount={genreMovies.length}
+          />
+        ))}
     </div>
   );
 };

@@ -10,6 +10,8 @@ import MovieDetailDialog from "@/components/MovieDetailDialog";
 import MobileNavigation from "@/components/MobileNavigation";
 import AuthComponent from "@/components/AuthComponent";
 import MovieCarousel from "@/components/MovieCarousel";
+import HeroCarousel from "@/components/HeroCarousel";
+import GenreFilterBar from "@/components/GenreFilterBar";
 import { Movie } from "@/components/MovieCard";
 import { movieService } from "@/services/databaseService";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +25,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedGenre, setSelectedGenre] = useState("All");
   
   // Filter states
   const [statusFilter, setStatusFilter] = useState("all");
@@ -72,6 +75,13 @@ const Index = () => {
       );
     }
 
+    // Apply genre filter for home page
+    if (activeTab === "home" && selectedGenre !== "All") {
+      filtered = filtered.filter(movie => 
+        movie?.genre?.toLowerCase().includes(selectedGenre.toLowerCase())
+      );
+    }
+
     // Apply filter bar filters
     if (statusFilter !== "all") {
       filtered = filtered.filter(movie => movie?.status === statusFilter);
@@ -102,7 +112,7 @@ const Index = () => {
     }
 
     setFilteredMovies(filtered);
-  }, [movies, searchQuery, activeTab, statusFilter, genreFilter, platformFilter]);
+  }, [movies, searchQuery, activeTab, statusFilter, genreFilter, platformFilter, selectedGenre]);
 
   const handleAddMovie = async () => {
     await refetch();
@@ -126,7 +136,9 @@ const Index = () => {
   };
 
   // Get unique genres and platforms for filter options
-  const uniqueGenres = Array.from(new Set(movies?.map(movie => movie.genre).filter(Boolean))) || [];
+  const uniqueGenres = Array.from(new Set(movies?.flatMap(movie => 
+    movie.genre.split(',').map(g => g.trim())
+  ).filter(Boolean))) || [];
   const uniquePlatforms = Array.from(new Set(movies?.map(movie => movie.platform).filter(Boolean))) || [];
 
   // Show loading screen
@@ -162,9 +174,15 @@ const Index = () => {
       case "home":
         return (
           <div className="space-y-6">
-            {/* Mobile Carousel */}
+            {/* Hero Carousel for Mobile */}
             <div className="md:hidden">
-              <MovieCarousel movies={movies || []} onMovieClick={setSelectedMovie} />
+              <HeroCarousel movies={filteredMovies || []} onMovieClick={setSelectedMovie} />
+              <GenreFilterBar 
+                genres={uniqueGenres}
+                selectedGenre={selectedGenre}
+                onGenreSelect={setSelectedGenre}
+              />
+              <MovieCarousel movies={filteredMovies || []} onMovieClick={setSelectedMovie} />
             </div>
             
             {/* Desktop/Tablet Collections */}

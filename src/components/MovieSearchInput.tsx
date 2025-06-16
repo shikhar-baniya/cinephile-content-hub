@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
@@ -26,10 +25,13 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
   const [open, setOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<MovieSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout>();
 
   const searchContent = useCallback(async (searchValue: string) => {
     if (searchValue.length < 3) {
       setSearchResults([]);
+      setOpen(false);
       return;
     }
 
@@ -58,6 +60,10 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
       const results = [...formattedMovies, ...formattedShows];
       console.log('Search results:', results);
       setSearchResults(results);
+      
+      if (results.length > 0) {
+        setOpen(true);
+      }
     } catch (error) {
       console.error('Error searching movies:', error);
       setSearchResults([]);
@@ -67,30 +73,56 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
   }, []);
 
   useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      searchContent(value);
-    }, 500); // Increased debounce time for better performance
+    // Clear previous timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
 
-    return () => clearTimeout(debounceTimer);
+    // Set new timer
+    debounceTimerRef.current = setTimeout(() => {
+      searchContent(value);
+    }, 300);
+
+    // Cleanup function
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
   }, [value, searchContent]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     onChange(newValue);
-    
-    if (newValue.length >= 3 && !open) {
-      setOpen(true);
-    } else if (newValue.length < 3) {
-      setOpen(false);
-    }
   };
 
   const handleSelect = (movie: MovieSearchResult) => {
     onChange(movie.title);
     setOpen(false);
+    
+    // Keep focus on input after selection
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 100);
+    
     if (onMovieSelect) {
       onMovieSelect(movie);
     }
+  };
+
+  const handleInputFocus = () => {
+    if (value.length >= 3 && searchResults.length > 0) {
+      setOpen(true);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Delay closing to allow for item selection
+    setTimeout(() => {
+      setOpen(false);
+    }, 200);
   };
 
   return (
@@ -98,20 +130,22 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
       <PopoverTrigger asChild>
         <div className="relative">
           <Input
+            ref={inputRef}
             value={value}
             onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
             placeholder={placeholder}
             className="bg-background/50 border-border/60"
-            onFocus={() => {
-              if (value.length >= 3) {
-                setOpen(true);
-              }
-            }}
           />
           <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0 bg-card/95 backdrop-blur-lg border-border/40" align="start">
+      <PopoverContent 
+        className="w-full p-0 bg-card/95 backdrop-blur-lg border-border/40 z-50" 
+        align="start"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <Command>
           <CommandList>
             {isLoading && (
