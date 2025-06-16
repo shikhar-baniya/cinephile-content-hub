@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Movie } from "@/components/MovieCard";
 
@@ -41,7 +40,8 @@ export const movieService = {
       status: movie.status as "watched" | "watching" | "want-to-watch",
       poster: movie.poster,
       notes: movie.notes,
-      createdAt: movie.created_at
+      createdAt: movie.created_at,
+      updatedAt: movie.updated_at,
     })) || [];
   },
 

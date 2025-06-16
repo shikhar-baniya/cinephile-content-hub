@@ -1,3 +1,6 @@
+import { config } from '@/config/env';
+import { apiClient } from '@/lib/api-client';
+import { ErrorHandler } from '@/lib/error-handling';
 
 // TMDb API service for fetching movie data
 // Note: This uses a demo API key - users should get their own from https://www.themoviedb.org/settings/api
@@ -57,25 +60,22 @@ const genreMap: Record<number, string> = {
 export const searchMoviesAndShows = async (query: string): Promise<{movies: TMDbMovie[], shows: TMDbTVShow[]}> => {
   try {
     const [movieResponse, tvResponse] = await Promise.all([
-      fetch(`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`),
-      fetch(`${TMDB_BASE_URL}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`)
+      apiClient.fetch<{ results: TMDbMovie[] }>(`/search/movie?query=${encodeURIComponent(query)}`),
+      apiClient.fetch<{ results: TMDbTVShow[] }>(`/search/tv?query=${encodeURIComponent(query)}`)
     ]);
 
-    const movieData = await movieResponse.json();
-    const tvData = await tvResponse.json();
-
     return {
-      movies: movieData.results || [],
-      shows: tvData.results || []
+      movies: movieResponse.results || [],
+      shows: tvResponse.results || []
     };
   } catch (error) {
-    console.error('Error searching movies and shows:', error);
+    ErrorHandler.handle(error);
     return { movies: [], shows: [] };
   }
 };
 
 export const getImageUrl = (posterPath: string | null): string | null => {
-  return posterPath ? `${TMDB_IMAGE_BASE_URL}${posterPath}` : null;
+  return posterPath ? `${config.tmdb.imageBaseUrl}/w500${posterPath}` : null;
 };
 
 export const getGenreName = (genreIds: number[]): string => {

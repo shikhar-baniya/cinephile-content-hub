@@ -1,4 +1,3 @@
-
 import { Star, Calendar, Play, Eye, Clock, Film } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -15,6 +14,7 @@ export interface Movie {
   watchDate?: string;
   notes?: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 interface MovieCardProps {
