@@ -80,7 +80,7 @@ app.use('/api/movies', movieRoutes);
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    message: 'Cinephile Content Hub API',
+    message: 'BingeBook API',
     version: '1.0.0',
     endpoints: {
       health: '/health',
