@@ -64,8 +64,11 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+console.log("App starting...");
+
 // Health check endpoint
 app.get('/health', (req, res) => {
+  console.log("Health check hit");
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
