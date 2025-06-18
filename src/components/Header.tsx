@@ -18,7 +18,7 @@ const Header = ({ searchQuery, onSearchChange, onAddMovie, onSignOut }: HeaderPr
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <Film className="h-8 w-8 text-primary" />
-              <h1 className="text-2xl font-bold gradient-text">CineTracker</h1>
+              <h1 className="text-2xl font-bold gradient-text">BingeBook</h1>
             </div>
           </div>
           

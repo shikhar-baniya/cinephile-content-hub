@@ -76,7 +76,7 @@ const createConfig = (): AppConfig => {
   
   return {
     app: {
-      name: 'CineTracker',
+      name: 'BingeBook',
       version: '1.0.0',
       environment: env,
       buildDate: new Date().toISOString(),

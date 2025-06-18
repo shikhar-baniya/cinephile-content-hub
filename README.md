@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# BingeBook - Your Personal Movie & TV Show Tracker
 
 ## Project info
 

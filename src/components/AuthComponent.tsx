@@ -59,7 +59,7 @@ const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Film className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold gradient-text">CineTracker</h1>
+            <h1 className="text-2xl font-bold gradient-text">BingeBook</h1>
           </div>
           <CardTitle>{isLogin ? "Welcome Back" : "Create Account"}</CardTitle>
           <CardDescription>
