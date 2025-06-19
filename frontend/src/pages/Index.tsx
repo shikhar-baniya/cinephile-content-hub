@@ -21,7 +21,7 @@ import LoadingBar from "@/components/LoadingBar";
 import FuturisticBackground from "@/components/FuturisticBackground";
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("home");
   const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
@@ -122,8 +122,7 @@ const Index = () => {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
+    await signOut();
   };
 
   const clearFilters = () => {

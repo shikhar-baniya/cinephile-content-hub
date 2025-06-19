@@ -73,10 +73,8 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted with data:', formData);
     
     if (!formData.title.trim() || formData.genre.length === 0 || !formData.platform) {
-      console.log('Form validation failed:', { title: formData.title, genre: formData.genre, platform: formData.platform });
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields (Title, Genre, Platform)",
@@ -104,7 +102,6 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
       onAddMovie();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error adding movie:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to add movie. Please try again.",

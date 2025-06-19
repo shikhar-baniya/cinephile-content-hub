@@ -23,17 +23,6 @@ const HeroCarousel = ({ movies, onMovieClick }: HeroCarouselProps) => {
                      movie.title && 
                      movie.poster && 
                      (movie.rating >= 7 || movie.status === "watching");
-      
-      if (process.env.NODE_ENV === 'development' && !isValid && movie) {
-        console.warn('HeroCarousel: Filtering out invalid movie', {
-          id: movie.id,
-          title: movie.title,
-          poster: !!movie.poster,
-          rating: movie.rating,
-          status: movie.status
-        });
-      }
-      
       return isValid;
     })
     .slice(0, 5);

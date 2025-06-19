@@ -43,7 +43,6 @@ class AuthService {
         apiClient.setToken(parsedSession.access_token);
       }
     } catch (error) {
-      console.error('Failed to load session from storage:', error);
       this.clearStorage();
     }
   }
@@ -90,7 +89,6 @@ class AuthService {
       
       return response;
     } catch (error) {
-      console.error('Sign up error:', error);
       throw error;
     }
   }
@@ -109,7 +107,6 @@ class AuthService {
       
       return response;
     } catch (error) {
-      console.error('Sign in error:', error);
       throw error;
     }
   }
@@ -118,7 +115,7 @@ class AuthService {
     try {
       await apiClient.signOut();
     } catch (error) {
-      console.error('Sign out error:', error);
+      // Handle sign out error silently
     } finally {
       this.currentUser = null;
       this.currentSession = null;
@@ -139,7 +136,6 @@ class AuthService {
       this.notifyAuthChange(response.user);
       return response.user;
     } catch (error) {
-      console.error('Get user error:', error);
       // If token is invalid, clear session
       this.signOut();
       return null;
@@ -165,7 +161,6 @@ class AuthService {
           return { session: response.session, user: response.user };
         }
       } catch (error) {
-        console.error('Token refresh failed:', error);
         this.signOut();
         return { session: null, user: null };
       }

@@ -15,9 +15,9 @@ export const usePerformanceMonitor = (componentName: string) => {
       const renderTime = performance.now() - renderStartTime.current;
       addRenderTime(renderTime);
       
-      // Log slow renders in development
+      // Track slow renders silently
       if (process.env.NODE_ENV === 'development' && renderTime > 16) {
-        console.warn(`Slow render detected in ${componentName}: ${renderTime.toFixed(2)}ms`);
+        // Slow render detected - handled silently
       }
     }
   });
@@ -35,14 +35,14 @@ export const usePerformanceMonitor = (componentName: string) => {
       usePerformanceStore.getState().addApiCallTime(duration);
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`API call ${operationName}: ${duration.toFixed(2)}ms`);
+        // API call timing tracked silently
       }
       
       return result;
     } catch (error) {
       const endTime = performance.now();
       const duration = endTime - startTime;
-      console.error(`API call ${operationName} failed after ${duration.toFixed(2)}ms:`, error);
+      // API call failed - error handled silently
       throw error;
     }
   };

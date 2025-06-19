@@ -181,7 +181,6 @@ export const appConfig = createConfig();
 try {
   validateConfig(appConfig);
 } catch (error) {
-  console.error('Configuration Error:', error);
   if (appConfig.app.environment === 'production') {
     throw error; // Fail fast in production
   }

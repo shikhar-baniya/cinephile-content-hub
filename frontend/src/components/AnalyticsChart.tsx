@@ -29,8 +29,7 @@ type TimeRange = keyof typeof RANGE_CONFIG;
 const AnalyticsChart = ({ movies }: AnalyticsChartProps) => {
   const [timeRange, setTimeRange] = useState<TimeRange>("days");
 
-  // Debug: log incoming movies
-  console.log("AnalyticsChart movies prop:", movies);
+
 
   // Generate all chart data for the selected range
   const generateChartData = () => {
@@ -219,11 +218,10 @@ const AnalyticsChart = ({ movies }: AnalyticsChartProps) => {
 
   // Debug: log allChartData and chartData after generation
   useEffect(() => {
-    console.log("allChartData:", chartData);
     // Check for valid updatedAt
     movies.forEach(m => {
       if (m.status === "watched" && (!m.updatedAt || isNaN(new Date(m.updatedAt).getTime()))) {
-        console.warn("Movie with invalid updatedAt:", m);
+        // Movie with invalid updatedAt - handled silently
       }
     });
   }, [movies, chartData]);

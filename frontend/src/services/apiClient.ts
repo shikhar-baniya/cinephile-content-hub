@@ -44,7 +44,6 @@ class ApiClient {
 
       return await response.json();
     } catch (error) {
-      console.error(`API request failed for ${endpoint}:`, error);
       throw error;
     }
   }

@@ -125,7 +125,6 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
       onAddMovie();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error adding movie:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to add movie. Please try again.",

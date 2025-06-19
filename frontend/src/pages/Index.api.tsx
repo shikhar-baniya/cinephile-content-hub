@@ -5,8 +5,8 @@ import MovieGrid from "@/components/MovieGrid";
 import StatsCards from "@/components/StatsCards";
 import FilterBar from "@/components/FilterBar";
 import GenreCollections from "@/components/GenreCollections";
-import AddMovieDialog from "@/components/AddMovieDialog";
-import MovieDetailDialog from "@/components/MovieDetailDialog";
+import AddMovieDialog from "@/components/AddMovieDialog.api";
+import MovieDetailDialog from "@/components/MovieDetailDialog.api";
 import MobileNavigation from "@/components/MobileNavigation";
 import AuthComponent from "@/components/AuthComponent.api";
 import MovieCarousel from "@/components/MovieCarousel";
@@ -43,7 +43,7 @@ const Index = () => {
         const { user: currentUser } = await authService.getSession();
         setUser(currentUser);
       } catch (error) {
-        console.error('Session check failed:', error);
+        // Session check failed - handled silently
       } finally {
         setLoading(false);
       }

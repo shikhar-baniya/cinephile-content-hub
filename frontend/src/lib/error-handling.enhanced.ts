@@ -39,7 +39,7 @@ class ErrorLogger {
     if (process.env.NODE_ENV === 'production') {
       this.sendToErrorService(error);
     } else {
-      console.error('Logged error:', error);
+      // Error logged silently
     }
   }
 

@@ -100,7 +100,7 @@ export const useAuth = create<AuthState>()(
           });
 
           if (!response.ok) {
-            console.warn('Logout request failed, but clearing local state');
+            // Logout request failed, but clearing local state
           }
 
           set({
