@@ -36,7 +36,12 @@ export const getMovies = async (req, res) => {
 
 export const addMovie = async (req, res) => {
   try {
+    console.log('=== ADD MOVIE REQUEST ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('User:', req.user ? { id: req.user.id, email: req.user.email } : 'No user');
+
     if (!req.user) {
+      console.log('No user found in request');
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -56,6 +61,8 @@ export const addMovie = async (req, res) => {
       updated_at: updatedAt
     };
 
+    console.log('Transformed movie data for database:', JSON.stringify(movieData, null, 2));
+
     const supabase = getSupabase();
     
     const { data, error } = await supabase
@@ -64,7 +71,18 @@ export const addMovie = async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    console.log('Supabase response - data:', data);
+    console.log('Supabase response - error:', error);
+
+    if (error) {
+      console.error('Supabase insert error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      throw error;
+    }
 
     // Transform snake_case fields back to camelCase for response
     const responseData = {
@@ -79,9 +97,11 @@ export const addMovie = async (req, res) => {
     delete responseData.created_at;
     delete responseData.updated_at;
 
+    console.log('Final response data:', JSON.stringify(responseData, null, 2));
     res.status(201).json(responseData);
   } catch (error) {
     console.error('Add movie error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ error: 'Failed to add movie' });
   }
 };
