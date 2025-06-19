@@ -6,9 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js",
-    "build": "npm install",
-    "vercel-build": "echo hello"
+    "start": "node src/index.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",

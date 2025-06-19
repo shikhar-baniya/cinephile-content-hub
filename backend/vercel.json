@@ -1,23 +1,7 @@
 {
-  "version": 2,
   "functions": {
     "api/index.js": {
       "maxDuration": 30
     }
-  },
-  "routes": [
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.*",
-      "dest": "api/index.js",
-      "headers": {
-        "Cache-Control": "s-maxage=0",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-        "Access-Control-Allow-Headers": "*"
-      }
-    }
-  ]
+  }
 }
