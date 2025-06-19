@@ -3,48 +3,31 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error('Missing Supabase environment variables');
 }
 
+const options = {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+  },
+  db: {
+    schema: 'public',
+  },
+};
+
 // Client for user operations (with RLS)
-export const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY,
-  {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-    db: {
-      schema: 'public',
-    },
-    global: {
-      headers: { 'x-my-custom-header': 'my-app-name' },
-    },
-    realtime: {
-      timeout: 8000, // 8 second timeout
-    },
-  }
-);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, options);
 
 // Service client for admin operations (bypasses RLS)
 export const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY,
-  {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-    db: {
-      schema: 'public',
-    },
-    global: {
-      headers: { 'x-my-custom-header': 'my-app-name' },
-    },
-    realtime: {
-      timeout: 8000, // 8 second timeout
-    },
-  }
+  SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY,
+  options
 );

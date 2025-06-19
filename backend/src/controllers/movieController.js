@@ -1,23 +1,8 @@
 import { supabase } from '../config/database.js';
 
-// Utility function to handle database timeouts
-const withTimeout = (promise, timeoutMs = 8000) => {
-  let timeoutId;
-  const timeoutPromise = new Promise((_, reject) => {
-    timeoutId = setTimeout(() => {
-      reject(new Error('Operation timed out'));
-    }, timeoutMs);
-  });
-
-  return Promise.race([promise, timeoutPromise])
-    .finally(() => clearTimeout(timeoutId));
-};
-
 export const getMovies = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
 
     const query = supabase
       .from('movies')
@@ -25,34 +10,24 @@ export const getMovies = async (req, res) => {
       .eq('user_id', req.user.id)
       .order('created_at', { ascending: false });
 
-    const { data, error } = await withTimeout(query);
+    const { data, error } = await query;
+    
+    if (error) throw error;
 
-    if (error) {
-      console.error('Error fetching movies:', error);
-      if (error.message === 'Operation timed out') {
-        return res.status(504).json({ error: 'Request timed out' });
-      }
-      return res.status(500).json({ error: 'Failed to fetch movies' });
-    }
-
-    const movies = data?.map(movie => ({
-      id: movie.id,
-      title: movie.title,
-      genre: movie.genre,
-      category: movie.category,
-      releaseYear: movie.release_year,
-      platform: movie.platform,
-      rating: movie.rating,
-      status: movie.status,
-      poster: movie.poster,
-      notes: movie.notes,
-      createdAt: movie.created_at,
+    const movies = data?.map(({
+      release_year: releaseYear,
+      created_at: createdAt,
+      ...movie
+    }) => ({
+      ...movie,
+      releaseYear,
+      createdAt
     })) || [];
 
-    return res.json(movies);
-  } catch (err) {
-    console.error('Unexpected error:', err);
-    return res.status(500).json({ error: 'An unexpected error occurred' });
+    res.json(movies);
+  } catch (error) {
+    console.error('Movie fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch movies' });
   }
 };
 
