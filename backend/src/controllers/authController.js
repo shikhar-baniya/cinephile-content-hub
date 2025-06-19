@@ -1,74 +1,54 @@
-import { supabase } from '../config/database.js';
+import { getSupabase } from '../config/database.js';
 
 export const signUp = async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
+    const supabase = getSupabase();
 
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
+    if (error) throw error;
 
-    res.status(201).json({
-      user: data.user,
-      session: data.session,
-    });
+    res.json(data);
   } catch (error) {
-    console.error('Sign up error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Signup error:', error);
+    res.status(500).json({ error: error.message });
   }
 };
 
 export const signIn = async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
+    const supabase = getSupabase();
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
+    if (error) throw error;
 
-    res.json({
-      user: data.user,
-      session: data.session,
-    });
+    res.json(data);
   } catch (error) {
-    console.error('Sign in error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Signin error:', error);
+    res.status(500).json({ error: error.message });
   }
 };
 
 export const signOut = async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
-      
-      // Set the token for this request
-      await supabase.auth.signOut();
-    }
+    const supabase = getSupabase();
+    const { error } = await supabase.auth.signOut();
 
-    res.status(200).json({ message: 'Signed out successfully' });
+    if (error) throw error;
+
+    res.json({ message: 'Signed out successfully' });
   } catch (error) {
-    console.error('Sign out error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Signout error:', error);
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -82,6 +62,7 @@ export const getUser = async (req, res) => {
 
     const token = authHeader.substring(7);
     
+    const supabase = getSupabase();
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
     if (error || !user) {
@@ -103,6 +84,7 @@ export const refreshToken = async (req, res) => {
       return res.status(400).json({ error: 'Refresh token is required' });
     }
 
+    const supabase = getSupabase();
     const { data, error } = await supabase.auth.refreshSession({
       refresh_token,
     });

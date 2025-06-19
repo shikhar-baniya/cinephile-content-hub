@@ -7,7 +7,6 @@ export const getMovies = async (req, res) => {
     }
 
     const supabase = getSupabase();
-    
     const { data, error } = await supabase
       .from('movies')
       .select('id, title, genre, category, release_year, platform, rating, status, poster, notes, created_at')
@@ -26,149 +25,86 @@ export const getMovies = async (req, res) => {
       createdAt
     })) || [];
 
-    return res.json(movies);
+    res.json(movies);
   } catch (error) {
     console.error('Movie fetch error:', error);
-    return res.status(500).json({ error: 'Failed to fetch movies' });
+    res.status(500).json({ error: 'Failed to fetch movies' });
   }
 };
 
 export const addMovie = async (req, res) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { title, genre, category, releaseYear, platform, rating, status, poster, notes } = req.body;
-
-    // Validation
-    if (!title || !genre || !category || !releaseYear || !platform || rating === undefined || !status) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
+    const movieData = { ...req.body, user_id: req.user.id };
     const supabase = getSupabase();
+    
     const { data, error } = await supabase
       .from('movies')
-      .insert({
-        user_id: req.user.id,
-        title,
-        genre,
-        category,
-        release_year: releaseYear,
-        platform,
-        rating,
-        status,
-        poster,
-        notes
-      })
+      .insert([movieData])
       .select()
       .single();
 
-    if (error) {
-      if (error.code === '23505') {
-        return res.status(400).json({ error: 'This movie already exists in your collection' });
-      }
-      console.error('Error adding movie:', error);
-      return res.status(500).json({ error: 'Failed to add movie' });
-    }
+    if (error) throw error;
 
-    const movie = {
-      id: data.id,
-      title: data.title,
-      genre: data.genre,
-      category: data.category,
-      releaseYear: data.release_year,
-      platform: data.platform,
-      rating: data.rating,
-      status: data.status,
-      poster: data.poster,
-      notes: data.notes,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
-
-    res.status(201).json(movie);
+    res.status(201).json(data);
   } catch (error) {
     console.error('Add movie error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Failed to add movie' });
   }
 };
 
 export const updateMovie = async (req, res) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const { id } = req.params;
-    const updates = req.body;
-
     const supabase = getSupabase();
+    
     const { data, error } = await supabase
       .from('movies')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString(),
-      })
+      .update(req.body)
       .eq('id', id)
-      .eq('user_id', req.user.id) // Ensure user can only update their own movies
+      .eq('user_id', req.user.id)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating movie:', error);
-      return res.status(500).json({ error: 'Failed to update movie' });
-    }
-
+    if (error) throw error;
     if (!data) {
       return res.status(404).json({ error: 'Movie not found' });
     }
 
-    const movie = {
-      id: data.id,
-      title: data.title,
-      genre: data.genre,
-      category: data.category,
-      releaseYear: data.release_year,
-      platform: data.platform,
-      rating: data.rating,
-      status: data.status,
-      poster: data.poster,
-      notes: data.notes,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
-
-    res.json(movie);
+    res.json(data);
   } catch (error) {
     console.error('Update movie error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Failed to update movie' });
   }
 };
 
 export const deleteMovie = async (req, res) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const { id } = req.params;
-
     const supabase = getSupabase();
+    
     const { error } = await supabase
       .from('movies')
       .delete()
       .eq('id', id)
-      .eq('user_id', req.user.id); // Ensure user can only delete their own movies
+      .eq('user_id', req.user.id);
 
-    if (error) {
-      console.error('Error deleting movie:', error);
-      return res.status(500).json({ error: 'Failed to delete movie' });
-    }
+    if (error) throw error;
 
     res.status(204).send();
   } catch (error) {
     console.error('Delete movie error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Failed to delete movie' });
   }
 };

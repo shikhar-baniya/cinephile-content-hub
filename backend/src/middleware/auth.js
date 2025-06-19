@@ -1,4 +1,4 @@
-import { supabase } from '../config/database.js';
+import { getSupabase } from '../config/database.js';
 
 export const authenticateUser = async (req, res, next) => {
   try {
@@ -9,7 +9,8 @@ export const authenticateUser = async (req, res, next) => {
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    
+
+    const supabase = getSupabase();
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
     if (error || !user) {
@@ -30,6 +31,7 @@ export const optionalAuth = async (req, res, next) => {
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
+      const supabase = getSupabase();
       const { data: { user } } = await supabase.auth.getUser(token);
       req.user = user;
     }
