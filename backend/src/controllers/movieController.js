@@ -40,7 +40,22 @@ export const addMovie = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const movieData = { ...req.body, user_id: req.user.id };
+    // Transform camelCase fields to snake_case for database
+    const {
+      releaseYear,
+      createdAt,
+      updatedAt,
+      ...otherFields
+    } = req.body;
+
+    const movieData = {
+      ...otherFields,
+      user_id: req.user.id,
+      release_year: releaseYear,
+      created_at: createdAt,
+      updated_at: updatedAt
+    };
+
     const supabase = getSupabase();
     
     const { data, error } = await supabase
@@ -51,7 +66,20 @@ export const addMovie = async (req, res) => {
 
     if (error) throw error;
 
-    res.status(201).json(data);
+    // Transform snake_case fields back to camelCase for response
+    const responseData = {
+      ...data,
+      releaseYear: data.release_year,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+
+    // Remove snake_case fields from response
+    delete responseData.release_year;
+    delete responseData.created_at;
+    delete responseData.updated_at;
+
+    res.status(201).json(responseData);
   } catch (error) {
     console.error('Add movie error:', error);
     res.status(500).json({ error: 'Failed to add movie' });
@@ -65,11 +93,27 @@ export const updateMovie = async (req, res) => {
     }
 
     const { id } = req.params;
+    
+    // Transform camelCase fields to snake_case for database
+    const {
+      releaseYear,
+      createdAt,
+      updatedAt,
+      ...otherFields
+    } = req.body;
+
+    const updateData = {
+      ...otherFields,
+      ...(releaseYear !== undefined && { release_year: releaseYear }),
+      ...(createdAt !== undefined && { created_at: createdAt }),
+      ...(updatedAt !== undefined && { updated_at: updatedAt })
+    };
+
     const supabase = getSupabase();
     
     const { data, error } = await supabase
       .from('movies')
-      .update(req.body)
+      .update(updateData)
       .eq('id', id)
       .eq('user_id', req.user.id)
       .select()
@@ -80,7 +124,20 @@ export const updateMovie = async (req, res) => {
       return res.status(404).json({ error: 'Movie not found' });
     }
 
-    res.json(data);
+    // Transform snake_case fields back to camelCase for response
+    const responseData = {
+      ...data,
+      releaseYear: data.release_year,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+
+    // Remove snake_case fields from response
+    delete responseData.release_year;
+    delete responseData.created_at;
+    delete responseData.updated_at;
+
+    res.json(responseData);
   } catch (error) {
     console.error('Update movie error:', error);
     res.status(500).json({ error: 'Failed to update movie' });

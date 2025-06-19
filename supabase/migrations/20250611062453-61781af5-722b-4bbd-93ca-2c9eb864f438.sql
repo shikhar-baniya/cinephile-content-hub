@@ -8,7 +8,7 @@ CREATE TABLE public.movies (
   category TEXT NOT NULL CHECK (category IN ('Movie', 'Series', 'Short-Film')),
   release_year INTEGER NOT NULL,
   platform TEXT NOT NULL,
-  rating INTEGER NOT NULL CHECK (rating >= 0 AND rating <= 10),
+  rating DECIMAL(3,1) NOT NULL CHECK (rating >= 0 AND rating <= 10),
   status TEXT NOT NULL CHECK (status IN ('watched', 'watching', 'want-to-watch')),
   poster TEXT,
   notes TEXT,
