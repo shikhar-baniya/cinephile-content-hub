@@ -41,6 +41,6 @@ export class ErrorHandler {
 
   private static handleUnknownError(error: unknown): void {
     toast.error('An unexpected error occurred. Please try again later.');
-    console.error('Unknown error:', error);
+    // Unknown error handled silently
   }
 } 

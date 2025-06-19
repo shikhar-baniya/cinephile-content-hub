@@ -54,9 +54,9 @@ class ErrorLogger {
   private static async sendToErrorService(error: AppError) {
     try {
       // Replace with your error tracking service (Sentry, LogRocket, etc.)
-      console.log('Would send to error service:', error);
+      // Error would be sent to tracking service
     } catch (e) {
-      console.error('Failed to send error to tracking service:', e);
+      // Failed to send error to tracking service - handled silently
     }
   }
 }

@@ -22,13 +22,11 @@ export class OfflineManager {
   }
 
   private static handleOnline() {
-    console.log('App is online');
     useDataStore.getState().setOfflineStatus(false);
     this.syncPendingOperations();
   }
 
   private static handleOffline() {
-    console.log('App is offline');
     useDataStore.getState().setOfflineStatus(true);
   }
 
@@ -41,16 +39,13 @@ export class OfflineManager {
     
     if (pendingOperations.length === 0) return;
     
-    console.log(`Syncing ${pendingOperations.length} pending operations...`);
-    
     for (const operation of pendingOperations) {
       try {
         await this.executePendingOperation(operation);
         removePendingOperation(operation.id);
-        console.log(`Synced operation: ${operation.type}`);
+        // Operation synced successfully
       } catch (error) {
-        console.error(`Failed to sync operation ${operation.id}:`, error);
-        // Keep operation in queue for next sync attempt
+        // Failed to sync operation - keep in queue for next sync attempt
       }
     }
   }
@@ -82,7 +77,7 @@ export class OfflineManager {
     if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
-        console.log('Service Worker registered:', registration);
+        // Service Worker registered successfully
         
         // Listen for updates
         registration.addEventListener('updatefound', () => {
@@ -97,7 +92,7 @@ export class OfflineManager {
           }
         });
       } catch (error) {
-        console.error('Service Worker registration failed:', error);
+        // Service Worker registration failed - handled silently
       }
     }
   }

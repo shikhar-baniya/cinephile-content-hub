@@ -31,10 +31,16 @@ const HeroCarousel = ({ movies, onMovieClick }: HeroCarouselProps) => {
   useEffect(() => {
     if (featuredMovies.length === 0) {
       setCurrentIndex(0);
-    } else if (currentIndex >= featuredMovies.length) {
-      setCurrentIndex(0);
+    } else {
+      // Use a function to get the current value without adding it to dependencies
+      setCurrentIndex(prevIndex => {
+        if (prevIndex >= featuredMovies.length) {
+          return 0;
+        }
+        return prevIndex;
+      });
     }
-  }, [featuredMovies.length, currentIndex]);
+  }, [featuredMovies.length]);
 
   useEffect(() => {
     // Don't start auto-play if there are no featured movies
@@ -74,7 +80,6 @@ const HeroCarousel = ({ movies, onMovieClick }: HeroCarouselProps) => {
 
   // Additional safety check for currentMovie
   if (!currentMovie || !currentMovie.id || !currentMovie.title) {
-    console.warn('HeroCarousel: Invalid currentMovie', { currentMovie, featuredMovies, currentIndex, safeCurrentIndex });
     return null;
   }
 

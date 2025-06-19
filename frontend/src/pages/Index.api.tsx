@@ -52,13 +52,13 @@ const Index = () => {
     checkSession();
 
     // Listen for auth changes
-    const unsubscribe = authService.onAuthStateChange((user) => {
-      setUser(user);
+    const unsubscribe = authService.onAuthStateChange((newUser) => {
+      setUser(newUser);
       setLoading(false);
     });
 
     return unsubscribe;
-  }, []);
+  }, []); // Empty dependency array to run only once
 
   // Fetch movies data
   const { data: movies = [], isLoading: moviesLoading, refetch } = useQuery({

@@ -90,7 +90,6 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
         onUpdate();
       }
     } catch (error: any) {
-      console.error('Error updating movie status:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to update movie status. Please try again.",
@@ -123,7 +122,6 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
       }
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error deleting movie:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to delete movie. Please try again.",
