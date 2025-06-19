@@ -3,11 +3,10 @@
   "version": "1.0.0",
   "description": "Backend API for BingeBook",
   "main": "src/index.js",
-  "type": "module",
-  "scripts": {
+  "type": "module",  "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "build": "echo \"No build step required\""
+    "build": "if not exist dist mkdir dist && xcopy /E /I src dist\\src && copy package.json dist\\"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",
