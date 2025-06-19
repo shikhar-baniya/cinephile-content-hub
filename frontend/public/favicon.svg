@@ -1,0 +1,31 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient matching BingeBook theme -->
+  <defs>
+    <linearGradient id="bingeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="url(#bingeGrad)"/>
+  
+  <!-- Film icon matching the one used in BingeBook header -->
+  <g transform="translate(4, 4)">
+    <!-- Main film strip -->
+    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" fill="none" stroke="white" stroke-width="1.5"/>
+    
+    <!-- Left side film holes -->
+    <circle cx="6" cy="6" r="1" fill="white"/>
+    <circle cx="6" cy="10" r="1" fill="white"/>
+    <circle cx="6" cy="14" r="1" fill="white"/>
+    
+    <!-- Right side film holes -->
+    <circle cx="18" cy="6" r="1" fill="white"/>
+    <circle cx="18" cy="10" r="1" fill="white"/>
+    <circle cx="18" cy="14" r="1" fill="white"/>
+    
+    <!-- Center viewing area -->
+    <rect x="9" y="6.5" width="6" height="7" rx="1" fill="white" opacity="0.8"/>
+  </g>
+</svg>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with app theme gradient -->
+  <defs>
+    <linearGradient id="appGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#appGradient)"/>
+  
+  <!-- Film reel icon - scaled up version of Lucide's Film icon -->
+  <g transform="translate(64, 64)">
+    <!-- Main film strip -->
+    <rect x="32" y="48" width="320" height="224" rx="32" ry="32" fill="none" stroke="white" stroke-width="24"/>
+    
+    <!-- Left side holes -->
+    <circle cx="96" cy="96" r="20" fill="white"/>
+    <circle cx="96" cy="160" r="20" fill="white"/>
+    <circle cx="96" cy="224" r="20" fill="white"/>
+    
+    <!-- Right side holes -->
+    <circle cx="288" cy="96" r="20" fill="white"/>
+    <circle cx="288" cy="160" r="20" fill="white"/>
+    <circle cx="288" cy="224" r="20" fill="white"/>
+    
+    <!-- Center screen area -->
+    <rect x="144" y="96" width="96" height="128" rx="16" fill="white" opacity="0.95"/>
+    
+    <!-- Film perforations detail -->
+    <rect x="64" y="80" width="16" height="8" rx="4" fill="url(#appGradient)"/>
+    <rect x="64" y="144" width="16" height="8" rx="4" fill="url(#appGradient)"/>
+    <rect x="64" y="208" width="16" height="8" rx="4" fill="url(#appGradient)"/>
+    <rect x="64" y="232" width="16" height="8" rx="4" fill="url(#appGradient)"/>
+    
+    <rect x="304" y="80" width="16" height="8" rx="4" fill="url(#appGradient)"/>
+    <rect x="304" y="144" width="16" height="8" rx="4" fill="url(#appGradient)"/>
+    <rect x="304" y="208" width="16" height="8" rx="4" fill="url(#appGradient)"/>
+    <rect x="304" y="232" width="16" height="8" rx="4" fill="url(#appGradient)"/>
+  </g>
+</svg>
