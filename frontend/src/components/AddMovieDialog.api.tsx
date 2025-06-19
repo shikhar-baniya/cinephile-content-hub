@@ -27,6 +27,11 @@ interface AddMovieDialogProps {
 
 const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps) => {
   const { toast } = useToast();
+  const genres = [
+    "Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary",
+    "Drama", "Family", "Fantasy", "Horror", "Mystery", "Romance",
+    "Sci-Fi", "Thriller", "War", "Western"
+  ];
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -113,6 +118,8 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
         status: formData.status,
         poster: formData.poster,
         notes: formData.notes.trim() || undefined,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       await movieService.addMovie(movieData);
@@ -149,7 +156,11 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="search">Search Movies/Series</Label>
-            <MovieSearchInput onMovieSelect={handleMovieSelect} />
+            <MovieSearchInput 
+              value={formData.title}
+              onChange={val => setFormData(prev => ({ ...prev, title: val }))}
+              onMovieSelect={handleMovieSelect}
+            />
           </div>
 
           <div className="space-y-2">
@@ -168,6 +179,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
             <MultiSelectGenre 
               selectedGenres={formData.genre}
               onGenreChange={handleGenreChange}
+              availableGenres={genres}
             />
           </div>
 
