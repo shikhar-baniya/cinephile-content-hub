@@ -16,6 +16,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Add timeout middleware
+const timeout = (req, res, next) => {
+  // Set 9.5s timeout (Vercel limit is 10s)
+  req.setTimeout(9500, () => {
+    res.status(408).json({ error: 'Request timeout' });
+  });
+  next();
+};
+
 // Security middleware
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
@@ -28,6 +37,9 @@ app.use(helmet({
     },
   },
 }));
+
+// Apply timeout middleware first
+app.use(timeout);
 
 // Rate limiting
 const limiter = rateLimit({

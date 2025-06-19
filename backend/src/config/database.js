@@ -16,6 +16,15 @@ export const supabase = createClient(
       persistSession: false,
       autoRefreshToken: false,
     },
+    db: {
+      schema: 'public',
+    },
+    global: {
+      headers: { 'x-my-custom-header': 'my-app-name' },
+    },
+    realtime: {
+      timeout: 8000, // 8 second timeout
+    },
   }
 );
 
@@ -27,6 +36,15 @@ export const supabaseAdmin = createClient(
     auth: {
       persistSession: false,
       autoRefreshToken: false,
+    },
+    db: {
+      schema: 'public',
+    },
+    global: {
+      headers: { 'x-my-custom-header': 'my-app-name' },
+    },
+    realtime: {
+      timeout: 8000, // 8 second timeout
     },
   }
 );
