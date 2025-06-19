@@ -1,17 +1,19 @@
-import { supabase } from '../config/database.js';
+import { getSupabase } from '../config/database.js';
 
 export const getMovies = async (req, res) => {
   try {
-    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
-    const query = supabase
+    const supabase = getSupabase();
+    
+    const { data, error } = await supabase
       .from('movies')
       .select('id, title, genre, category, release_year, platform, rating, status, poster, notes, created_at')
       .eq('user_id', req.user.id)
       .order('created_at', { ascending: false });
 
-    const { data, error } = await query;
-    
     if (error) throw error;
 
     const movies = data?.map(({
@@ -24,10 +26,10 @@ export const getMovies = async (req, res) => {
       createdAt
     })) || [];
 
-    res.json(movies);
+    return res.json(movies);
   } catch (error) {
     console.error('Movie fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch movies' });
+    return res.status(500).json({ error: 'Failed to fetch movies' });
   }
 };
 
@@ -44,6 +46,7 @@ export const addMovie = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('movies')
       .insert({
@@ -100,6 +103,7 @@ export const updateMovie = async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('movies')
       .update({
@@ -150,6 +154,7 @@ export const deleteMovie = async (req, res) => {
 
     const { id } = req.params;
 
+    const supabase = getSupabase();
     const { error } = await supabase
       .from('movies')
       .delete()

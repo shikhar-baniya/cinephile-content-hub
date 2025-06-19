@@ -3,31 +3,43 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+let supabase = null;
+let supabaseAdmin = null;
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error('Missing Supabase environment variables');
-}
+const initializeClients = () => {
+  if (supabase && supabaseAdmin) return;
 
-const options = {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-    detectSessionInUrl: false,
-  },
-  db: {
-    schema: 'public',
-  },
+  const options = {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+    global: {
+      headers: { 'x-client-info': '@vercel/node' },
+    },
+  };
+
+  supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY,
+    options
+  );
+
+  supabaseAdmin = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY,
+    options
+  );
 };
 
-// Client for user operations (with RLS)
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, options);
+// Lazy initialization of clients
+export const getSupabase = () => {
+  initializeClients();
+  return supabase;
+};
 
-// Service client for admin operations (bypasses RLS)
-export const supabaseAdmin = createClient(
-  SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY,
-  options
-);
+export const getSupabaseAdmin = () => {
+  initializeClients();
+  return supabaseAdmin;
+};
