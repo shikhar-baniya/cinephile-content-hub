@@ -16,12 +16,18 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Add timeout middleware
+// Timeout middleware for serverless environment
 const timeout = (req, res, next) => {
-  // Set 9.5s timeout (Vercel limit is 10s)
-  req.setTimeout(9500, () => {
-    res.status(408).json({ error: 'Request timeout' });
+  const timeoutDuration = 9500; // 9.5 seconds
+  const timeoutId = setTimeout(() => {
+    res.status(504).json({ error: 'Request timeout' });
+  }, timeoutDuration);
+
+  // Clear timeout when response is sent
+  res.on('finish', () => {
+    clearTimeout(timeoutId);
   });
+
   next();
 };
 
@@ -38,8 +44,12 @@ app.use(helmet({
   },
 }));
 
-// Apply timeout middleware first
+// Apply middleware
 app.use(timeout);
+app.use(cors());
+app.use(compression());
+app.use(express.json({ limit: '10mb' }));
+app.use(morgan('dev'));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -49,38 +59,8 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// CORS configuration
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : ['http://localhost:5173', 'http://localhost:3000'];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
-// Middleware
-app.use(compression());
-app.use(morgan('combined'));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-console.log("App starting...");
-
 // Health check endpoint
 app.get('/health', (req, res) => {
-  console.log("Health check hit");
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
