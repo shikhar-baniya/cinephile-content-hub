@@ -44,8 +44,12 @@ const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
         await signIn(email, password);
       } else {
         await signUp(email, password);
-        setMessage("Account created successfully! Please sign in.");
-        setIsLogin(true);
+        setMessage("Account created successfully! Please check your email to confirm your account.");
+        setShowConfirmationMessage(true);
+        setTimeout(() => {
+          setIsLogin(true);
+          setShowConfirmationMessage(false);
+        }, 3000); // Redirect to sign-in after 3 seconds
       }
     } catch (error: any) {
       setMessage(error.message);
@@ -77,6 +81,7 @@ const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
                 placeholder="Enter your email"
                 required
                 className="bg-background/50 border-border/60"
+                disabled={isLoading || showConfirmationMessage}
               />
             </div>
             
@@ -90,14 +95,21 @@ const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
                 placeholder="Enter your password"
                 required
                 className="bg-background/50 border-border/60"
+                disabled={isLoading || showConfirmationMessage}
               />
             </div>
 
-            <Button type="submit" disabled={isLoading} className="w-full">
+            <Button type="submit" disabled={isLoading || showConfirmationMessage} className="w-full">
               {isLoading ? "Loading..." : (isLogin ? "Sign In" : "Sign Up")}
             </Button>
 
-            {message && (
+            {showConfirmationMessage && (
+              <p className="text-sm text-center text-green-400">
+                Please check your email to confirm your account. You will be redirected to sign in.
+              </p>
+            )}
+
+            {message && !showConfirmationMessage && (
               <p className={`text-sm text-center ${
                 message.includes("successfully") ? "text-green-400" : "text-red-400"
               }`}>
@@ -111,6 +123,7 @@ const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
                 variant="link"
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-primary"
+                disabled={isLoading || showConfirmationMessage}
               >
                 {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
               </Button>
