@@ -6,11 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Film } from "lucide-react";
 
-interface AuthComponentProps {
-  onAuthChange: (user: any) => void;
-}
-
-const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
+const AuthComponent = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,10 +14,6 @@ const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
   const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
   
   const { signIn, signUp, user, isLoading, error, requiresEmailConfirmation, resendConfirmation } = useAuth();
-
-  useEffect(() => {
-    onAuthChange(user);
-  }, [user, onAuthChange]);
 
   useEffect(() => {
     if (error) {

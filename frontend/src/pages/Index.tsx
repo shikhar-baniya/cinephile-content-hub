@@ -153,7 +153,7 @@ const Index = () => {
 
   // Show auth component if not authenticated
   if (!user) {
-    return <AuthComponent onAuthChange={setUser} />;
+    return <AuthComponent />;
   }
 
   const renderContent = () => {
