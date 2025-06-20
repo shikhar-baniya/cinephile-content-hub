@@ -153,3 +153,63 @@ export const resendConfirmation = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Google OAuth - Initiate authentication
+export const initiateGoogleAuth = async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const { origin } = req.body;
+    
+    // Use the provided origin or fallback to production domain
+    const redirectOrigin = origin || 'https://thebingebook.netlify.app';
+    
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${redirectOrigin}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        }
+      }
+    });
+
+    if (error) throw error;
+
+    res.json({ 
+      url: data.url,
+      message: 'Redirect to Google OAuth' 
+    });
+  } catch (error) {
+    console.error('Google auth initiation error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Google OAuth - Handle callback
+export const handleGoogleCallback = async (req, res) => {
+  try {
+    const { code } = req.query;
+    
+    if (!code) {
+      return res.status(400).json({ error: 'Authorization code is required' });
+    }
+
+    const supabase = getSupabase();
+    
+    // Exchange the code for a session
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error) throw error;
+
+    // Return the session data
+    res.json({
+      user: data.user,
+      session: data.session,
+      message: 'Google authentication successful'
+    });
+  } catch (error) {
+    console.error('Google callback error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};

@@ -80,6 +80,17 @@ class ApiClient {
     });
   }
 
+  async initiateGoogleAuth(origin: string) {
+    return this.request('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ origin }),
+    });
+  }
+
+  async handleGoogleCallback(code: string) {
+    return this.request(`/auth/google/callback?code=${encodeURIComponent(code)}`);
+  }
+
   // Movie methods
   async getMovies(): Promise<Movie[]> {
     return this.request<Movie[]>('/movies');

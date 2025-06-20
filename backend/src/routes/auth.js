@@ -1,5 +1,14 @@
 import express from 'express';
-import { signUp, signIn, signOut, getUser, refreshToken, resendConfirmation } from '../controllers/authController.js';
+import { 
+  signUp, 
+  signIn, 
+  signOut, 
+  getUser, 
+  refreshToken, 
+  resendConfirmation,
+  initiateGoogleAuth,
+  handleGoogleCallback
+} from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -20,5 +29,12 @@ router.post('/refresh', refreshToken);
 
 // POST /api/auth/resend-confirmation - Resend email confirmation
 router.post('/resend-confirmation', resendConfirmation);
+
+// Google OAuth routes
+// POST /api/auth/google - Initiate Google OAuth flow
+router.post('/google', initiateGoogleAuth);
+
+// GET /api/auth/google/callback - Handle Google OAuth callback
+router.get('/google/callback', handleGoogleCallback);
 
 export default router;

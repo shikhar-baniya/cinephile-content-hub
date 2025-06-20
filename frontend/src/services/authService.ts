@@ -125,6 +125,34 @@ class AuthService {
     }
   }
 
+  async signInWithGoogle(): Promise<{ url: string }> {
+    try {
+      const origin = window.location.origin;
+      const response = await apiClient.initiateGoogleAuth(origin);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async handleGoogleCallback(code: string): Promise<AuthResponse> {
+    try {
+      const response = await apiClient.handleGoogleCallback(code);
+      
+      if (response.session) {
+        this.currentSession = response.session;
+        this.currentUser = response.user;
+        this.saveToStorage(response.session);
+        apiClient.setToken(response.session.access_token);
+        this.notifyAuthChange(response.user);
+      }
+      
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getUser(): Promise<User | null> {
     if (!this.currentSession) {
       return null;

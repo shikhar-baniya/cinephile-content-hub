@@ -16,6 +16,7 @@ interface AuthState {
   requiresEmailConfirmation: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
@@ -101,6 +102,33 @@ export const useAuth = create<AuthState>()(
           });
           // Clear persisted auth state
           localStorage.removeItem('auth-storage');
+        } catch (error: any) {
+          set({ error: error.message, isLoading: false });
+          throw error;
+        }
+      },
+
+      signInWithGoogle: async () => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          const response = await fetch(`${config.api.baseUrl}/auth/google`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ origin: window.location.origin }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            set({ error: data.error || 'Google authentication failed', isLoading: false });
+            throw new Error(data.error || 'Google authentication failed');
+          }
+
+          // Redirect to Google OAuth URL
+          window.location.href = data.url;
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
           throw error;
