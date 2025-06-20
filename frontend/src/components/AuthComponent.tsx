@@ -24,6 +24,13 @@ const AuthComponent = () => {
   useEffect(() => {
     if (requiresEmailConfirmation) {
       setShowConfirmationMessage(true);
+      setMessage("Account created successfully! Please check your email to confirm your account.");
+      // Redirect to sign-in after 3 seconds
+      setTimeout(() => {
+        setIsLogin(true);
+        setShowConfirmationMessage(false);
+        setMessage("");
+      }, 3000);
     }
   }, [requiresEmailConfirmation]);
 
@@ -62,65 +69,49 @@ const AuthComponent = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-                className="bg-background/50 border-border/60"
-                disabled={isLoading || showConfirmationMessage}
-              />
+          {showConfirmationMessage ? (
+            <div className="text-center text-green-500 font-semibold py-4">
+              {message}
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-                className="bg-background/50 border-border/60"
-                disabled={isLoading || showConfirmationMessage}
-              />
-            </div>
-
-            <Button type="submit" disabled={isLoading || showConfirmationMessage} className="w-full">
-              {isLoading ? "Loading..." : (isLogin ? "Sign In" : "Sign Up")}
-            </Button>
-
-            {showConfirmationMessage && (
-              <p className="text-sm text-center text-green-400">
-                Please check your email to confirm your account. You will be redirected to sign in.
-              </p>
-            )}
-
-            {message && !showConfirmationMessage && (
-              <p className={`text-sm text-center ${
-                message.includes("successfully") ? "text-green-400" : "text-red-400"
-              }`}>
-                {message}
-              </p>
-            )}
-
-            <div className="text-center">
-              <Button
-                type="button"
-                variant="link"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-primary"
-                disabled={isLoading || showConfirmationMessage}
-              >
-                {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
+          ) : (
+            <form onSubmit={handleAuth} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  className="bg-background/50 border-border/60"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  className="bg-background/50 border-border/60"
+                />
+              </div>
+              {message && (
+                <div className="text-center text-red-500 font-semibold py-2">{message}</div>
+              )}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
               </Button>
-            </div>
-          </form>
+              <div className="text-center mt-2">
+                <Button type="button" variant="link" onClick={() => setIsLogin(!isLogin)}>
+                  {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+                </Button>
+              </div>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>
