@@ -110,31 +110,21 @@ export const useAuth = create<AuthState>()(
       signOut: async () => {
         try {
           set({ isLoading: true, error: null });
-          
-          const response = await fetch(`${config.api.baseUrl}/auth/logout`, {
+          // Call backend logout
+          await fetch(`${config.api.baseUrl}/auth/logout`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
           });
-
-          if (!response.ok) {
-            // Logout request failed, but clearing local state
+          // Clear all local/session storage and caches
+          localStorage.clear();
+          sessionStorage.clear();
+          if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
           }
-
-          set({
-            user: null,
-            session: null,
-            isLoading: false,
-          });
+          set({ user: null, session: null, isLoading: false });
         } catch (error: any) {
-          // Even if logout fails on server, clear local state
-          set({ 
-            user: null,
-            session: null,
-            error: error.message, 
-            isLoading: false 
-          });
+          set({ user: null, session: null, error: error.message, isLoading: false });
         }
       },
 
