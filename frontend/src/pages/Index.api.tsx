@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import MovieGrid from "@/components/MovieGrid";
@@ -24,7 +24,6 @@ const Index = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("home");
-  const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -67,50 +66,37 @@ const Index = () => {
     enabled: !!user, // Only fetch when user is authenticated
   });
 
-  // Filter movies based on search and tab
-  useEffect(() => {
+  // Filter movies based on search and tab (useMemo instead of useEffect)
+  const filteredMovies = useMemo(() => {
     if (!movies || !Array.isArray(movies)) {
-      setFilteredMovies([]);
-      return;
+      return [];
     }
-
-    // Filter out any invalid/undefined movies first
     let filtered = movies.filter(movie => 
-      movie && 
-      typeof movie === 'object' && 
-      movie.id && 
+      movie &&
+      typeof movie === 'object' &&
+      movie.id &&
       movie.title
     );
-
-    // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter(movie => 
         movie?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         movie?.genre?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    // Apply genre filter for home page
     if (activeTab === "home" && selectedGenre !== "All") {
       filtered = filtered.filter(movie => 
         movie?.genre?.toLowerCase().includes(selectedGenre.toLowerCase())
       );
     }
-
-    // Apply filter bar filters
     if (statusFilter !== "all") {
       filtered = filtered.filter(movie => movie?.status === statusFilter);
     }
-    
     if (genreFilter !== "all") {
       filtered = filtered.filter(movie => movie?.genre === genreFilter);
     }
-    
     if (platformFilter !== "all") {
       filtered = filtered.filter(movie => movie?.platform === platformFilter);
     }
-
-    // Apply tab filter
     switch (activeTab) {
       case "movies":
         filtered = filtered.filter(movie => movie?.category === "Movie");
@@ -119,14 +105,11 @@ const Index = () => {
         filtered = filtered.filter(movie => movie?.category === "Series");
         break;
       case "analytics":
-        // Keep all for analytics view
         break;
-      default: // home
-        // Keep all for home view
+      default:
         break;
     }
-
-    setFilteredMovies(filtered);
+    return filtered;
   }, [movies, searchQuery, activeTab, statusFilter, genreFilter, platformFilter, selectedGenre]);
 
   const handleAddMovie = async () => {

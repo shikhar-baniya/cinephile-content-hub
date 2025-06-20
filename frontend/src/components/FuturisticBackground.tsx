@@ -165,18 +165,21 @@ const FuturisticBackground = () => {
           </linearGradient>
         </defs>
         {Array.from({ length: 8 }).map((_, i) => {
-          // Generate consistent random values to avoid re-renders
-          const x1 = (i * 13 + 17) % 100;
-          const y1 = (i * 23 + 31) % 100;
-          const x2 = (i * 37 + 41) % 100;
-          const y2 = (i * 43 + 47) % 100;
-          const x3 = (i * 53 + 59) % 100;
-          const y3 = (i * 61 + 67) % 100;
+          // SVG viewBox size
+          const width = 1000;
+          const height = 1000;
+          // Convert percent to px
+          const x1 = ((i * 13 + 17) % 100) * width / 100;
+          const y1 = ((i * 23 + 31) % 100) * height / 100;
+          const x2 = ((i * 37 + 41) % 100) * width / 100;
+          const y2 = ((i * 43 + 47) % 100) * height / 100;
+          const x3 = ((i * 53 + 59) % 100) * width / 100;
+          const y3 = ((i * 61 + 67) % 100) * height / 100;
           
           return (
             <g key={`path-${i}`}>
               <path
-                d={`M${x1}% ${y1}% Q${x2}% ${y2}% ${x3}% ${y3}%`}
+                d={`M${x1} ${y1} Q${x2} ${y2} ${x3} ${y3}`}
                 stroke="url(#lineGradient)"
                 strokeWidth="1"
                 fill="none"
