@@ -99,6 +99,8 @@ export const useAuth = create<AuthState>()(
             requiresEmailConfirmation: true,
             error: null,
           });
+          // Clear persisted auth state
+          localStorage.removeItem('auth-storage');
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
           throw error;

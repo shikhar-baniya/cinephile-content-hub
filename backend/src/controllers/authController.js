@@ -5,10 +5,9 @@ export const signUp = async (req, res) => {
     const { email, password } = req.body;
     const supabase = getSupabase();
 
-    // Get the origin from the request or use a default
-    const isProduction = process.env.NODE_ENV === 'production';
+    // Always use Netlify domain for redirect
     const netlifyDomain = 'https://thebingebook.netlify.app';
-    const origin = isProduction ? netlifyDomain : (req.headers.origin || req.headers.referer || netlifyDomain);
+    const origin = netlifyDomain;
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -135,9 +134,8 @@ export const resendConfirmation = async (req, res) => {
     }
 
     const supabase = getSupabase();
-    const isProduction = process.env.NODE_ENV === 'production';
     const netlifyDomain = 'https://thebingebook.netlify.app';
-    const origin = isProduction ? netlifyDomain : (req.headers.origin || req.headers.referer || netlifyDomain);
+    const origin = netlifyDomain;
     
     const { error } = await supabase.auth.resend({
       type: 'signup',
