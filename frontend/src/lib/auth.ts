@@ -13,11 +13,13 @@ interface AuthState {
   session: any | null;
   isLoading: boolean;
   error: string | null;
+  requiresEmailConfirmation: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  resendConfirmation: (email: string) => Promise<void>;
 }
 
 export const useAuth = create<AuthState>()(
@@ -27,12 +29,13 @@ export const useAuth = create<AuthState>()(
       session: null,
       isLoading: false,
       error: null,
+      requiresEmailConfirmation: false,
 
       signIn: async (email: string, password: string) => {
         try {
-          set({ isLoading: true, error: null });
+          set({ isLoading: true, error: null, requiresEmailConfirmation: false });
           
-          const response = await fetch(`${config.api.baseUrl}/auth/login`, {
+          const response = await fetch(`${config.api.baseUrl}/auth/signin`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -40,29 +43,40 @@ export const useAuth = create<AuthState>()(
             body: JSON.stringify({ email, password }),
           });
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Login failed');
-          }
-
           const data = await response.json();
+
+          if (!response.ok) {
+            if (data.requiresEmailConfirmation) {
+              set({ 
+                error: data.error, 
+                isLoading: false, 
+                requiresEmailConfirmation: true 
+              });
+            } else {
+              set({ error: data.error || 'Login failed', isLoading: false });
+            }
+            throw new Error(data.error || 'Login failed');
+          }
           
           set({
             user: data.user,
             session: data.session,
             isLoading: false,
+            requiresEmailConfirmation: false,
           });
         } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+          if (!error.message.includes('email')) {
+            set({ error: error.message, isLoading: false });
+          }
           throw error;
         }
       },
 
       signUp: async (email: string, password: string) => {
         try {
-          set({ isLoading: true, error: null });
+          set({ isLoading: true, error: null, requiresEmailConfirmation: false });
           
-          const response = await fetch(`${config.api.baseUrl}/auth/register`, {
+          const response = await fetch(`${config.api.baseUrl}/auth/signup`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -70,17 +84,20 @@ export const useAuth = create<AuthState>()(
             body: JSON.stringify({ email, password }),
           });
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Registration failed');
-          }
-
           const data = await response.json();
+
+          if (!response.ok) {
+            set({ error: data.error || 'Registration failed', isLoading: false });
+            throw new Error(data.error || 'Registration failed');
+          }
           
+          // For signup, don't set user/session - user needs to confirm email first
           set({
-            user: data.user,
-            session: data.session,
+            user: null,
+            session: null,
             isLoading: false,
+            requiresEmailConfirmation: true,
+            error: null,
           });
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
@@ -166,6 +183,32 @@ export const useAuth = create<AuthState>()(
             user: state.user ? { ...state.user, ...updatedUser } : null,
             isLoading: false,
           }));
+        } catch (error: any) {
+          set({ error: error.message, isLoading: false });
+          throw error;
+        }
+      },
+
+      resendConfirmation: async (email: string) => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          const response = await fetch(`${config.api.baseUrl}/auth/resend-confirmation`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            set({ error: data.error || 'Failed to resend confirmation', isLoading: false });
+            throw new Error(data.error || 'Failed to resend confirmation');
+          }
+
+          set({ isLoading: false, error: null });
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
           throw error;

@@ -5,14 +5,25 @@ export const signUp = async (req, res) => {
     const { email, password } = req.body;
     const supabase = getSupabase();
 
+    // Get the origin from the request or use a default
+    const origin = req.headers.origin || req.headers.referer || 'https://thebingebook.netlify.app';
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${origin}/email-confirmation`,
+      }
     });
 
     if (error) throw error;
 
-    res.json(data);
+    // Don't return session data for unconfirmed users
+    res.json({
+      user: data.user,
+      session: null, // Force null session until email is confirmed
+      message: 'Please check your email and click the confirmation link to complete your registration.'
+    });
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).json({ error: error.message });
@@ -30,6 +41,16 @@ export const signIn = async (req, res) => {
     });
 
     if (error) throw error;
+
+    // Check if email is confirmed
+    if (data.user && !data.user.email_confirmed_at) {
+      // Sign out the unconfirmed user
+      await supabase.auth.signOut();
+      return res.status(400).json({ 
+        error: 'Please confirm your email address before signing in. Check your inbox for the confirmation link.',
+        requiresEmailConfirmation: true
+      });
+    }
 
     res.json(data);
   } catch (error) {
@@ -100,5 +121,33 @@ export const refreshToken = async (req, res) => {
   } catch (error) {
     console.error('Refresh token error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const resendConfirmation = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const supabase = getSupabase();
+    const origin = req.headers.origin || req.headers.referer || 'https://thebingebook.netlify.app';
+    
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+      options: {
+        emailRedirectTo: `${origin}/email-confirmation`,
+      }
+    });
+
+    if (error) throw error;
+
+    res.json({ message: 'Confirmation email sent! Please check your inbox.' });
+  } catch (error) {
+    console.error('Resend confirmation error:', error);
+    res.status(500).json({ error: error.message });
   }
 };

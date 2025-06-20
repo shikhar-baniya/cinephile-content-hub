@@ -15,8 +15,9 @@ const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
   
-  const { signIn, signUp, user, isLoading, error } = useAuth();
+  const { signIn, signUp, user, isLoading, error, requiresEmailConfirmation, resendConfirmation } = useAuth();
 
   useEffect(() => {
     onAuthChange(user);
@@ -27,6 +28,12 @@ const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
       setMessage(error);
     }
   }, [error]);
+
+  useEffect(() => {
+    if (requiresEmailConfirmation) {
+      setShowConfirmationMessage(true);
+    }
+  }, [requiresEmailConfirmation]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();

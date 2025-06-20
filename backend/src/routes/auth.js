@@ -1,5 +1,5 @@
 import express from 'express';
-import { signUp, signIn, signOut, getUser, refreshToken } from '../controllers/authController.js';
+import { signUp, signIn, signOut, getUser, refreshToken, resendConfirmation } from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -17,5 +17,8 @@ router.get('/user', getUser);
 
 // POST /api/auth/refresh - Refresh access token
 router.post('/refresh', refreshToken);
+
+// POST /api/auth/resend-confirmation - Resend email confirmation
+router.post('/resend-confirmation', resendConfirmation);
 
 export default router;
