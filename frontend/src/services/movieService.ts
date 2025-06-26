@@ -100,3 +100,17 @@ export const formatTVData = (show: TMDbTVShow) => ({
   rating: Math.round(show.vote_average),
   notes: show.overview
 });
+
+/**
+ * Fetch TV show details from TMDB, including seasons list.
+ * @param tvId TMDB TV show ID
+ */
+export const fetchTVShowDetails = async (tvId: number) => {
+  try {
+    const data = await apiClient.fetch<any>(`/tv/${tvId}`);
+    return data; // includes 'seasons' array
+  } catch (error) {
+    ErrorHandler.handle(error);
+    return null;
+  }
+};

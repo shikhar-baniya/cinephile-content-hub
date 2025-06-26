@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Search } from "lucide-react";
-import { searchMoviesAndShows, formatMovieData, formatTVData } from "@/services/movieService";
+import { searchMoviesAndShows, formatMovieData, formatTVData, fetchTVShowDetails } from "@/services/movieService";
 
 interface MovieSearchResult {
   title: string;
@@ -12,6 +12,8 @@ interface MovieSearchResult {
   genre: string[];
   poster?: string;
   type: "movie" | "series";
+  id?: number;
+  seasons?: { season_number: number; name: string }[]; // For series only
 }
 
 interface MovieSearchInputProps {
@@ -46,7 +48,8 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
         year: movie.release_date ? new Date(movie.release_date).getFullYear() : new Date().getFullYear(),
         genre: [formatMovieData(movie).genre],
         poster: formatMovieData(movie).poster || undefined,
-        type: "movie" as const
+        type: "movie" as const,
+        id: movie.id
       }));
 
       const formattedShows = shows.slice(0, 3).map(show => ({
@@ -54,7 +57,8 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
         year: show.first_air_date ? new Date(show.first_air_date).getFullYear() : new Date().getFullYear(),
         genre: [formatTVData(show).genre],
         poster: formatTVData(show).poster || undefined,
-        type: "series" as const
+        type: "series" as const,
+        id: show.id
       }));
 
       const results = [...formattedMovies, ...formattedShows];
@@ -96,7 +100,7 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
     onChange(newValue);
   };
 
-  const handleSelect = (movie: MovieSearchResult) => {
+  const handleSelect = async (movie: MovieSearchResult) => {
     onChange(movie.title);
     setOpen(false);
     
@@ -108,7 +112,17 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
     }, 100);
     
     if (onMovieSelect) {
-      onMovieSelect(movie);
+      if (movie.type === "series" && movie.id) {
+        // Fetch seasons for the selected series
+        const details = await fetchTVShowDetails(movie.id);
+        const seasons = details?.seasons?.map((s: any) => ({
+          season_number: s.season_number,
+          name: s.name
+        })) || [];
+        onMovieSelect({ ...movie, seasons });
+      } else {
+        onMovieSelect(movie);
+      }
     }
   };
 

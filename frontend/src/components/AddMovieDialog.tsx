@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ interface MovieSearchResult {
   genre: string[];
   poster?: string;
   type: "movie" | "series";
+  seasons?: { season_number: number; name: string }[];
 }
 
 interface AddMovieDialogProps {
@@ -41,6 +41,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
     notes: "",
     season: ""
   });
+  const [availableSeasons, setAvailableSeasons] = useState<{ season_number: number; name: string }[]>([]);
 
   // Reset form when dialog closes
   useEffect(() => {
@@ -67,8 +68,14 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
       genre: movie.genre,
       releaseYear: movie.year,
       category: movie.type === "movie" ? "Movie" : "Series",
-      poster: movie.poster || ""
+      poster: movie.poster || "",
+      season: ""
     }));
+    if (movie.type === "series" && movie.seasons) {
+      setAvailableSeasons(movie.seasons);
+    } else {
+      setAvailableSeasons([]);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -159,13 +166,31 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
             {formData.category === "Series" && (
               <div className="space-y-2">
                 <Label htmlFor="season">Season</Label>
-                <Input
-                  id="season"
-                  value={formData.season}
-                  onChange={(e) => setFormData({ ...formData, season: e.target.value })}
-                  placeholder="e.g., Season 1, S1"
-                  className="bg-background/50 border-border/60"
-                />
+                {availableSeasons.length > 0 ? (
+                  <Select
+                    value={formData.season}
+                    onValueChange={(value) => setFormData({ ...formData, season: value })}
+                  >
+                    <SelectTrigger className="bg-background/50 border-border/60">
+                      <SelectValue placeholder="Select season" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card/95 backdrop-blur-lg border-border/40">
+                      {availableSeasons.map((season) => (
+                        <SelectItem key={season.season_number} value={season.season_number.toString()}>
+                          {season.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id="season"
+                    value={formData.season}
+                    onChange={(e) => setFormData({ ...formData, season: e.target.value })}
+                    placeholder="e.g., Season 1, S1"
+                    className="bg-background/50 border-border/60"
+                  />
+                )}
               </div>
             )}
           </div>
