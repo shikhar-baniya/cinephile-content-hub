@@ -103,24 +103,52 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
   const handleSelect = async (movie: MovieSearchResult) => {
     onChange(movie.title);
     setOpen(false);
-    
+
     // Keep focus on input after selection
     setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();
       }
     }, 100);
-    
+
     if (onMovieSelect) {
       if (movie.type === "series" && movie.id) {
-        // Fetch seasons for the selected series
-        const details = await fetchTVShowDetails(movie.id);
-        const seasons = details?.seasons?.map((s: any) => ({
-          season_number: s.season_number,
-          name: s.name
-        })) || [];
-        onMovieSelect({ ...movie, seasons });
+        try {
+          // Fetch seasons for the selected series
+          console.log('=== SERIES SELECTED ===');
+          console.log('Movie object:', movie);
+          console.log('Fetching TV show details for ID:', movie.id);
+
+          const details = await fetchTVShowDetails(movie.id);
+          console.log('TV show details received:', details);
+          console.log('Raw seasons from API:', details?.seasons);
+
+          if (!details) {
+            console.error('No details received from API');
+            onMovieSelect(movie);
+            return;
+          }
+
+          const seasons = details?.seasons?.map((s: any) => ({
+            season_number: s.season_number,
+            name: s.name || `Season ${s.season_number}`
+          })) || [];
+          console.log('Processed seasons for dropdown:', seasons);
+          console.log('Number of processed seasons:', seasons.length);
+
+          const movieWithSeasons = { ...movie, seasons };
+          console.log('Final movie object with seasons:', movieWithSeasons);
+          console.log('=== CALLING onMovieSelect ===');
+          onMovieSelect(movieWithSeasons);
+        } catch (error) {
+          console.error('Error fetching TV show details:', error);
+          console.error('Falling back to movie without seasons');
+          onMovieSelect(movie); // Fallback to movie without seasons
+        }
       } else {
+        console.log('Selected item is not a series or has no ID, passing as-is');
+        console.log('Movie type:', movie.type);
+        console.log('Movie ID:', movie.id);
         onMovieSelect(movie);
       }
     }

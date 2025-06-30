@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Movie } from "./MovieCard";
 import { movieService } from "@/services/databaseService.api";
+import { fetchTVShowDetails } from "@/services/movieService";
 import { useToast } from "@/components/ui/use-toast";
 import MovieSearchInput from "./MovieSearchInput";
 import MultiSelectGenre from "./MultiSelectGenre";
@@ -17,6 +18,7 @@ interface MovieSearchResult {
   genre: string[];
   poster?: string;
   type: "movie" | "series";
+  seasons?: { season_number: number; name: string }[];
 }
 
 interface AddMovieDialogProps {
@@ -45,10 +47,14 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
     notes: "",
     season: ""
   });
+  const [availableSeasons, setAvailableSeasons] = useState<{ season_number: number; name: string }[]>([]);
+  const [selectedMovie, setSelectedMovie] = useState<MovieSearchResult | null>(null);
 
   // Reset form when dialog closes
   useEffect(() => {
     if (!open) {
+      setSelectedMovie(null);
+      setAvailableSeasons([]);
       setFormData({
         title: "",
         genre: [],
@@ -65,15 +71,38 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
   }, [open]);
 
   const handleMovieSelect = (movie: MovieSearchResult) => {
+    console.log('Movie selected in AddMovieDialog.api:', movie);
+    console.log('Movie type:', movie.type);
+    console.log('Movie seasons:', movie.seasons);
+    setSelectedMovie(movie);
     setFormData(prev => ({
       ...prev,
       title: movie.title,
       genre: movie.genre,
       releaseYear: movie.year,
       poster: movie.poster || "",
-      category: movie.type === "series" ? "Series" : "Movie"
+      category: movie.type === "series" ? "Series" : "Movie",
+      season: ""
     }));
   };
+
+  // Update availableSeasons when selectedMovie changes
+  useEffect(() => {
+
+    if (selectedMovie && selectedMovie.type === "series" && selectedMovie.seasons && selectedMovie.seasons.length > 0) {
+      setAvailableSeasons(selectedMovie.seasons);
+    } else {
+      setAvailableSeasons([]);
+    }
+  }, [selectedMovie]);
+
+  // When category changes manually, clear availableSeasons and season if not Series
+  useEffect(() => {
+    if (formData.category !== "Series") {
+      setAvailableSeasons([]);
+      setFormData(prev => ({ ...prev, season: "" }));
+    }
+  }, [formData.category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +147,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
         status: formData.status,
         poster: formData.poster,
         notes: formData.notes.trim() || undefined,
+        season: formData.season,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -204,15 +234,47 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="year">Release Year</Label>
-              <Input
-                id="year"
-                type="number"
-                value={formData.releaseYear}
-                onChange={(e) => setFormData(prev => ({ ...prev, releaseYear: parseInt(e.target.value) || new Date().getFullYear() }))}
-                min="1900"
-                max={new Date().getFullYear() + 5}
-              />
+              {formData.category === "Series" ? (
+                <>
+                  <Label htmlFor="season">Season</Label>
+                  {availableSeasons.length > 0 ? (
+                    <Select
+                      value={formData.season}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, season: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select season" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableSeasons.map((season) => (
+                          <SelectItem key={season.season_number} value={season.season_number.toString()}>
+                            {season.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="season"
+                      value={formData.season}
+                      onChange={(e) => setFormData(prev => ({ ...prev, season: e.target.value }))}
+                      placeholder="e.g., Season 1, S1"
+                    />
+                  )}
+                </>
+              ) : (
+                <>
+                  <Label htmlFor="year">Release Year</Label>
+                  <Input
+                    id="year"
+                    type="number"
+                    value={formData.releaseYear}
+                    onChange={(e) => setFormData(prev => ({ ...prev, releaseYear: parseInt(e.target.value) || new Date().getFullYear() }))}
+                    min="1900"
+                    max={new Date().getFullYear() + 5}
+                  />
+                </>
+              )}
             </div>
           </div>
 

@@ -241,13 +241,13 @@ const Index = () => {
       <LoadingBar isLoading={isPageTransitioning} />
       
       <div className="relative z-10 container mx-auto px-4 py-6 pb-24 md:pb-6">
-        <Header 
-          searchQuery={searchQuery} 
+        <Header
+          searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onAddMovie={() => setShowAddDialog(true)}
           onSignOut={handleSignOut}
         />
-        
+
         <PageTransition triggerKey={activeTab}>
           {renderContent()}
         </PageTransition>

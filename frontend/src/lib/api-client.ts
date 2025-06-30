@@ -43,7 +43,7 @@ export const apiClient = {
     await rateLimiter.waitForSlot();
 
     const url = `${config.tmdb.baseUrl}${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${config.tmdb.apiKey}`;
-    
+
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -58,7 +58,6 @@ export const apiClient = {
         response.status
       );
     }
-
     return response.json();
   }
 };
