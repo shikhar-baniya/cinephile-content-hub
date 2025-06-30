@@ -37,8 +37,8 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
   ];
   
   const platforms = [
-    "Netflix", "Amazon Prime Video", "Disney+", "HBO Max", "Hulu", "Apple TV+",
-    "Paramount+", "Peacock", "YouTube Premium", "Crunchyroll", "Funimation",
+    "Netflix", "Amazon Prime Video", "JioHotstar", "HBO Max", "Hulu", "Apple TV+",
+    "Paramount+", "Peacock", "YouTube", "Crunchyroll", "Funimation", "Theatre",
     "Other"
   ];
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,7 +52,8 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
     status: "want-to-watch" as Movie['status'],
     poster: "",
     notes: "",
-    season: ""
+    season: "",
+    watchDate: ""
   });
   const [availableSeasons, setAvailableSeasons] = useState<{ season_number: number; name: string; poster_path?: string; vote_average?: number }[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<MovieSearchResult | null>(null);
@@ -74,7 +75,8 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
         status: "want-to-watch",
         poster: "",
         notes: "",
-        season: ""
+        season: "",
+        watchDate: ""
       });
     }
   }, [open]);
@@ -94,6 +96,11 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
       category: movie.type === "series" ? "Series" : "Movie",
       season: ""
     }));
+    
+    // Store available seasons for series
+    if (movie.type === "series" && movie.seasons) {
+      setAvailableSeasons(movie.seasons);
+    }
   };
 
   // Update availableSeasons when selectedMovie changes
@@ -159,6 +166,8 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
         poster: formData.poster,
         notes: formData.notes.trim() || undefined,
         season: formData.season,
+        tmdbId: selectedMovie?.id,
+        watchDate: formData.watchDate || undefined,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -195,7 +204,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
       const selectedSeason = availableSeasons.find(s => s.season_number.toString() === seasonNumber);
       if (selectedSeason) {
         const seasonPoster = selectedSeason.poster_path ? 
-          `https://image.tmdb.org/t/api/w500${selectedSeason.poster_path}` : 
+          `https://image.tmdb.org/t/p/w500${selectedSeason.poster_path}` : 
           selectedMovie.poster || "";
         const seasonRating = selectedSeason.vote_average ? 
           Math.round(selectedSeason.vote_average * 10) / 10 : 
@@ -282,7 +291,14 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
                       <SelectContent>
                         {availableSeasons.map((season) => (
                           <SelectItem key={season.season_number} value={season.season_number.toString()}>
-                            {season.name}
+                            <div className="flex items-center justify-between w-full">
+                              <span>{season.name}</span>
+                              {season.vote_average && (
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  ⭐ {season.vote_average.toFixed(1)}
+                                </span>
+                              )}
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -362,9 +378,16 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
               <Label htmlFor="status">Status</Label>
               <Select 
                 value={formData.status} 
-                onValueChange={(value: Movie['status']) => 
-                  setFormData(prev => ({ ...prev, status: value }))
-                }
+                onValueChange={(value: Movie['status']) => {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    status: value,
+                    // Set watch date to today if status is "watched" and no date is set
+                    watchDate: value === 'watched' && !prev.watchDate 
+                      ? new Date().toISOString().split('T')[0] 
+                      : prev.watchDate
+                  }));
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -376,6 +399,19 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Watch Date (only show if status is "watched") */}
+            {formData.status === 'watched' && (
+              <div className="space-y-2">
+                <Label htmlFor="watchDate">Watch Date</Label>
+                <Input
+                  id="watchDate"
+                  type="date"
+                  value={formData.watchDate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, watchDate: e.target.value }))}
+                />
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">

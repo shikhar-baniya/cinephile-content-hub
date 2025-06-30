@@ -14,6 +14,8 @@ export interface DatabaseMovie {
   poster?: string;
   notes?: string;
   season?: string;
+  tmdb_id?: number;
+  watch_date?: string;
   created_at: string;
   updated_at: string;
 }
@@ -52,6 +54,8 @@ export const movieService = {
       if (updates.poster !== undefined) movieUpdates.poster = updates.poster;
       if (updates.notes !== undefined) movieUpdates.notes = updates.notes;
       if (updates.season !== undefined) movieUpdates.season = updates.season;
+      if (updates.tmdb_id !== undefined) movieUpdates.tmdbId = updates.tmdb_id;
+      if (updates.watch_date !== undefined) movieUpdates.watchDate = updates.watch_date;
 
       return await apiClient.updateMovie(movieId, movieUpdates);
     } catch (error) {

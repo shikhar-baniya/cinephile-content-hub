@@ -1,10 +1,14 @@
 import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star, Calendar, Play, Eye, Clock, Film, Edit, Trash2, RefreshCw } from "lucide-react";
+import { Star, Calendar, Play, Eye, Clock, Film, Edit, Trash2, RefreshCw, Save, X } from "lucide-react";
 import { Movie } from "./MovieCard";
 import { movieService } from "@/services/databaseService.api";
+import { fetchTVShowDetails } from "@/services/movieService";
 import { useToast } from "@/components/ui/use-toast";
 import { useState, useEffect } from "react";
 
@@ -22,13 +26,65 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<Movie['status']>(movie?.status || 'want-to-watch');
+  
+  // Additional editing states
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const [editedRating, setEditedRating] = useState(movie?.rating || 5);
+  const [editedSeason, setEditedSeason] = useState(movie?.season || '');
+  const [editedNotes, setEditedNotes] = useState(movie?.notes || '');
+  const [editedPoster, setEditedPoster] = useState(movie?.poster || '');
+  const [editedWatchDate, setEditedWatchDate] = useState(movie?.watchDate || '');
+  const [availableSeasons, setAvailableSeasons] = useState<{ season_number: number; name: string; poster_path?: string; vote_average?: number }[]>([]);
+  const [isFetchingSeasons, setIsFetchingSeasons] = useState(false);
+  const [showPosterPreview, setShowPosterPreview] = useState(false);
 
   // Update current status when movie changes
   useEffect(() => {
     if (movie) {
       setCurrentStatus(movie.status);
+      setEditedRating(movie.rating || 5);
+      setEditedSeason(movie.season || '');
+      setEditedNotes(movie.notes || '');
+      setEditedPoster(movie.poster || '');
+      setEditedWatchDate(movie.watchDate || '');
+      setIsEditingDetails(false);
+      setAvailableSeasons([]);
+      setShowPosterPreview(false);
     }
   }, [movie]);
+
+  // Fetch seasons when editing a series
+  const fetchSeasonsForSeries = async () => {
+    if (!movie || movie.category !== 'Series') return;
+    
+    setIsFetchingSeasons(true);
+    try {
+      if (movie.tmdbId) {
+        console.log('Fetching seasons for TMDB ID:', movie.tmdbId);
+        const details = await fetchTVShowDetails(movie.tmdbId);
+        console.log('TV show details received:', details);
+        
+        if (details && details.seasons) {
+          const seasons = details.seasons.map((s: any) => ({
+            season_number: s.season_number,
+            name: s.name || `Season ${s.season_number}`,
+            poster_path: s.poster_path,
+            vote_average: s.vote_average
+          }));
+          console.log('Processed seasons:', seasons);
+          setAvailableSeasons(seasons);
+        }
+      } else {
+        console.log('No TMDB ID available for season fetching');
+        setAvailableSeasons([]);
+      }
+    } catch (error) {
+      console.error('Error fetching seasons:', error);
+      setAvailableSeasons([]);
+    } finally {
+      setIsFetchingSeasons(false);
+    }
+  };
 
   if (!movie) return null;
 
@@ -81,6 +137,16 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
       
       setCurrentStatus(newStatus);
       
+      // If status changed to "watched", show editing options and set watch date
+      if (newStatus === 'watched') {
+        setIsEditingDetails(true);
+        fetchSeasonsForSeries();
+        // Set watch date to today if not already set
+        if (!editedWatchDate) {
+          setEditedWatchDate(new Date().toISOString().split('T')[0]);
+        }
+      }
+      
       toast({
         title: "Success",
         description: "Movie status updated successfully!",
@@ -102,6 +168,77 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const handleSaveDetails = async () => {
+    if (!movie?.id || isUpdating) return;
+    
+    setIsUpdating(true);
+    
+    try {
+      const updates: any = {
+        rating: editedRating,
+        notes: editedNotes,
+        poster: editedPoster,
+        watch_date: editedWatchDate || null,
+      };
+      
+      // Only add season if it's a series
+      if (movie.category === 'Series') {
+        updates.season = editedSeason;
+      }
+      
+      await movieService.updateMovie(movie.id, updates);
+      
+      toast({
+        title: "Success",
+        description: "Movie details updated successfully!",
+      });
+      
+      setIsEditingDetails(false);
+      
+      if (onUpdate) {
+        onUpdate();
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update movie details. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleSeasonChange = (seasonNumber: string) => {
+    setEditedSeason(seasonNumber);
+    
+    // Update poster and rating if season has specific data
+    if (availableSeasons.length > 0) {
+      const selectedSeason = availableSeasons.find(s => s.season_number.toString() === seasonNumber);
+      if (selectedSeason) {
+        if (selectedSeason.poster_path) {
+          const newPoster = `https://image.tmdb.org/t/p/w500${selectedSeason.poster_path}`;
+          setEditedPoster(newPoster);
+          setShowPosterPreview(true);
+        }
+        if (selectedSeason.vote_average) {
+          const seasonRating = Math.round(selectedSeason.vote_average * 10) / 10;
+          setEditedRating(seasonRating);
+        }
+      }
+    }
+  };
+
+  const handleCancelEditing = () => {
+    setIsEditingDetails(false);
+    setEditedRating(movie?.rating || 5);
+    setEditedSeason(movie?.season || '');
+    setEditedNotes(movie?.notes || '');
+    setEditedPoster(movie?.poster || '');
+    setEditedWatchDate(movie?.watchDate || '');
+    setShowPosterPreview(false);
   };
 
   const handleDelete = async () => {
@@ -138,9 +275,9 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
         <DialogHeader className="space-y-0">
           <div className="flex items-start gap-4">
             <div className="aspect-[2/3] w-32 bg-gradient-to-br from-secondary to-secondary/50 rounded-lg overflow-hidden flex-shrink-0">
-              {movie.poster ? (
+              {(isEditingDetails ? editedPoster : movie.poster) ? (
                 <img 
-                  src={movie.poster} 
+                  src={isEditingDetails ? editedPoster : movie.poster} 
                   alt={movie.title}
                   className="w-full h-full object-cover"
                 />
@@ -201,6 +338,24 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
                   </Select>
                 </div>
                 
+                {/* Edit Details Button for Watched Movies */}
+                {currentStatus === 'watched' && !isEditingDetails && (
+                  <div className="flex items-center gap-3 pt-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => {
+                        setIsEditingDetails(true);
+                        fetchSeasonsForSeries();
+                      }}
+                      className="gap-2"
+                    >
+                      <Edit className="h-3 w-3" />
+                      Edit Details
+                    </Button>
+                  </div>
+                )}
+                
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
@@ -208,9 +363,164 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
                   </div>
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span>{movie.rating}/10</span>
+                    <span>{isEditingDetails ? editedRating : movie.rating}/10</span>
                   </div>
+                  {movie.category === "Series" && (movie.season || editedSeason) && (
+                    <div className="flex items-center gap-1">
+                      <Play className="h-4 w-4" />
+                      <span>{isEditingDetails ? editedSeason : movie.season}</span>
+                    </div>
+                  )}
+                  {currentStatus === "watched" && (movie.watchDate || editedWatchDate) && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span className="text-xs">
+                        {isEditingDetails && editedWatchDate 
+                          ? new Date(editedWatchDate).toLocaleDateString()
+                          : movie.watchDate 
+                            ? new Date(movie.watchDate).toLocaleDateString()
+                            : 'Today'
+                        }
+                      </span>
+                    </div>
+                  )}
                 </div>
+                
+                {/* Editing Section for Watched Movies */}
+                {currentStatus === 'watched' && isEditingDetails && (
+                  <div className="border rounded-lg p-4 space-y-4 bg-secondary/20">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold">Update Details</h3>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={handleSaveDetails} disabled={isUpdating}>
+                          <Save className="h-3 w-3 mr-1" />
+                          Save
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={handleCancelEditing}>
+                          <X className="h-3 w-3 mr-1" />
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-4">
+                      {/* Rating */}
+                      <div className="space-y-2">
+                        <Label htmlFor="rating" className="text-sm">Rating (1-10)</Label>
+                        <Input
+                          id="rating"
+                          type="number"
+                          value={editedRating}
+                          onChange={(e) => setEditedRating(parseFloat(e.target.value) || 5)}
+                          min="1"
+                          max="10"
+                          step="0.1"
+                          className="w-full"
+                        />
+                      </div>
+                      
+                      {/* Season (only for Series) */}
+                      {movie.category === 'Series' && (
+                        <div className="space-y-2">
+                          <Label htmlFor="season" className="text-sm">Season</Label>
+                          {availableSeasons.length > 0 ? (
+                            <Select
+                              value={editedSeason}
+                              onValueChange={handleSeasonChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select season" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableSeasons.map((season) => (
+                                  <SelectItem key={season.season_number} value={season.season_number.toString()}>
+                                    <div className="flex items-center gap-2">
+                                      <span>{season.name}</span>
+                                      {season.vote_average && (
+                                        <span className="text-xs text-muted-foreground">
+                                          ⭐ {season.vote_average.toFixed(1)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input
+                              id="season"
+                              value={editedSeason}
+                              onChange={(e) => handleSeasonChange(e.target.value)}
+                              placeholder="e.g., Season 1, S1, 1"
+                              className="w-full"
+                            />
+                          )}
+                          {isFetchingSeasons && (
+                            <div className="text-xs text-muted-foreground flex items-center gap-1">
+                              <RefreshCw className="h-3 w-3 animate-spin" />
+                              Loading seasons...
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Watch Date */}
+                      <div className="space-y-2">
+                        <Label htmlFor="watchDate" className="text-sm">Watch Date</Label>
+                        <Input
+                          id="watchDate"
+                          type="date"
+                          value={editedWatchDate}
+                          onChange={(e) => setEditedWatchDate(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+                      
+                      {/* Notes */}
+                      <div className="space-y-2">
+                        <Label htmlFor="notes" className="text-sm">Notes & Review</Label>
+                        <Textarea
+                          id="notes"
+                          value={editedNotes}
+                          onChange={(e) => setEditedNotes(e.target.value)}
+                          placeholder="Add your thoughts, review, or notes..."
+                          rows={3}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Poster Preview */}
+                    {showPosterPreview && editedPoster && editedPoster !== movie.poster && (
+                      <div className="border rounded-lg p-3 bg-secondary/10">
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-xs font-medium text-muted-foreground">Poster Preview</Label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowPosterPreview(false)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <div className="flex gap-3">
+                          <div className="w-16 h-24 bg-secondary/20 rounded overflow-hidden">
+                            <img 
+                              src={editedPoster} 
+                              alt="New poster" 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 text-xs text-muted-foreground">
+                            <p>New poster will be applied when you save changes.</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="outline" className="text-sm">
@@ -226,14 +536,16 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
         </DialogHeader>
         
         <div className="space-y-4 mt-6">
-          {movie.watchDate && (
+          {(movie.watchDate || (isEditingDetails && editedWatchDate)) && !isEditingDetails && (
             <div>
               <h3 className="font-semibold text-sm mb-2">Watch Date</h3>
-              <p className="text-sm text-muted-foreground">{movie.watchDate}</p>
+              <p className="text-sm text-muted-foreground">
+                {movie.watchDate ? new Date(movie.watchDate).toLocaleDateString() : 'Not set'}
+              </p>
             </div>
           )}
           
-          {movie.notes && (
+          {(movie.notes || (isEditingDetails && editedNotes)) && !isEditingDetails && (
             <div>
               <h3 className="font-semibold text-sm mb-2">Notes & Review</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{movie.notes}</p>

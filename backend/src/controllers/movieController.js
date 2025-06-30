@@ -9,7 +9,7 @@ export const getMovies = async (req, res) => {
     const supabase = getSupabase();
     const { data, error } = await supabase
       .from('movies')
-      .select('id, title, genre, category, release_year, platform, rating, status, poster, notes, season, created_at, updated_at')
+      .select('id, title, genre, category, release_year, platform, rating, status, poster, notes, season, tmdb_id, watch_date, created_at, updated_at')
       .eq('user_id', req.user.id)
       .order('created_at', { ascending: false });
 
@@ -17,12 +17,16 @@ export const getMovies = async (req, res) => {
 
     const movies = data?.map(({
       release_year: releaseYear,
+      tmdb_id: tmdbId,
+      watch_date: watchDate,
       created_at: createdAt,
       updated_at: updatedAt,
       ...movie
     }) => ({
       ...movie,
       releaseYear,
+      tmdbId,
+      watchDate,
       createdAt,
       updatedAt
     })) || [];
@@ -48,6 +52,8 @@ export const addMovie = async (req, res) => {
     // Transform camelCase fields to snake_case for database
     const {
       releaseYear,
+      tmdbId,
+      watchDate,
       createdAt,
       updatedAt,
       ...otherFields
@@ -57,6 +63,8 @@ export const addMovie = async (req, res) => {
       ...otherFields,
       user_id: req.user.id,
       release_year: releaseYear,
+      tmdb_id: tmdbId,
+      watch_date: watchDate,
       created_at: createdAt,
       updated_at: updatedAt
     };
@@ -88,12 +96,16 @@ export const addMovie = async (req, res) => {
     const responseData = {
       ...data,
       releaseYear: data.release_year,
+      tmdbId: data.tmdb_id,
+      watchDate: data.watch_date,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
 
     // Remove snake_case fields from response
     delete responseData.release_year;
+    delete responseData.tmdb_id;
+    delete responseData.watch_date;
     delete responseData.created_at;
     delete responseData.updated_at;
 
@@ -117,6 +129,8 @@ export const updateMovie = async (req, res) => {
     // Transform camelCase fields to snake_case for database
     const {
       releaseYear,
+      tmdbId,
+      watchDate,
       createdAt,
       updatedAt,
       ...otherFields
@@ -125,6 +139,8 @@ export const updateMovie = async (req, res) => {
     const updateData = {
       ...otherFields,
       ...(releaseYear !== undefined && { release_year: releaseYear }),
+      ...(tmdbId !== undefined && { tmdb_id: tmdbId }),
+      ...(watchDate !== undefined && { watch_date: watchDate }),
       ...(createdAt !== undefined && { created_at: createdAt }),
       ...(updatedAt !== undefined && { updated_at: updatedAt })
     };
@@ -148,12 +164,16 @@ export const updateMovie = async (req, res) => {
     const responseData = {
       ...data,
       releaseYear: data.release_year,
+      tmdbId: data.tmdb_id,
+      watchDate: data.watch_date,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
 
     // Remove snake_case fields from response
     delete responseData.release_year;
+    delete responseData.tmdb_id;
+    delete responseData.watch_date;
     delete responseData.created_at;
     delete responseData.updated_at;
 

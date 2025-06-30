@@ -14,6 +14,7 @@ export interface Movie {
   watchDate?: string;
   notes?: string;
   season?: string;
+  tmdbId?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -117,6 +118,14 @@ const MovieCard = ({ movie, onClick }: MovieCardProps) => {
           <div className="flex items-center gap-1 text-xs text-primary/80">
             <Play className="h-3 w-3" />
             <span>{movie.season}</span>
+          </div>
+        )}
+        
+        {/* Watch date for watched movies */}
+        {movie.status === "watched" && movie.watchDate && (
+          <div className="flex items-center gap-1 text-xs text-green-400/80">
+            <Eye className="h-3 w-3" />
+            <span>Watched {new Date(movie.watchDate).toLocaleDateString()}</span>
           </div>
         )}
       </div>
