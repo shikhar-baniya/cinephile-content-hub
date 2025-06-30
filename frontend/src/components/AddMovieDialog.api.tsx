@@ -18,7 +18,8 @@ interface MovieSearchResult {
   genre: string[];
   poster?: string;
   type: "movie" | "series";
-  seasons?: { season_number: number; name: string }[];
+  rating?: number;
+  seasons?: { season_number: number; name: string; poster_path?: string; vote_average?: number }[];
 }
 
 interface AddMovieDialogProps {
@@ -34,6 +35,12 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
     "Drama", "Family", "Fantasy", "Horror", "Mystery", "Romance",
     "Sci-Fi", "Thriller", "War", "Western"
   ];
+  
+  const platforms = [
+    "Netflix", "Amazon Prime Video", "Disney+", "HBO Max", "Hulu", "Apple TV+",
+    "Paramount+", "Peacock", "YouTube Premium", "Crunchyroll", "Funimation",
+    "Other"
+  ];
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -47,14 +54,16 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
     notes: "",
     season: ""
   });
-  const [availableSeasons, setAvailableSeasons] = useState<{ season_number: number; name: string }[]>([]);
+  const [availableSeasons, setAvailableSeasons] = useState<{ season_number: number; name: string; poster_path?: string; vote_average?: number }[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<MovieSearchResult | null>(null);
+  const [customPlatform, setCustomPlatform] = useState("");
 
   // Reset form when dialog closes
   useEffect(() => {
     if (!open) {
       setSelectedMovie(null);
       setAvailableSeasons([]);
+      setCustomPlatform("");
       setFormData({
         title: "",
         genre: [],
@@ -81,6 +90,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
       genre: movie.genre,
       releaseYear: movie.year,
       poster: movie.poster || "",
+      rating: movie.rating || 5,
       category: movie.type === "series" ? "Series" : "Movie",
       season: ""
     }));
@@ -125,7 +135,8 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
       return;
     }
 
-    if (!formData.platform.trim()) {
+    const finalPlatform = formData.platform === "Other" ? customPlatform.trim() : formData.platform.trim();
+    if (!finalPlatform) {
       toast({
         title: "Error",
         description: "Platform is required",
@@ -142,7 +153,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
         genre: formData.genre.join(", "),
         category: formData.category,
         releaseYear: formData.releaseYear,
-        platform: formData.platform.trim(),
+        platform: finalPlatform,
         rating: formData.rating,
         status: formData.status,
         poster: formData.poster,
@@ -174,6 +185,29 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
 
   const handleGenreChange = (genres: string[]) => {
     setFormData(prev => ({ ...prev, genre: genres }));
+  };
+
+  const handleSeasonChange = (seasonNumber: string) => {
+    setFormData(prev => ({ ...prev, season: seasonNumber }));
+    
+    // Update poster and rating based on selected season
+    if (selectedMovie && selectedMovie.type === "series" && availableSeasons.length > 0) {
+      const selectedSeason = availableSeasons.find(s => s.season_number.toString() === seasonNumber);
+      if (selectedSeason) {
+        const seasonPoster = selectedSeason.poster_path ? 
+          `https://image.tmdb.org/t/api/w500${selectedSeason.poster_path}` : 
+          selectedMovie.poster || "";
+        const seasonRating = selectedSeason.vote_average ? 
+          Math.round(selectedSeason.vote_average * 10) / 10 : 
+          selectedMovie.rating || 5;
+        
+        setFormData(prev => ({
+          ...prev,
+          poster: seasonPoster,
+          rating: seasonRating
+        }));
+      }
+    }
   };
 
   return (
@@ -240,7 +274,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
                   {availableSeasons.length > 0 ? (
                     <Select
                       value={formData.season}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, season: value }))}
+                      onValueChange={handleSeasonChange}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select season" />
@@ -280,13 +314,34 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
 
           <div className="space-y-2">
             <Label htmlFor="platform">Platform *</Label>
-            <Input
-              id="platform"
-              value={formData.platform}
-              onChange={(e) => setFormData(prev => ({ ...prev, platform: e.target.value }))}
-              placeholder="Netflix, Amazon Prime, etc."
-              required
-            />
+            <Select 
+              value={formData.platform} 
+              onValueChange={(value) => {
+                setFormData(prev => ({ ...prev, platform: value }));
+                if (value !== "Other") {
+                  setCustomPlatform("");
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select platform" />
+              </SelectTrigger>
+              <SelectContent>
+                {platforms.map((platform) => (
+                  <SelectItem key={platform} value={platform}>
+                    {platform}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {formData.platform === "Other" && (
+              <Input
+                value={customPlatform}
+                onChange={(e) => setCustomPlatform(e.target.value)}
+                placeholder="Enter custom platform name"
+                className="mt-2"
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

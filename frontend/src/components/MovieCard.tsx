@@ -13,6 +13,7 @@ export interface Movie {
   poster?: string;
   watchDate?: string;
   notes?: string;
+  season?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -110,6 +111,14 @@ const MovieCard = ({ movie, onClick }: MovieCardProps) => {
             {movie.platform}
           </span>
         </div>
+        
+        {/* Season info for Series */}
+        {movie.category === "Series" && movie.season && (
+          <div className="flex items-center gap-1 text-xs text-primary/80">
+            <Play className="h-3 w-3" />
+            <span>{movie.season}</span>
+          </div>
+        )}
       </div>
     </div>
   );

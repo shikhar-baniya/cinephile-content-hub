@@ -13,7 +13,8 @@ interface MovieSearchResult {
   poster?: string;
   type: "movie" | "series";
   id?: number;
-  seasons?: { season_number: number; name: string }[]; // For series only
+  rating?: number;
+  seasons?: { season_number: number; name: string; poster_path?: string; vote_average?: number }[]; // For series only
 }
 
 interface MovieSearchInputProps {
@@ -43,23 +44,31 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
       const { movies, shows } = await searchMoviesAndShows(searchValue);
       
       // Format and combine results
-      const formattedMovies = movies.slice(0, 3).map(movie => ({
-        title: movie.title,
-        year: movie.release_date ? new Date(movie.release_date).getFullYear() : new Date().getFullYear(),
-        genre: [formatMovieData(movie).genre],
-        poster: formatMovieData(movie).poster || undefined,
-        type: "movie" as const,
-        id: movie.id
-      }));
+      const formattedMovies = movies.slice(0, 3).map(movie => {
+        const movieData = formatMovieData(movie);
+        return {
+          title: movie.title,
+          year: movie.release_date ? new Date(movie.release_date).getFullYear() : new Date().getFullYear(),
+          genre: movieData.genres,
+          poster: movieData.poster || undefined,
+          rating: movieData.rating,
+          type: "movie" as const,
+          id: movie.id
+        };
+      });
 
-      const formattedShows = shows.slice(0, 3).map(show => ({
-        title: show.name,
-        year: show.first_air_date ? new Date(show.first_air_date).getFullYear() : new Date().getFullYear(),
-        genre: [formatTVData(show).genre],
-        poster: formatTVData(show).poster || undefined,
-        type: "series" as const,
-        id: show.id
-      }));
+      const formattedShows = shows.slice(0, 3).map(show => {
+        const showData = formatTVData(show);
+        return {
+          title: show.name,
+          year: show.first_air_date ? new Date(show.first_air_date).getFullYear() : new Date().getFullYear(),
+          genre: showData.genres,
+          poster: showData.poster || undefined,
+          rating: showData.rating,
+          type: "series" as const,
+          id: show.id
+        };
+      });
 
       const results = [...formattedMovies, ...formattedShows];
       console.log('Search results:', results);
@@ -101,8 +110,8 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
   };
 
   const handleSelect = async (movie: MovieSearchResult) => {
-    onChange(movie.title);
     setOpen(false);
+    setSearchResults([]); // Clear search results to prevent re-triggering search
 
     // Keep focus on input after selection
     setTimeout(() => {
@@ -125,13 +134,16 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
 
           if (!details) {
             console.error('No details received from API');
+            onChange(movie.title); // Update the input with selected title
             onMovieSelect(movie);
             return;
           }
 
           const seasons = details?.seasons?.map((s: any) => ({
             season_number: s.season_number,
-            name: s.name || `Season ${s.season_number}`
+            name: s.name || `Season ${s.season_number}`,
+            poster_path: s.poster_path,
+            vote_average: s.vote_average
           })) || [];
           console.log('Processed seasons for dropdown:', seasons);
           console.log('Number of processed seasons:', seasons.length);
@@ -139,16 +151,19 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
           const movieWithSeasons = { ...movie, seasons };
           console.log('Final movie object with seasons:', movieWithSeasons);
           console.log('=== CALLING onMovieSelect ===');
+          onChange(movie.title); // Update the input with selected title
           onMovieSelect(movieWithSeasons);
         } catch (error) {
           console.error('Error fetching TV show details:', error);
           console.error('Falling back to movie without seasons');
+          onChange(movie.title); // Update the input with selected title
           onMovieSelect(movie); // Fallback to movie without seasons
         }
       } else {
         console.log('Selected item is not a series or has no ID, passing as-is');
         console.log('Movie type:', movie.type);
         console.log('Movie ID:', movie.id);
+        onChange(movie.title); // Update the input with selected title
         onMovieSelect(movie);
       }
     }

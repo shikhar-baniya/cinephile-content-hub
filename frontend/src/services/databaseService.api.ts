@@ -13,6 +13,7 @@ export interface DatabaseMovie {
   status: "watched" | "watching" | "want-to-watch";
   poster?: string;
   notes?: string;
+  season?: string;
   created_at: string;
   updated_at: string;
 }
@@ -50,6 +51,7 @@ export const movieService = {
       if (updates.status !== undefined) movieUpdates.status = updates.status;
       if (updates.poster !== undefined) movieUpdates.poster = updates.poster;
       if (updates.notes !== undefined) movieUpdates.notes = updates.notes;
+      if (updates.season !== undefined) movieUpdates.season = updates.season;
 
       return await apiClient.updateMovie(movieId, movieUpdates);
     } catch (error) {

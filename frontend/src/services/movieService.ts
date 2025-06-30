@@ -79,21 +79,28 @@ export const getGenreName = (genreIds: number[]): string => {
   return genreMap[genreIds[0]] || "Unknown";
 };
 
+export const getAllGenreNames = (genreIds: number[]): string[] => {
+  if (!genreIds || genreIds.length === 0) return ["Unknown"];
+  return genreIds.map(id => genreMap[id] || "Unknown").filter(name => name !== "Unknown");
+};
+
 export const formatMovieData = (movie: TMDbMovie) => ({
   title: movie.title,
   genre: getGenreName(movie.genre_ids),
+  genres: getAllGenreNames(movie.genre_ids),
   releaseYear: movie.release_date ? new Date(movie.release_date).getFullYear() : new Date().getFullYear(),
   poster: getImageUrl(movie.poster_path),
-  rating: Math.round(movie.vote_average),
+  rating: Math.round(movie.vote_average * 10) / 10, // Keep decimal for better precision
   notes: movie.overview
 });
 
 export const formatTVData = (show: TMDbTVShow) => ({
   title: show.name,
   genre: getGenreName(show.genre_ids),
+  genres: getAllGenreNames(show.genre_ids),
   releaseYear: show.first_air_date ? new Date(show.first_air_date).getFullYear() : new Date().getFullYear(),
   poster: getImageUrl(show.poster_path),
-  rating: Math.round(show.vote_average),
+  rating: Math.round(show.vote_average * 10) / 10, // Keep decimal for better precision
   notes: show.overview
 });
 
