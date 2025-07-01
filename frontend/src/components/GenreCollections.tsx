@@ -79,7 +79,7 @@ const GenreCollections = ({ movies, onMovieClick }: GenreCollectionsProps) => {
         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
           {movies.map((movie) => (
             <div key={movie.id} className="flex-shrink-0 w-36">
-              <MovieCard movie={movie} onClick={onMovieClick} />
+              <MovieCard movie={movie} onClick={onMovieClick} showWatchedDate={false} />
             </div>
           ))}
         </div>

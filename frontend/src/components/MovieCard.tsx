@@ -22,9 +22,10 @@ export interface Movie {
 interface MovieCardProps {
   movie: Movie;
   onClick: (movie: Movie) => void;
+  showWatchedDate?: boolean;
 }
 
-const MovieCard = ({ movie, onClick }: MovieCardProps) => {
+const MovieCard = ({ movie, onClick, showWatchedDate = true }: MovieCardProps) => {
   const getStatusIcon = () => {
     switch (movie.status) {
       case "watched":
@@ -122,10 +123,14 @@ const MovieCard = ({ movie, onClick }: MovieCardProps) => {
         )}
         
         {/* Watch date for watched movies */}
-        {movie.status === "watched" && movie.watchDate && (
+        {showWatchedDate && movie.status === "watched" && movie.watchDate && (
           <div className="flex items-center gap-1 text-xs text-green-400/80">
             <Eye className="h-3 w-3" />
-            <span>Watched {new Date(movie.watchDate).toLocaleDateString()}</span>
+            <span>Watched {new Date(movie.watchDate).toLocaleDateString('en-US', { 
+              day: 'numeric', 
+              month: 'short', 
+              year: 'numeric' 
+            })}</span>
           </div>
         )}
       </div>

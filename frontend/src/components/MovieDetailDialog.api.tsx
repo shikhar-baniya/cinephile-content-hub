@@ -271,7 +271,7 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-card/95 backdrop-blur-lg border-border/40 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] bg-card/95 backdrop-blur-lg border-border/40 max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="space-y-0">
           <div className="flex items-start gap-4">
             <div className="aspect-[2/3] w-32 bg-gradient-to-br from-secondary to-secondary/50 rounded-lg overflow-hidden flex-shrink-0">
@@ -376,151 +376,24 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
                       <Calendar className="h-4 w-4" />
                       <span className="text-xs">
                         {isEditingDetails && editedWatchDate 
-                          ? new Date(editedWatchDate).toLocaleDateString()
+                          ? new Date(editedWatchDate).toLocaleDateString('en-US', { 
+                              day: 'numeric', 
+                              month: 'short', 
+                              year: 'numeric' 
+                            })
                           : movie.watchDate 
-                            ? new Date(movie.watchDate).toLocaleDateString()
+                            ? new Date(movie.watchDate).toLocaleDateString('en-US', { 
+                                day: 'numeric', 
+                                month: 'short', 
+                                year: 'numeric' 
+                              })
                             : 'Today'
                         }
                       </span>
                     </div>
                   )}
                 </div>
-                
-                {/* Editing Section for Watched Movies */}
-                {currentStatus === 'watched' && isEditingDetails && (
-                  <div className="border rounded-lg p-4 space-y-4 bg-secondary/20">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold">Update Details</h3>
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={handleSaveDetails} disabled={isUpdating}>
-                          <Save className="h-3 w-3 mr-1" />
-                          Save
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={handleCancelEditing}>
-                          <X className="h-3 w-3 mr-1" />
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 gap-4">
-                      {/* Rating */}
-                      <div className="space-y-2">
-                        <Label htmlFor="rating" className="text-sm">Rating (1-10)</Label>
-                        <Input
-                          id="rating"
-                          type="number"
-                          value={editedRating}
-                          onChange={(e) => setEditedRating(parseFloat(e.target.value) || 5)}
-                          min="1"
-                          max="10"
-                          step="0.1"
-                          className="w-full"
-                        />
-                      </div>
-                      
-                      {/* Season (only for Series) */}
-                      {movie.category === 'Series' && (
-                        <div className="space-y-2">
-                          <Label htmlFor="season" className="text-sm">Season</Label>
-                          {availableSeasons.length > 0 ? (
-                            <Select
-                              value={editedSeason}
-                              onValueChange={handleSeasonChange}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select season" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {availableSeasons.map((season) => (
-                                  <SelectItem key={season.season_number} value={season.season_number.toString()}>
-                                    <div className="flex items-center gap-2">
-                                      <span>{season.name}</span>
-                                      {season.vote_average && (
-                                        <span className="text-xs text-muted-foreground">
-                                          ⭐ {season.vote_average.toFixed(1)}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <Input
-                              id="season"
-                              value={editedSeason}
-                              onChange={(e) => handleSeasonChange(e.target.value)}
-                              placeholder="e.g., Season 1, S1, 1"
-                              className="w-full"
-                            />
-                          )}
-                          {isFetchingSeasons && (
-                            <div className="text-xs text-muted-foreground flex items-center gap-1">
-                              <RefreshCw className="h-3 w-3 animate-spin" />
-                              Loading seasons...
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* Watch Date */}
-                      <div className="space-y-2">
-                        <Label htmlFor="watchDate" className="text-sm">Watch Date</Label>
-                        <Input
-                          id="watchDate"
-                          type="date"
-                          value={editedWatchDate}
-                          onChange={(e) => setEditedWatchDate(e.target.value)}
-                          className="w-full"
-                        />
-                      </div>
-                      
-                      {/* Notes */}
-                      <div className="space-y-2">
-                        <Label htmlFor="notes" className="text-sm">Notes & Review</Label>
-                        <Textarea
-                          id="notes"
-                          value={editedNotes}
-                          onChange={(e) => setEditedNotes(e.target.value)}
-                          placeholder="Add your thoughts, review, or notes..."
-                          rows={3}
-                          className="w-full"
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Poster Preview */}
-                    {showPosterPreview && editedPoster && editedPoster !== movie.poster && (
-                      <div className="border rounded-lg p-3 bg-secondary/10">
-                        <div className="flex items-center justify-between mb-2">
-                          <Label className="text-xs font-medium text-muted-foreground">Poster Preview</Label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowPosterPreview(false)}
-                            className="h-6 w-6 p-0"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        <div className="flex gap-3">
-                          <div className="w-16 h-24 bg-secondary/20 rounded overflow-hidden">
-                            <img 
-                              src={editedPoster} 
-                              alt="New poster" 
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 text-xs text-muted-foreground">
-                            <p>New poster will be applied when you save changes.</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+
                 
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="outline" className="text-sm">
@@ -535,15 +408,104 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
           </div>
         </DialogHeader>
         
-        <div className="space-y-4 mt-6">
-          {(movie.watchDate || (isEditingDetails && editedWatchDate)) && !isEditingDetails && (
-            <div>
-              <h3 className="font-semibold text-sm mb-2">Watch Date</h3>
-              <p className="text-sm text-muted-foreground">
-                {movie.watchDate ? new Date(movie.watchDate).toLocaleDateString() : 'Not set'}
-              </p>
+        {/* Editing Section for Watched Movies */}
+        {currentStatus === 'watched' && isEditingDetails && (
+          <div className="border rounded-lg mx-6 mt-4 p-4 space-y-4 bg-secondary/20">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Update Details</h3>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleSaveDetails} disabled={isUpdating}>
+                  <Save className="h-3 w-3 mr-1" />
+                  Save
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleCancelEditing}>
+                  <X className="h-3 w-3 mr-1" />
+                  Cancel
+                </Button>
+              </div>
             </div>
-          )}
+            
+            <div className="grid grid-cols-1 gap-3">
+              {/* Rating */}
+              <div className="space-y-2">
+                <Label htmlFor="rating" className="text-sm">Rating (1-10)</Label>
+                <Input
+                  id="rating"
+                  type="number"
+                  value={editedRating}
+                  onChange={(e) => setEditedRating(parseFloat(e.target.value) || 5)}
+                  min="1"
+                  max="10"
+                  step="0.1"
+                  className="w-full"
+                />
+              </div>
+              
+              {/* Season (only for Series) */}
+              {movie.category === 'Series' && (
+                <div className="space-y-2">
+                  <Label htmlFor="season" className="text-sm">Season</Label>
+                  {availableSeasons.length > 0 ? (
+                    <Select
+                      value={editedSeason}
+                      onValueChange={handleSeasonChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select season" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableSeasons.map((season) => (
+                          <SelectItem key={season.season_number} value={season.season_number.toString()}>
+                            <div className="flex items-center gap-2">
+                              <span>{season.name}</span>
+                              {season.vote_average && (
+                                <span className="text-xs text-muted-foreground">
+                                  ⭐ {season.vote_average.toFixed(1)}
+                                </span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="season"
+                      value={editedSeason}
+                      onChange={(e) => handleSeasonChange(e.target.value)}
+                      placeholder="e.g., Season 1, S1, 1"
+                      className="w-full"
+                    />
+                  )}
+                  {isFetchingSeasons && (
+                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                      <RefreshCw className="h-3 w-3 animate-spin" />
+                      Loading seasons...
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Notes */}
+              <div className="space-y-2">
+                <Label htmlFor="notes" className="text-sm">Notes & Review</Label>
+                <Textarea
+                  id="notes"
+                  value={editedNotes}
+                  onChange={(e) => setEditedNotes(e.target.value)}
+                  placeholder="Add your thoughts, review, or notes..."
+                  rows={3}
+                  className="w-full"
+                />
+              </div>
+            </div>
+            
+          </div>
+        )}
+        
+        <div className="flex-1 overflow-y-auto px-6">
+          <div className="space-y-4" style={{marginTop: currentStatus === 'watched' && isEditingDetails ? '16px' : '24px'}}>
+
           
           {(movie.notes || (isEditingDetails && editedNotes)) && !isEditingDetails && (
             <div>
@@ -562,12 +524,14 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
             <Button 
               variant="destructive" 
               onClick={handleDelete} 
-              className="gap-2"
+              size="sm"
               disabled={isDeleting}
+              className="p-2"
+              title={isDeleting ? "Deleting..." : "Delete"}
             >
               <Trash2 className="h-4 w-4" />
-              {isDeleting ? "Deleting..." : "Delete"}
             </Button>
+          </div>
           </div>
         </div>
       </DialogContent>

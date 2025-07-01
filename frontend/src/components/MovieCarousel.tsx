@@ -99,7 +99,7 @@ const MovieCarousel = ({ movies, onMovieClick }: MovieCarouselProps) => {
               <CarouselItem key={movie.id} className="pl-2 md:pl-4 basis-36">
                 <div className="p-1">
                   <div className="h-64">
-                    <MovieCard movie={movie} onClick={onMovieClick} />
+                    <MovieCard movie={movie} onClick={onMovieClick} showWatchedDate={false} />
                   </div>
                 </div>
               </CarouselItem>
