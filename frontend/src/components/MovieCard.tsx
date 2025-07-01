@@ -11,10 +11,10 @@ export interface Movie {
   rating: number;
   status: "watched" | "watching" | "want-to-watch";
   poster?: string;
-  watchDate?: string;
   notes?: string;
   season?: string;
   tmdbId?: number;
+  watchDate?: string;
   createdAt: string;
   updatedAt: string;
 }

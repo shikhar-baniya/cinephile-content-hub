@@ -43,6 +43,18 @@ const MovieStats = ({ movies }: MovieStatsProps) => {
     const total = movies.length;
     if (total === 0) return null;
 
+    // Debug: Log movies data to check watchDate field
+    console.log('🎬 MovieStats Debug - Sample movies:', movies.slice(0, 3));
+    console.log('🎬 Watched movies with watchDate:', 
+      movies.filter(m => m.status === 'watched').map(m => ({
+        title: m.title,
+        status: m.status,
+        watchDate: m.watchDate,
+        createdAt: m.createdAt,
+        updatedAt: m.updatedAt
+      }))
+    );
+
     // Status counts
     const watched = movies.filter(m => m.status === 'watched').length;
     const watching = movies.filter(m => m.status === 'watching').length;
@@ -97,14 +109,34 @@ const MovieStats = ({ movies }: MovieStatsProps) => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 8);
 
-    // Year analysis (for watched movies)
-    const watchedMovies = movies.filter(m => m.status === 'watched' && m.watchDate);
+    // Year analysis (for watched movies using watch_date, fallback to updatedAt)
+    const watchedMovies = movies.filter(m => m.status === 'watched');
     const yearMap = new Map<number, number>();
+    
     watchedMovies.forEach(movie => {
-      if (movie.watchDate) {
-        const year = new Date(movie.watchDate).getFullYear();
+      // Use watchDate if available, otherwise fall back to updatedAt
+      const dateToUse = movie.watchDate || movie.updatedAt;
+      if (dateToUse) {
+        const year = new Date(dateToUse).getFullYear();
         const count = yearMap.get(year) || 0;
         yearMap.set(year, count + 1);
+      }
+    });
+    
+    // Monthly analysis for current year
+    const currentYear = new Date().getFullYear();
+    const currentYearWatched = watchedMovies.filter(m => {
+      const dateToUse = m.watchDate || m.updatedAt;
+      return dateToUse && new Date(dateToUse).getFullYear() === currentYear;
+    });
+    
+    const monthMap = new Map<number, number>();
+    currentYearWatched.forEach(movie => {
+      const dateToUse = movie.watchDate || movie.updatedAt;
+      if (dateToUse) {
+        const month = new Date(dateToUse).getMonth();
+        const count = monthMap.get(month) || 0;
+        monthMap.set(month, count + 1);
       }
     });
 
@@ -112,6 +144,11 @@ const MovieStats = ({ movies }: MovieStatsProps) => {
       .map(([year, count]) => ({ year, count }))
       .sort((a, b) => b.year - a.year)
       .slice(0, 5);
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthStats = Array.from(monthMap.entries())
+      .map(([month, count]) => ({ month: monthNames[month], count }))
+      .filter(stat => stat.count > 0);
 
     // High-rated content (8.0+)
     const highRated = movies.filter(m => m.rating >= 8.0).length;
@@ -136,6 +173,7 @@ const MovieStats = ({ movies }: MovieStatsProps) => {
       genreStats,
       platformStats,
       yearStats,
+      monthStats,
       highRated,
       highRatedPercentage,
       recentlyAdded,
@@ -319,7 +357,7 @@ const MovieStats = ({ movies }: MovieStatsProps) => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Watch Activity
+                Watch Activity by Year
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -328,6 +366,27 @@ const MovieStats = ({ movies }: MovieStatsProps) => {
                   <div key={year.year} className="flex items-center justify-between">
                     <span className="text-sm font-medium">{year.year}</span>
                     <Badge variant="outline">{year.count} watched</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {stats.monthStats.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                This Year by Month
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats.monthStats.map((month) => (
+                  <div key={month.month} className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{month.month}</span>
+                    <Badge variant="outline">{month.count} watched</Badge>
                   </div>
                 ))}
               </div>

@@ -403,13 +403,25 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
             {/* Watch Date (only show if status is "watched") */}
             {formData.status === 'watched' && (
               <div className="space-y-2">
-                <Label htmlFor="watchDate">Watch Date</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="watchDate">Watch Date</Label>
+                  <span className="text-xs text-muted-foreground">
+                    {formData.watchDate === new Date().toISOString().split('T')[0] 
+                      ? 'Today' 
+                      : 'Custom date'
+                    }
+                  </span>
+                </div>
                 <Input
                   id="watchDate"
                   type="date"
                   value={formData.watchDate}
                   onChange={(e) => setFormData(prev => ({ ...prev, watchDate: e.target.value }))}
+                  className="text-sm"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Leave as today's date or change to when you actually watched it
+                </p>
               </div>
             )}
           </div>

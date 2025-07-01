@@ -31,6 +31,8 @@ export interface FilterOptions {
   ratingMax: number;
   yearMin: number;
   yearMax: number;
+  watchDateFrom: string;
+  watchDateTo: string;
   sortBy: string;
   sortOrder: 'asc' | 'desc';
 }
