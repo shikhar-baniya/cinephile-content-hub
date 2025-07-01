@@ -33,7 +33,7 @@ const AnalyticsChart = ({ movies }: AnalyticsChartProps) => {
 
   // Generate all chart data for the selected range
   const generateChartData = () => {
-    const watchedMovies = movies.filter(m => m.status === "watched" && m.updatedAt);
+    const watchedMovies = movies.filter(m => m.status === "watched" && m.watchDate);
     if (watchedMovies.length === 0) return [];
     const now = new Date();
     const data: { 
@@ -60,8 +60,8 @@ const AnalyticsChart = ({ movies }: AnalyticsChartProps) => {
           });
           const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
           const dayMovies = watchedMovies.filter(m => {
-            const updatedAt = new Date(m.updatedAt);
-            return updatedAt.toDateString() === date.toDateString();
+            const watchDate = new Date(m.watchDate!);
+            return watchDate.toDateString() === date.toDateString();
           });
           data.push({
             name: dateStr,
@@ -93,8 +93,8 @@ const AnalyticsChart = ({ movies }: AnalyticsChartProps) => {
             year: 'numeric' 
           })}`;
           const weekMovies = watchedMovies.filter(m => {
-            const updatedAt = new Date(m.updatedAt);
-            return updatedAt >= weekStart && updatedAt <= weekEnd;
+            const watchDate = new Date(m.watchDate!);
+            return watchDate >= weekStart && watchDate <= weekEnd;
           });
           data.push({
             name: weekLabel,
@@ -117,9 +117,9 @@ const AnalyticsChart = ({ movies }: AnalyticsChartProps) => {
             year: 'numeric' 
           });
           const monthMovies = watchedMovies.filter(m => {
-            const updatedAt = new Date(m.updatedAt);
-            return updatedAt.getMonth() === date.getMonth() && 
-                   updatedAt.getFullYear() === date.getFullYear();
+            const watchDate = new Date(m.watchDate!);
+            return watchDate.getMonth() === date.getMonth() && 
+                   watchDate.getFullYear() === date.getFullYear();
           });
           data.push({
             name: monthName,
@@ -138,8 +138,8 @@ const AnalyticsChart = ({ movies }: AnalyticsChartProps) => {
         for (let i = 4; i >= 0; i--) {
           const year = currentYear - i;
           const yearMovies = watchedMovies.filter(m => {
-            const updatedAt = new Date(m.updatedAt);
-            return updatedAt.getFullYear() === year;
+            const watchDate = new Date(m.watchDate!);
+            return watchDate.getFullYear() === year;
           });
           data.push({
             name: year.toString(),
@@ -218,10 +218,10 @@ const AnalyticsChart = ({ movies }: AnalyticsChartProps) => {
 
   // Debug: log allChartData and chartData after generation
   useEffect(() => {
-    // Check for valid updatedAt
+    // Check for valid watchDate
     movies.forEach(m => {
-      if (m.status === "watched" && (!m.updatedAt || isNaN(new Date(m.updatedAt).getTime()))) {
-        // Movie with invalid updatedAt - handled silently
+      if (m.status === "watched" && (!m.watchDate || isNaN(new Date(m.watchDate).getTime()))) {
+        // Movie with invalid watchDate - handled silently
       }
     });
   }, [movies, chartData]);
