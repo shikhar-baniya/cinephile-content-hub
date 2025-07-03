@@ -14,6 +14,14 @@ class ApiClient {
     this.token = token;
   }
 
+  getToken(): string | null {
+    return this.token;
+  }
+
+  get baseURL(): string {
+    return this.baseURL;
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}

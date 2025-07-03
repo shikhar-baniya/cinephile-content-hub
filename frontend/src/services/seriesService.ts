@@ -82,18 +82,25 @@ export interface EpisodeStats {
 export const seasonService = {
   async getSeriesSeasons(seriesId: string): Promise<SeriesSeason[]> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/${seriesId}/seasons`, {
+      console.log('Fetching seasons for series:', seriesId);
+      const response = await fetch(`${apiClient.baseURL}/series/${seriesId}/seasons`, {
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
           'Content-Type': 'application/json',
         },
       });
 
+      console.log('Seasons response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Seasons error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('Seasons data:', data);
+      return data;
     } catch (error) {
       console.error('Error fetching series seasons:', error);
       throw error;
@@ -102,7 +109,7 @@ export const seasonService = {
 
   async getSeason(seasonId: string): Promise<SeriesSeason> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/seasons/${seasonId}`, {
+      const response = await fetch(`${apiClient.baseURL}/series/seasons/${seasonId}`, {
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
           'Content-Type': 'application/json',
@@ -122,7 +129,7 @@ export const seasonService = {
 
   async createSeason(seriesId: string, seasonData: Partial<SeriesSeason>): Promise<SeriesSeason> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/${seriesId}/seasons`, {
+      const response = await fetch(`${apiClient.baseURL}/series/${seriesId}/seasons`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
@@ -144,7 +151,7 @@ export const seasonService = {
 
   async updateSeason(seasonId: string, updates: Partial<SeriesSeason>): Promise<SeriesSeason> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/seasons/${seasonId}`, {
+      const response = await fetch(`${apiClient.baseURL}/series/seasons/${seasonId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
@@ -166,7 +173,7 @@ export const seasonService = {
 
   async deleteSeason(seasonId: string): Promise<void> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/seasons/${seasonId}`, {
+      const response = await fetch(`${apiClient.baseURL}/series/seasons/${seasonId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
@@ -189,7 +196,7 @@ export const seasonService = {
     watchDate?: string;
   }): Promise<SeriesSeason> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/seasons/${seasonId}/progress`, {
+      const response = await fetch(`${apiClient.baseURL}/series/seasons/${seasonId}/progress`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
@@ -211,18 +218,25 @@ export const seasonService = {
 
   async getSeriesOverview(seriesId: string): Promise<SeriesWithSeasons> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/${seriesId}/overview`, {
+      console.log('Fetching series overview for:', seriesId);
+      const response = await fetch(`${apiClient.baseURL}/series/${seriesId}/overview`, {
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
           'Content-Type': 'application/json',
         },
       });
 
+      console.log('Series overview response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Series overview error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('Series overview data:', data);
+      return data;
     } catch (error) {
       console.error('Error fetching series overview:', error);
       throw error;
@@ -235,7 +249,7 @@ export const seasonService = {
 export const episodeService = {
   async getSeasonEpisodes(seasonId: string): Promise<SeriesEpisode[]> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/seasons/${seasonId}/episodes`, {
+      const response = await fetch(`${apiClient.baseURL}/series/seasons/${seasonId}/episodes`, {
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
           'Content-Type': 'application/json',
@@ -255,7 +269,7 @@ export const episodeService = {
 
   async getEpisode(episodeId: string): Promise<SeriesEpisode> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/episodes/${episodeId}`, {
+      const response = await fetch(`${apiClient.baseURL}/series/episodes/${episodeId}`, {
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
           'Content-Type': 'application/json',
@@ -275,7 +289,7 @@ export const episodeService = {
 
   async createEpisode(seasonId: string, episodeData: Partial<SeriesEpisode>): Promise<SeriesEpisode> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/seasons/${seasonId}/episodes`, {
+      const response = await fetch(`${apiClient.baseURL}/series/seasons/${seasonId}/episodes`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
@@ -297,7 +311,7 @@ export const episodeService = {
 
   async updateEpisode(episodeId: string, updates: Partial<SeriesEpisode>): Promise<SeriesEpisode> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/episodes/${episodeId}`, {
+      const response = await fetch(`${apiClient.baseURL}/series/episodes/${episodeId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
@@ -319,7 +333,7 @@ export const episodeService = {
 
   async deleteEpisode(episodeId: string): Promise<void> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/episodes/${episodeId}`, {
+      const response = await fetch(`${apiClient.baseURL}/series/episodes/${episodeId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
@@ -342,7 +356,7 @@ export const episodeService = {
     rating?: number;
   }): Promise<SeriesEpisode> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/episodes/${episodeId}/watched`, {
+      const response = await fetch(`${apiClient.baseURL}/series/episodes/${episodeId}/watched`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
@@ -368,7 +382,7 @@ export const episodeService = {
     watchDate?: string;
   }): Promise<SeriesEpisode[]> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/seasons/${seasonId}/episodes/bulk`, {
+      const response = await fetch(`${apiClient.baseURL}/series/seasons/${seasonId}/episodes/bulk`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
@@ -393,7 +407,7 @@ export const episodeService = {
     watchDate?: string;
   }): Promise<SeriesEpisode[]> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/seasons/${seasonId}/episodes/watch-up-to`, {
+      const response = await fetch(`${apiClient.baseURL}/series/seasons/${seasonId}/episodes/watch-up-to`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
@@ -415,7 +429,7 @@ export const episodeService = {
 
   async getSeasonEpisodeStats(seasonId: string): Promise<EpisodeStats> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/series/seasons/${seasonId}/episodes/stats`, {
+      const response = await fetch(`${apiClient.baseURL}/series/seasons/${seasonId}/episodes/stats`, {
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
           'Content-Type': 'application/json',

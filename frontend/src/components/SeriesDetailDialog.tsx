@@ -4,9 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Star, Calendar, Play, Eye, Clock, ChevronDown, ChevronRight, Check, X } from "lucide-react";
+import { Star, Calendar, Play, Eye, Clock, ChevronDown, ChevronRight, Check, X, RefreshCw } from "lucide-react";
 import { Movie } from "./MovieCard";
 import { SeriesSeason, SeriesEpisode, seriesService, EpisodeStats } from "@/services/seriesService";
+import { tmdbService } from "@/services/tmdbService";
+import { debugBackend } from "@/utils/debugBackend";
 import { cn } from "@/lib/utils";
 
 interface SeriesDetailDialogProps {
@@ -23,6 +25,8 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
   const [expandedSeasons, setExpandedSeasons] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [error, setError] = useState<string | null>(null);
+  const [isPopulatingTMDB, setIsPopulatingTMDB] = useState(false);
 
   // Fetch series data when dialog opens
   useEffect(() => {
@@ -35,27 +39,60 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
     if (!series) return;
     
     setLoading(true);
+    setError(null);
+    
     try {
+      console.log('Fetching series data for:', series.id, series.title);
       const data = await seriesService.getCompleteSeriesData(series.id);
+      console.log('Series data received:', data);
+      
       setSeasons(data.seasons);
       setEpisodesBySeason(data.episodesBySeasonId);
       
       // Fetch stats for each season
-      const statsPromises = data.seasons.map(season => 
-        seriesService.episodes.getSeasonEpisodeStats(season.id)
-      );
-      const statsResults = await Promise.all(statsPromises);
-      
-      const statsMap: Record<string, EpisodeStats> = {};
-      data.seasons.forEach((season, index) => {
-        statsMap[season.id] = statsResults[index];
-      });
-      setEpisodeStats(statsMap);
+      if (data.seasons.length > 0) {
+        const statsPromises = data.seasons.map(season => 
+          seriesService.episodes.getSeasonEpisodeStats(season.id)
+        );
+        const statsResults = await Promise.all(statsPromises);
+        
+        const statsMap: Record<string, EpisodeStats> = {};
+        data.seasons.forEach((season, index) => {
+          statsMap[season.id] = statsResults[index];
+        });
+        setEpisodeStats(statsMap);
+      }
       
     } catch (error) {
       console.error('Error fetching series data:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fetch series data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePopulateTMDB = async () => {
+    if (!series || !series.tmdbId) {
+      setError('No TMDB ID found for this series');
+      return;
+    }
+
+    setIsPopulatingTMDB(true);
+    setError(null);
+
+    try {
+      console.log('Populating TMDB data for series:', series.id, 'TMDB ID:', series.tmdbId);
+      await tmdbService.populateSeriesWithTMDBData(series.id);
+      
+      // Refresh the series data after population
+      await fetchSeriesData();
+      
+      console.log('TMDB population completed successfully');
+    } catch (error) {
+      console.error('Error populating TMDB data:', error);
+      setError(error instanceof Error ? error.message : 'Failed to populate TMDB data');
+    } finally {
+      setIsPopulatingTMDB(false);
     }
   };
 
@@ -165,6 +202,12 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
           </DialogTitle>
         </DialogHeader>
 
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -218,14 +261,77 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
                 <p className="text-sm text-muted-foreground">{series.overallNotes}</p>
               </div>
             )}
+
+            {process.env.NODE_ENV === 'development' && (
+              <div className="border-t pt-4 space-y-2">
+                <h3 className="font-medium text-sm">Debug Information</h3>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => debugBackend.testBackendConnection()}
+                  >
+                    Test Backend
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => debugBackend.testSeriesEndpoint(series.id)}
+                  >
+                    Test Series API
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => debugBackend.getAllSeriesDebugInfo()}
+                  >
+                    Debug All Series
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p>Series ID: {series.id}</p>
+                  <p>TMDB ID: {series.tmdbId || 'None'}</p>
+                  <p>Category: {series.category}</p>
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="seasons" className="space-y-4">
             {loading ? (
               <div className="text-center py-4">Loading seasons...</div>
             ) : seasons.length === 0 ? (
-              <div className="text-center py-4 text-muted-foreground">
-                No seasons found. Try populating from TMDB.
+              <div className="text-center py-8 space-y-4">
+                <p className="text-muted-foreground">No seasons found.</p>
+                {series.tmdbId ? (
+                  <Button 
+                    onClick={handlePopulateTMDB}
+                    disabled={isPopulatingTMDB}
+                    className="mx-auto"
+                  >
+                    {isPopulatingTMDB ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Populating from TMDB...
+                      </>
+                    ) : (
+                      'Populate from TMDB'
+                    )}
+                  </Button>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      No TMDB ID found. Please add a TMDB ID to populate seasons.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => debugBackend.testSeriesEndpoint(series.id)}
+                    >
+                      Debug API Connection
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-2">

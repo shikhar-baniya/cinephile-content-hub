@@ -69,7 +69,7 @@ export const tmdbService = {
   // Get TV show details from TMDB
   async getTVShowDetails(tmdbId: number): Promise<TMDBTVShow> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/tmdb/tv/${tmdbId}`, {
+      const response = await fetch(`${apiClient.baseURL}/tmdb/tv/${tmdbId}`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -89,7 +89,7 @@ export const tmdbService = {
   // Get season details from TMDB
   async getSeasonDetails(tmdbId: number, seasonNumber: number): Promise<TMDBSeason> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/tmdb/tv/${tmdbId}/season/${seasonNumber}`, {
+      const response = await fetch(`${apiClient.baseURL}/tmdb/tv/${tmdbId}/season/${seasonNumber}`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -109,7 +109,7 @@ export const tmdbService = {
   // Search TV shows on TMDB
   async searchTVShows(query: string): Promise<TMDBSearchResult> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/tmdb/tv/search?query=${encodeURIComponent(query)}`, {
+      const response = await fetch(`${apiClient.baseURL}/tmdb/tv/search?query=${encodeURIComponent(query)}`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -129,7 +129,7 @@ export const tmdbService = {
   // Get trending TV shows from TMDB
   async getTrendingTVShows(timeWindow: 'day' | 'week' = 'week'): Promise<TMDBSearchResult> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/tmdb/tv/trending?timeWindow=${timeWindow}`, {
+      const response = await fetch(`${apiClient.baseURL}/tmdb/tv/trending?timeWindow=${timeWindow}`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -149,7 +149,7 @@ export const tmdbService = {
   // Get TV genres from TMDB
   async getTVGenres(): Promise<TMDBGenre[]> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/tmdb/tv/genres`, {
+      const response = await fetch(`${apiClient.baseURL}/tmdb/tv/genres`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -184,7 +184,7 @@ export const tmdbService = {
     }>;
   }> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/tmdb/series/${seriesId}/populate`, {
+      const response = await fetch(`${apiClient.baseURL}/tmdb/series/${seriesId}/populate`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
@@ -215,7 +215,7 @@ export const tmdbService = {
     };
   }> {
     try {
-      const response = await fetch(`${apiClient.baseURL}/api/tmdb/series/auto-create`, {
+      const response = await fetch(`${apiClient.baseURL}/tmdb/series/auto-create`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
