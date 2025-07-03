@@ -16,6 +16,10 @@ export interface DatabaseMovie {
   season?: string;
   tmdb_id?: number;
   watch_date?: string;
+  latest_season_watched?: number;
+  total_seasons_available?: number;
+  overall_rating?: number;
+  overall_notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -56,6 +60,10 @@ export const movieService = {
       if (updates.season !== undefined) movieUpdates.season = updates.season;
       if (updates.tmdb_id !== undefined) movieUpdates.tmdbId = updates.tmdb_id;
       if (updates.watch_date !== undefined) movieUpdates.watchDate = updates.watch_date;
+      if (updates.latest_season_watched !== undefined) movieUpdates.latestSeasonWatched = updates.latest_season_watched;
+      if (updates.total_seasons_available !== undefined) movieUpdates.totalSeasonsAvailable = updates.total_seasons_available;
+      if (updates.overall_rating !== undefined) movieUpdates.overallRating = updates.overall_rating;
+      if (updates.overall_notes !== undefined) movieUpdates.overallNotes = updates.overall_notes;
 
       return await apiClient.updateMovie(movieId, movieUpdates);
     } catch (error) {

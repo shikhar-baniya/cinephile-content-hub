@@ -9,7 +9,10 @@ export const getMovies = async (req, res) => {
     const supabase = getSupabase();
     const { data, error } = await supabase
       .from('movies')
-      .select('id, title, genre, category, release_year, platform, rating, status, poster, notes, season, tmdb_id, watch_date, created_at, updated_at')
+      .select(`
+        id, title, genre, category, release_year, platform, rating, status, poster, notes, season, tmdb_id, watch_date, created_at, updated_at,
+        latest_season_watched, total_seasons_available, overall_rating, overall_notes
+      `)
       .eq('user_id', req.user.id)
       .order('created_at', { ascending: false });
 
@@ -21,6 +24,10 @@ export const getMovies = async (req, res) => {
       watch_date: watchDate,
       created_at: createdAt,
       updated_at: updatedAt,
+      latest_season_watched: latestSeasonWatched,
+      total_seasons_available: totalSeasonsAvailable,
+      overall_rating: overallRating,
+      overall_notes: overallNotes,
       ...movie
     }) => ({
       ...movie,
@@ -28,7 +35,11 @@ export const getMovies = async (req, res) => {
       tmdbId,
       watchDate,
       createdAt,
-      updatedAt
+      updatedAt,
+      latestSeasonWatched,
+      totalSeasonsAvailable,
+      overallRating,
+      overallNotes
     })) || [];
 
     res.json(movies);
@@ -56,6 +67,10 @@ export const addMovie = async (req, res) => {
       watchDate,
       createdAt,
       updatedAt,
+      latestSeasonWatched,
+      totalSeasonsAvailable,
+      overallRating,
+      overallNotes,
       ...otherFields
     } = req.body;
 
@@ -66,7 +81,11 @@ export const addMovie = async (req, res) => {
       tmdb_id: tmdbId,
       watch_date: watchDate,
       created_at: createdAt,
-      updated_at: updatedAt
+      updated_at: updatedAt,
+      latest_season_watched: latestSeasonWatched,
+      total_seasons_available: totalSeasonsAvailable,
+      overall_rating: overallRating,
+      overall_notes: overallNotes
     };
 
     console.log('Transformed movie data for database:', JSON.stringify(movieData, null, 2));
@@ -99,7 +118,11 @@ export const addMovie = async (req, res) => {
       tmdbId: data.tmdb_id,
       watchDate: data.watch_date,
       createdAt: data.created_at,
-      updatedAt: data.updated_at
+      updatedAt: data.updated_at,
+      latestSeasonWatched: data.latest_season_watched,
+      totalSeasonsAvailable: data.total_seasons_available,
+      overallRating: data.overall_rating,
+      overallNotes: data.overall_notes
     };
 
     // Remove snake_case fields from response
@@ -108,6 +131,10 @@ export const addMovie = async (req, res) => {
     delete responseData.watch_date;
     delete responseData.created_at;
     delete responseData.updated_at;
+    delete responseData.latest_season_watched;
+    delete responseData.total_seasons_available;
+    delete responseData.overall_rating;
+    delete responseData.overall_notes;
 
     console.log('Final response data:', JSON.stringify(responseData, null, 2));
     res.status(201).json(responseData);
@@ -133,6 +160,10 @@ export const updateMovie = async (req, res) => {
       watchDate,
       createdAt,
       updatedAt,
+      latestSeasonWatched,
+      totalSeasonsAvailable,
+      overallRating,
+      overallNotes,
       ...otherFields
     } = req.body;
 
@@ -142,7 +173,11 @@ export const updateMovie = async (req, res) => {
       ...(tmdbId !== undefined && { tmdb_id: tmdbId }),
       ...(watchDate !== undefined && { watch_date: watchDate }),
       ...(createdAt !== undefined && { created_at: createdAt }),
-      ...(updatedAt !== undefined && { updated_at: updatedAt })
+      ...(updatedAt !== undefined && { updated_at: updatedAt }),
+      ...(latestSeasonWatched !== undefined && { latest_season_watched: latestSeasonWatched }),
+      ...(totalSeasonsAvailable !== undefined && { total_seasons_available: totalSeasonsAvailable }),
+      ...(overallRating !== undefined && { overall_rating: overallRating }),
+      ...(overallNotes !== undefined && { overall_notes: overallNotes })
     };
 
     const supabase = getSupabase();
@@ -167,7 +202,11 @@ export const updateMovie = async (req, res) => {
       tmdbId: data.tmdb_id,
       watchDate: data.watch_date,
       createdAt: data.created_at,
-      updatedAt: data.updated_at
+      updatedAt: data.updated_at,
+      latestSeasonWatched: data.latest_season_watched,
+      totalSeasonsAvailable: data.total_seasons_available,
+      overallRating: data.overall_rating,
+      overallNotes: data.overall_notes
     };
 
     // Remove snake_case fields from response
@@ -176,6 +215,10 @@ export const updateMovie = async (req, res) => {
     delete responseData.watch_date;
     delete responseData.created_at;
     delete responseData.updated_at;
+    delete responseData.latest_season_watched;
+    delete responseData.total_seasons_available;
+    delete responseData.overall_rating;
+    delete responseData.overall_notes;
 
     res.json(responseData);
   } catch (error) {

@@ -11,6 +11,7 @@ import { movieService } from "@/services/databaseService.api";
 import { fetchTVShowDetails } from "@/services/movieService";
 import { useToast } from "@/components/ui/use-toast";
 import { useState, useEffect } from "react";
+import SeriesDetailDialog from "./SeriesDetailDialog";
 
 interface MovieDetailDialogProps {
   movie: Movie | null;
@@ -22,6 +23,19 @@ interface MovieDetailDialogProps {
 }
 
 const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpdate }: MovieDetailDialogProps) => {
+  // If this is a series, use the SeriesDetailDialog instead
+  if (movie?.category === 'Series') {
+    return (
+      <SeriesDetailDialog
+        series={movie}
+        isOpen={open}
+        onClose={() => onOpenChange(false)}
+        onSeriesUpdate={(updatedSeries) => {
+          if (onUpdate) onUpdate();
+        }}
+      />
+    );
+  }
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);

@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Backend API for BingeBook",
   "main": "src/index.js",
-  "type": "module",  "scripts": {
+  "type": "module",
+  "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "build": "if not exist dist mkdir dist && xcopy /E /I src dist\\src && copy package.json dist\\"
@@ -15,6 +16,7 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "helmet": "^7.0.0",
+    "node-fetch": "^3.3.2",
     "serverless-http": "^3.2.0"
   },
   "devDependencies": {
@@ -23,7 +25,12 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["movies", "tracking", "api", "supabase"],
+  "keywords": [
+    "movies",
+    "tracking",
+    "api",
+    "supabase"
+  ],
   "author": "",
   "license": "MIT"
 }

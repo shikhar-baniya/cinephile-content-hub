@@ -5,6 +5,8 @@ import compression from 'compression';
 // Import routes
 import movieRoutes from './routes/movies.js';
 import authRoutes from './routes/auth.js';
+import seriesRoutes from './routes/series.js';
+import tmdbRoutes from './routes/tmdb.js';
 
 const app = express();
 
@@ -51,7 +53,9 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       movies: '/api/movies',
-      auth: '/api/auth'
+      auth: '/api/auth',
+      series: '/api/series',
+      tmdb: '/api/tmdb'
     }
   });
 });
@@ -59,6 +63,8 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/api/movies', movieRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/series', seriesRoutes);
+app.use('/api/tmdb', tmdbRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
