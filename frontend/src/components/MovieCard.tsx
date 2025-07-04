@@ -1,4 +1,4 @@
-import { Star, Calendar, Play, Eye, Clock, Film } from "lucide-react";
+import { Star, Calendar, Play, Eye, Clock, Film, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export interface Movie {
@@ -21,6 +21,7 @@ export interface Movie {
   overallNotes?: string;
   createdAt: string;
   updatedAt: string;
+  isPopulating?: boolean;
 }
 
 interface MovieCardProps {
@@ -30,6 +31,15 @@ interface MovieCardProps {
 }
 
 const MovieCard = ({ movie, onClick, showWatchedDate = true }: MovieCardProps) => {
+  // Get current season's poster for series
+  const getCurrentPoster = () => {
+    if (movie.category !== 'Series') return movie.poster;
+    
+    // For series, we would need season data to determine the current season's poster
+    // This would require fetching season data which might be expensive for the card view
+    // For now, use the main poster, but this could be enhanced with cached season data
+    return movie.poster;
+  };
   const getStatusIcon = () => {
     switch (movie.status) {
       case "watched":
@@ -54,13 +64,19 @@ const MovieCard = ({ movie, onClick, showWatchedDate = true }: MovieCardProps) =
 
   return (
     <div 
-      className="movie-card cursor-pointer group animate-fade-in h-full flex flex-col"
-      onClick={() => onClick(movie)}
+      className={`movie-card group animate-fade-in h-full flex flex-col w-full min-w-0 ${
+        movie.isPopulating ? 'cursor-wait' : 'cursor-pointer'
+      }`}
+      onClick={() => {
+        if (!movie.isPopulating) {
+          onClick(movie);
+        }
+      }}
     >
       <div className="relative aspect-[2/3] bg-gradient-to-br from-secondary to-secondary/50 rounded-2xl mb-3 overflow-hidden flex-shrink-0">
-        {movie.poster ? (
+        {getCurrentPoster() ? (
           <img 
-            src={movie.poster} 
+            src={getCurrentPoster()} 
             alt={movie.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           />
@@ -72,6 +88,16 @@ const MovieCard = ({ movie, onClick, showWatchedDate = true }: MovieCardProps) =
         
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Loading overlay for series being populated */}
+        {movie.isPopulating && (
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+              <p className="text-white text-sm">Loading episodes...</p>
+            </div>
+          </div>
+        )}
         
         {/* Status badge */}
         <div className="absolute top-3 right-3">
@@ -103,34 +129,34 @@ const MovieCard = ({ movie, onClick, showWatchedDate = true }: MovieCardProps) =
         </div>
       </div>
       
-      <div className="space-y-2 flex-grow flex flex-col px-1">
+      <div className="space-y-2 flex-grow flex flex-col px-1 min-w-0 overflow-hidden">
         <h3 className="font-bold text-white text-sm leading-tight line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-primary group-hover:via-purple-500 group-hover:to-pink-500 transition-all duration-300">
           {movie.title}
         </h3>
         
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
+        <div className="flex items-center justify-between text-xs text-muted-foreground min-w-0">
+          <span className="flex items-center gap-1 shrink-0">
             <Calendar className="h-3 w-3" />
             {movie.releaseYear}
           </span>
-          <span className="text-xs text-muted-foreground/80 truncate max-w-[60%]">
+          <span className="text-xs text-muted-foreground/80 truncate min-w-0 max-w-[60%]">
             {movie.platform}
           </span>
         </div>
         
         {/* Season info for Series */}
         {movie.category === "Series" && movie.season && (
-          <div className="flex items-center gap-1 text-xs text-primary/80">
-            <Play className="h-3 w-3" />
-            <span>{movie.season}</span>
+          <div className="flex items-center gap-1 text-xs text-primary/80 min-w-0">
+            <Play className="h-3 w-3 shrink-0" />
+            <span className="truncate min-w-0">{movie.season}</span>
           </div>
         )}
         
         {/* Watch date for watched movies */}
         {showWatchedDate && movie.status === "watched" && movie.watchDate && (
-          <div className="flex items-center gap-1 text-xs text-green-400/80">
-            <Eye className="h-3 w-3" />
-            <span>Watched {new Date(movie.watchDate).toLocaleDateString('en-US', { 
+          <div className="flex items-center gap-1 text-xs text-green-400/80 min-w-0">
+            <Eye className="h-3 w-3 shrink-0" />
+            <span className="truncate min-w-0">Watched {new Date(movie.watchDate).toLocaleDateString('en-US', { 
               day: 'numeric', 
               month: 'short', 
               year: 'numeric' 

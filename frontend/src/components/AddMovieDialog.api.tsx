@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Movie } from "./MovieCard";
 import { movieService } from "@/services/databaseService.api";
 import { fetchTVShowDetails } from "@/services/movieService";
+import { enhancedSeriesService } from "@/services/enhancedSeriesService";
 import { useToast } from "@/components/ui/use-toast";
 import MovieSearchInput from "./MovieSearchInput";
 import MultiSelectGenre from "./MultiSelectGenre";
@@ -155,29 +156,54 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
     setIsSubmitting(true);
 
     try {
-      const movieData: Omit<Movie, 'id'> = {
-        title: formData.title.trim(),
-        genre: formData.genre.join(", "),
-        category: formData.category,
-        releaseYear: formData.releaseYear,
-        platform: finalPlatform,
-        rating: formData.rating,
-        status: formData.status,
-        poster: formData.poster,
-        notes: formData.notes.trim() || undefined,
-        season: formData.season,
-        tmdbId: selectedMovie?.id,
-        watchDate: formData.watchDate || undefined,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      if (formData.category === 'Series' && selectedMovie?.id && formData.season) {
+        // Enhanced series creation with auto-population
+        const seasonNumber = parseInt(formData.season.replace(/\D/g, '')) || 1;
+        
+        const createdSeries = await enhancedSeriesService.createSeriesWithAutoPopulation({
+          title: formData.title.trim(),
+          tmdbId: selectedMovie.id,
+          selectedSeason: seasonNumber,
+          status: formData.status,
+          genre: formData.genre.join(", "),
+          releaseYear: formData.releaseYear,
+          platform: finalPlatform,
+          rating: formData.rating,
+          poster: formData.poster,
+          notes: formData.notes.trim() || undefined,
+          watchDate: formData.watchDate || undefined,
+        });
 
-      await movieService.addMovie(movieData);
-      
-      toast({
-        title: "Success",
-        description: `${formData.category} added successfully!`,
-      });
+        toast({
+          title: "Success",
+          description: `Series added successfully! Episodes are being loaded in the background.`,
+        });
+      } else {
+        // Regular movie creation
+        const movieData: Omit<Movie, 'id'> = {
+          title: formData.title.trim(),
+          genre: formData.genre.join(", "),
+          category: formData.category,
+          releaseYear: formData.releaseYear,
+          platform: finalPlatform,
+          rating: formData.rating,
+          status: formData.status,
+          poster: formData.poster,
+          notes: formData.notes.trim() || undefined,
+          season: formData.season,
+          tmdbId: selectedMovie?.id,
+          watchDate: formData.watchDate || undefined,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        await movieService.addMovie(movieData);
+        
+        toast({
+          title: "Success",
+          description: `${formData.category} added successfully!`,
+        });
+      }
       
       onAddMovie();
       onOpenChange(false);

@@ -33,6 +33,7 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
         onSeriesUpdate={(updatedSeries) => {
           if (onUpdate) onUpdate();
         }}
+        onDelete={onDelete}
       />
     );
   }

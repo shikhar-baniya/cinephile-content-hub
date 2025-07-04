@@ -2,23 +2,30 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Star, Calendar, Play, Eye, Clock, ChevronDown, ChevronRight, Check, X, RefreshCw } from "lucide-react";
+import { Star, Calendar, Play, Eye, Clock, ChevronDown, ChevronRight, Check, X, RefreshCw, Film, Edit, Save, Trash2 } from "lucide-react";
 import { Movie } from "./MovieCard";
 import { SeriesSeason, SeriesEpisode, seriesService, EpisodeStats } from "@/services/seriesService";
 import { tmdbService } from "@/services/tmdbService";
+import { enhancedSeriesService } from "@/services/enhancedSeriesService";
 import { debugBackend } from "@/utils/debugBackend";
 import { cn } from "@/lib/utils";
+import { movieService } from "@/services/databaseService.api";
+import { useToast } from "@/components/ui/use-toast";
 
 interface SeriesDetailDialogProps {
   series: Movie | null;
   isOpen: boolean;
   onClose: () => void;
   onSeriesUpdate: (updatedSeries: Movie) => void;
+  onDelete?: () => void;
 }
 
-const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesDetailDialogProps) => {
+const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete }: SeriesDetailDialogProps) => {
+  const { toast } = useToast();
   const [seasons, setSeasons] = useState<SeriesSeason[]>([]);
   const [episodesBySeason, setEpisodesBySeason] = useState<Record<string, SeriesEpisode[]>>({});
   const [episodeStats, setEpisodeStats] = useState<Record<string, EpisodeStats>>({});
@@ -27,6 +34,62 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
   const [activeTab, setActiveTab] = useState("overview");
   const [error, setError] = useState<string | null>(null);
   const [isPopulatingTMDB, setIsPopulatingTMDB] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [editingSeasonId, setEditingSeasonId] = useState<string | null>(null);
+  const [seasonRating, setSeasonRating] = useState<number>(5);
+  const [seasonNotes, setSeasonNotes] = useState<string>('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Get current season's poster or fallback to series poster
+  const getCurrentPoster = () => {
+    if (seasons.length === 0) return series?.poster;
+    
+    // Find the current season being watched (priority: watching > latest watched)
+    const watchingSeason = seasons.find(s => s.status === 'watching');
+    if (watchingSeason?.posterPath) {
+      return `https://image.tmdb.org/t/p/w500${watchingSeason.posterPath}`;
+    }
+    
+    // If no watching season, find the latest completed season
+    const completedSeasons = seasons.filter(s => s.status === 'completed').sort((a, b) => b.seasonNumber - a.seasonNumber);
+    if (completedSeasons.length > 0 && completedSeasons[0].posterPath) {
+      return `https://image.tmdb.org/t/p/w500${completedSeasons[0].posterPath}`;
+    }
+    
+    // Fallback to series poster
+    return series?.poster;
+  };
+
+  const handleDelete = async () => {
+    if (!series) return;
+    
+    const confirmed = window.confirm(`Are you sure you want to delete "${series.title}"? This action cannot be undone.`);
+    if (!confirmed) return;
+    
+    setIsDeleting(true);
+    try {
+      await movieService.deleteMovie(series.id);
+      
+      toast({
+        title: "Success",
+        description: "Series deleted from your collection!",
+      });
+      
+      if (onDelete) {
+        onDelete();
+      }
+      onClose();
+    } catch (error: any) {
+      console.error('Error deleting series:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete series. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Fetch series data when dialog opens
   useEffect(() => {
@@ -110,12 +173,13 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
 
   const handleEpisodeToggle = async (episode: SeriesEpisode, seasonId: string) => {
     try {
+      const newWatchedState = !episode.watched;
       const updatedEpisode = await seriesService.episodes.toggleEpisodeWatched(episode.id, {
-        watched: !episode.watched,
-        watchDate: !episode.watched ? new Date().toISOString().split('T')[0] : undefined,
+        watched: newWatchedState,
+        watchDate: newWatchedState ? new Date().toISOString().split('T')[0] : undefined,
       });
 
-      // Update local state
+      // Update episodes state optimistically
       setEpisodesBySeason(prev => ({
         ...prev,
         [seasonId]: prev[seasonId].map(ep => 
@@ -123,17 +187,51 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
         )
       }));
 
-      // Refresh stats for this season
-      const updatedStats = await seriesService.episodes.getSeasonEpisodeStats(seasonId);
+      // Update season state based on episode changes
+      const updatedEpisodes = episodesBySeason[seasonId].map(ep => 
+        ep.id === episode.id ? updatedEpisode : ep
+      );
+      const watchedCount = updatedEpisodes.filter(ep => ep.watched).length;
+      const totalCount = updatedEpisodes.length;
+      
+      setSeasons(prevSeasons => 
+        prevSeasons.map(season => 
+          season.id === seasonId 
+            ? { 
+                ...season, 
+                episodesWatched: watchedCount,
+                status: watchedCount === 0 ? 'not-started' : 
+                        watchedCount === totalCount ? 'completed' : 'watching',
+                watchDate: watchedCount === totalCount ? new Date().toISOString().split('T')[0] : season.watchDate
+              }
+            : season
+        )
+      );
+
+      // Update episode stats
       setEpisodeStats(prev => ({
         ...prev,
-        [seasonId]: updatedStats
+        [seasonId]: {
+          ...prev[seasonId],
+          watchedEpisodes: watchedCount,
+          unwatchedEpisodes: totalCount - watchedCount,
+          watchedPercentage: Math.round((watchedCount / totalCount) * 100),
+          isCompleted: watchedCount === totalCount,
+          nextEpisodeToWatch: watchedCount === totalCount ? undefined : watchedCount + 1
+        }
       }));
 
-      // Refresh seasons to get updated progress
-      await fetchSeriesData();
+      // Update series status based on episode changes
+      await enhancedSeriesService.updateSeriesStatusBasedOnSeasons(series.id);
+
+      // Show success message
+      setSuccessMessage(`Episode ${episode.episodeNumber} marked as ${newWatchedState ? 'watched' : 'unwatched'}`);
+      setTimeout(() => setSuccessMessage(null), 3000);
+
     } catch (error) {
       console.error('Error toggling episode:', error);
+      setError('Failed to update episode status');
+      setTimeout(() => setError(null), 5000);
     }
   };
 
@@ -148,11 +246,97 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
         watchDate: watched ? new Date().toISOString().split('T')[0] : undefined,
       });
 
-      // Refresh data
-      await fetchSeriesData();
+      // Update local state optimistically instead of full refresh
+      setSeasons(prevSeasons => 
+        prevSeasons.map(season => 
+          season.id === seasonId 
+            ? { 
+                ...season, 
+                status: watched ? 'completed' : 'not-started',
+                episodesWatched: watched ? season.episodeCount : 0,
+                watchDate: watched ? new Date().toISOString().split('T')[0] : undefined
+              }
+            : season
+        )
+      );
+
+      // Update episodes state
+      setEpisodesBySeason(prev => ({
+        ...prev,
+        [seasonId]: episodes.map(ep => ({
+          ...ep,
+          watched,
+          watchDate: watched ? new Date().toISOString().split('T')[0] : undefined
+        }))
+      }));
+
+      // Update episode stats
+      const totalEpisodes = episodes.length;
+      const watchedEpisodes = watched ? totalEpisodes : 0;
+      setEpisodeStats(prev => ({
+        ...prev,
+        [seasonId]: {
+          ...prev[seasonId],
+          watchedEpisodes,
+          unwatchedEpisodes: totalEpisodes - watchedEpisodes,
+          watchedPercentage: Math.round((watchedEpisodes / totalEpisodes) * 100),
+          isCompleted: watched,
+          nextEpisodeToWatch: watched ? undefined : 1
+        }
+      }));
+
+      // Update series status based on season changes
+      await enhancedSeriesService.updateSeriesStatusBasedOnSeasons(series.id);
+
+      // Show success message
+      setSuccessMessage(`Season ${seasons.find(s => s.id === seasonId)?.seasonName} marked as ${watched ? 'watched' : 'unwatched'}`);
+      setTimeout(() => setSuccessMessage(null), 3000);
+
     } catch (error) {
       console.error('Error marking season as watched:', error);
+      setError('Failed to update season status');
+      setTimeout(() => setError(null), 5000);
     }
+  };
+
+  const handleSeasonEdit = (season: SeriesSeason) => {
+    setEditingSeasonId(season.id);
+    setSeasonRating(season.rating || 5);
+    setSeasonNotes(season.notes || '');
+  };
+
+  const handleSaveSeasonEdit = async () => {
+    if (!editingSeasonId) return;
+    
+    try {
+      await seriesService.seasons.updateSeason(editingSeasonId, {
+        rating: seasonRating,
+        notes: seasonNotes.trim() || undefined
+      });
+
+      // Update local state
+      setSeasons(prevSeasons => 
+        prevSeasons.map(season => 
+          season.id === editingSeasonId 
+            ? { ...season, rating: seasonRating, notes: seasonNotes.trim() || undefined }
+            : season
+        )
+      );
+
+      setEditingSeasonId(null);
+      setSuccessMessage('Season updated successfully');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      console.error('Error updating season:', error);
+      setError('Failed to update season');
+      setTimeout(() => setError(null), 5000);
+    }
+  };
+
+  const handleCancelSeasonEdit = () => {
+    setEditingSeasonId(null);
+    setSeasonRating(5);
+    setSeasonNotes('');
   };
 
   const getStatusIcon = (status: string) => {
@@ -188,23 +372,41 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            {series.poster && (
+            {getCurrentPoster() && (
               <img 
-                src={series.poster} 
+                src={getCurrentPoster()} 
                 alt={series.title}
                 className="w-12 h-12 rounded object-cover"
               />
             )}
-            <div>
+            <div className="flex-1">
               <h2 className="text-xl font-semibold">{series.title}</h2>
               <p className="text-sm text-muted-foreground">{series.genre}</p>
             </div>
+            {onDelete && (
+              <Button 
+                variant="destructive" 
+                onClick={handleDelete} 
+                size="sm"
+                disabled={isDeleting}
+                className="p-2"
+                title={isDeleting ? "Deleting..." : "Delete"}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </DialogTitle>
         </DialogHeader>
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4">
             <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 mb-4">
+            <p className="text-green-400 text-sm">{successMessage}</p>
           </div>
         )}
 
@@ -215,83 +417,144 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
             <TabsTrigger value="episodes">Episodes</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h3 className="font-medium">Series Information</h3>
-                <div className="space-y-1 text-sm">
-                  <p><span className="font-medium">Status:</span> {series.status}</p>
-                  <p><span className="font-medium">Release Year:</span> {series.releaseYear}</p>
-                  <p><span className="font-medium">Platform:</span> {series.platform}</p>
-                  {series.totalSeasonsAvailable && (
-                    <p><span className="font-medium">Total Seasons:</span> {series.totalSeasonsAvailable}</p>
-                  )}
-                  {series.latestSeasonWatched && (
-                    <p><span className="font-medium">Latest Season Watched:</span> {series.latestSeasonWatched}</p>
-                  )}
+          <TabsContent value="overview" className="space-y-6">
+            {/* Header Stats Cards */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-muted/30 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {seasons.filter(s => s.status === 'completed').length}
                 </div>
+                <div className="text-sm text-muted-foreground">Seasons Completed</div>
               </div>
-              <div className="space-y-2">
-                <h3 className="font-medium">Progress Summary</h3>
-                {seasons.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Seasons Completed</span>
-                      <span>{seasons.filter(s => s.status === 'completed').length} / {seasons.length}</span>
-                    </div>
-                    <Progress 
-                      value={(seasons.filter(s => s.status === 'completed').length / seasons.length) * 100} 
-                      className="h-2"
-                    />
-                    <div className="flex justify-between text-sm">
-                      <span>Total Episodes Watched</span>
-                      <span>
-                        {Object.values(episodeStats).reduce((acc, stats) => acc + stats.watchedEpisodes, 0)} / 
-                        {Object.values(episodeStats).reduce((acc, stats) => acc + stats.totalEpisodes, 0)}
-                      </span>
-                    </div>
-                  </div>
-                )}
+              <div className="bg-muted/30 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {Object.values(episodeStats).reduce((acc, stats) => acc + stats.watchedEpisodes, 0)}
+                </div>
+                <div className="text-sm text-muted-foreground">Episodes Watched</div>
+              </div>
+              <div className="bg-muted/30 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {series.overallRating || 'N/A'}
+                </div>
+                <div className="text-sm text-muted-foreground">Overall Rating</div>
               </div>
             </div>
-            
-            {series.overallNotes && (
-              <div className="space-y-2">
-                <h3 className="font-medium">Notes</h3>
-                <p className="text-sm text-muted-foreground">{series.overallNotes}</p>
+
+            {/* Progress Section */}
+            {seasons.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="font-medium flex items-center gap-2">
+                  <Play className="h-4 w-4" />
+                  Watching Progress
+                </h3>
+                <div className="bg-muted/20 rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Season Progress</span>
+                    <span className="text-sm text-muted-foreground">
+                      {seasons.filter(s => s.status === 'completed').length} of {seasons.length} seasons
+                    </span>
+                  </div>
+                  <Progress 
+                    value={seasons.length > 0 ? (seasons.filter(s => s.status === 'completed').length / seasons.length) * 100 : 0} 
+                    className="h-3"
+                  />
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Episode Progress</span>
+                    <span className="text-sm text-muted-foreground">
+                      {Object.values(episodeStats).reduce((acc, stats) => acc + stats.watchedEpisodes, 0)} of{' '}
+                      {Object.values(episodeStats).reduce((acc, stats) => acc + stats.totalEpisodes, 0)} episodes
+                    </span>
+                  </div>
+                  <Progress 
+                    value={
+                      Object.values(episodeStats).reduce((acc, stats) => acc + stats.totalEpisodes, 0) > 0
+                        ? (Object.values(episodeStats).reduce((acc, stats) => acc + stats.watchedEpisodes, 0) / 
+                           Object.values(episodeStats).reduce((acc, stats) => acc + stats.totalEpisodes, 0)) * 100
+                        : 0
+                    } 
+                    className="h-3"
+                  />
+                </div>
               </div>
             )}
 
-            {process.env.NODE_ENV === 'development' && (
-              <div className="border-t pt-4 space-y-2">
-                <h3 className="font-medium text-sm">Debug Information</h3>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => debugBackend.testBackendConnection()}
-                  >
-                    Test Backend
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => debugBackend.testSeriesEndpoint(series.id)}
-                  >
-                    Test Series API
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => debugBackend.getAllSeriesDebugInfo()}
-                  >
-                    Debug All Series
-                  </Button>
+            {/* Series Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <h3 className="font-medium flex items-center gap-2">
+                  <Film className="h-4 w-4" />
+                  Series Information
+                </h3>
+                <div className="bg-muted/20 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Status:</span>
+                    <Badge className={
+                      series.status === 'watched' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                      series.status === 'watching' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                      'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                    }>
+                      {series.status.replace('-', ' ')}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Release Year:</span>
+                    <span className="text-sm font-medium">{series.releaseYear}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Platform:</span>
+                    <span className="text-sm font-medium">{series.platform}</span>
+                  </div>
+                  {series.totalSeasonsAvailable && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Total Seasons:</span>
+                      <span className="text-sm font-medium">{series.totalSeasonsAvailable}</span>
+                    </div>
+                  )}
+                  {series.latestSeasonWatched && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Latest Season Watched:</span>
+                      <span className="text-sm font-medium">Season {series.latestSeasonWatched}</span>
+                    </div>
+                  )}
                 </div>
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <p>Series ID: {series.id}</p>
-                  <p>TMDB ID: {series.tmdbId || 'None'}</p>
-                  <p>Category: {series.category}</p>
+              </div>
+
+              {/* Season Status Breakdown */}
+              {seasons.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="font-medium flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Season Status
+                  </h3>
+                  <div className="bg-muted/20 rounded-lg p-4 space-y-3">
+                    {[
+                      { status: 'completed', label: 'Completed', icon: Eye, color: 'text-green-400' },
+                      { status: 'watching', label: 'Watching', icon: Play, color: 'text-blue-400' },
+                      { status: 'want-to-watch', label: 'Want to Watch', icon: Clock, color: 'text-yellow-400' },
+                      { status: 'not-started', label: 'Not Started', icon: Clock, color: 'text-gray-400' }
+                    ].map(({ status, label, icon: Icon, color }) => {
+                      const count = seasons.filter(s => s.status === status).length;
+                      return count > 0 ? (
+                        <div key={status} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Icon className={`h-4 w-4 ${color}`} />
+                            <span className="text-sm">{label}</span>
+                          </div>
+                          <span className="text-sm font-medium">{count}</span>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {series.overallNotes && (
+              <div className="space-y-3">
+                <h3 className="font-medium">Notes</h3>
+                <div className="bg-muted/20 rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground leading-relaxed">{series.overallNotes}</p>
                 </div>
               </div>
             )}
@@ -323,40 +586,52 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
                     <p className="text-sm text-muted-foreground">
                       No TMDB ID found. Please add a TMDB ID to populate seasons.
                     </p>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => debugBackend.testSeriesEndpoint(series.id)}
-                    >
-                      Debug API Connection
-                    </Button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
                 {seasons.map((season) => {
                   const stats = episodeStats[season.id];
                   return (
-                    <div key={season.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <h4 className="font-medium">{season.seasonName}</h4>
-                          <Badge className={getStatusColor(season.status)}>
-                            {getStatusIcon(season.status)}
-                            <span className="ml-1 capitalize">{season.status.replace('-', ' ')}</span>
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-2">
+                    <div key={season.id} className="bg-muted/20 rounded-lg p-4 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <h4 className="font-medium text-lg">{season.seasonName}</h4>
+                            <Badge className={getStatusColor(season.status)}>
+                              {getStatusIcon(season.status)}
+                              <span className="ml-1 capitalize">{season.status.replace('-', ' ')}</span>
+                            </Badge>
+                          </div>
+                          
                           {stats && (
-                            <span className="text-sm text-muted-foreground">
-                              {stats.watchedEpisodes}/{stats.totalEpisodes} episodes
-                            </span>
+                            <div className="text-sm text-muted-foreground">
+                              {stats.watchedEpisodes} of {stats.totalEpisodes} episodes watched
+                            </div>
                           )}
+                        </div>
+                        
+                        <div className="flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => {
+                              if (editingSeasonId === season.id) {
+                                setEditingSeasonId(null);
+                              } else {
+                                handleSeasonEdit(season);
+                              }
+                            }}
+                            className="shrink-0"
+                          >
+                            {editingSeasonId === season.id ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            variant={season.status === 'completed' ? 'secondary' : 'default'}
+                            size="sm"
                             onClick={() => handleMarkSeasonWatched(season.id, season.status !== 'completed')}
+                            className="shrink-0"
                           >
                             {season.status === 'completed' ? 'Mark Unwatched' : 'Mark Watched'}
                           </Button>
@@ -364,19 +639,70 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
                       </div>
                       
                       {stats && stats.totalEpisodes > 0 && (
-                        <div className="mt-3">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>Progress</span>
-                            <span>{stats.watchedPercentage}%</span>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="font-medium">Progress</span>
+                            <span className="text-muted-foreground">{stats.watchedPercentage}%</span>
                           </div>
                           <Progress value={stats.watchedPercentage} className="h-2" />
                         </div>
                       )}
 
-                      {season.rating && (
-                        <div className="mt-2 flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm">{season.rating}/10</span>
+                      {editingSeasonId === season.id ? (
+                        <div className="space-y-3 border-t pt-3">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Rating (1-10)</label>
+                            <Input
+                              type="number"
+                              min="1"
+                              max="10"
+                              step="0.1"
+                              value={seasonRating}
+                              onChange={(e) => setSeasonRating(parseFloat(e.target.value) || 5)}
+                              className="w-24"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Notes</label>
+                            <Textarea
+                              value={seasonNotes}
+                              onChange={(e) => setSeasonNotes(e.target.value)}
+                              placeholder="Add notes about this season..."
+                              className="min-h-[60px]"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={handleSaveSeasonEdit}>
+                              <Save className="h-4 w-4 mr-1" />
+                              Save
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={handleCancelSeasonEdit}>
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-4">
+                            {season.rating && (
+                              <div className="flex items-center gap-1">
+                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                <span>{season.rating}/10</span>
+                              </div>
+                            )}
+                            
+                            {season.watchDate && (
+                              <div className="text-muted-foreground">
+                                Completed: {new Date(season.watchDate).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {season.notes && (
+                            <div className="text-xs text-muted-foreground max-w-xs truncate">
+                              {season.notes}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -386,7 +712,8 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
             )}
           </TabsContent>
 
-          <TabsContent value="episodes" className="space-y-4 max-h-96 overflow-y-auto">
+          <TabsContent value="episodes" className="space-y-4">
+            <div className="max-h-96 overflow-y-auto pr-2">
             {loading ? (
               <div className="text-center py-4">Loading episodes...</div>
             ) : (
@@ -470,8 +797,9 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate }: SeriesD
                 })}
               </div>
             )}
-          </TabsContent>
-        </Tabs>
+             </div>
+              </TabsContent>
+         </Tabs>
       </DialogContent>
     </Dialog>
   );

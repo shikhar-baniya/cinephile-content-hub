@@ -15,6 +15,7 @@ export interface SeriesSeason {
   rating?: number;
   notes?: string;
   tmdbSeasonId?: number;
+  posterPath?: string;
   createdAt: string;
   updatedAt: string;
 }

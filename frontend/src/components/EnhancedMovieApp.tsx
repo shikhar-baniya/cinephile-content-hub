@@ -5,6 +5,7 @@ import MovieList from "./MovieList";
 import MovieDetailDialog from "./MovieDetailDialog.api";
 import AddMovieDialog from "./AddMovieDialog.api";
 import { movieService } from "@/services/databaseService.api";
+import { seriesPopulationService } from "@/services/seriesPopulationService";
 
 /**
  * Enhanced Movie App with all new features:
@@ -24,6 +25,7 @@ const EnhancedMovieApp = () => {
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [populationUpdate, setPopulationUpdate] = useState(0);
 
   // Load movies
   const loadMovies = async () => {
@@ -44,6 +46,13 @@ const EnhancedMovieApp = () => {
 
   useEffect(() => {
     loadMovies();
+    
+    // Subscribe to population changes
+    const unsubscribe = seriesPopulationService.subscribe(() => {
+      setPopulationUpdate(prev => prev + 1);
+    });
+    
+    return unsubscribe;
   }, []);
 
   const handleMovieClick = (movie: Movie) => {
@@ -108,7 +117,11 @@ const EnhancedMovieApp = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <MovieList
-        movies={movies}
+        key={populationUpdate}
+        movies={movies.map(movie => ({
+          ...movie,
+          isPopulating: seriesPopulationService.isPopulating(movie.id)
+        }))}
         onMovieClick={handleMovieClick}
         onAddMovie={handleAddMovie}
         onEditMovie={handleEditMovie}
