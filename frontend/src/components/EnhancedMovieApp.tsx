@@ -51,9 +51,22 @@ const EnhancedMovieApp = () => {
     const unsubscribe = seriesPopulationService.subscribe(() => {
       setPopulationUpdate(prev => prev + 1);
     });
+
+    // Subscribe to completion notifications
+    const unsubscribeCompletion = seriesPopulationService.subscribeToCompletion((seriesId) => {
+      // Find the series name for the notification
+      const completedSeries = movies.find(m => m.id === seriesId);
+      toast({
+        title: "🎉 Series Ready!",
+        description: `${completedSeries?.title || 'Your series'} has been fully curated with all episodes and seasons!`,
+      });
+    });
     
-    return unsubscribe;
-  }, []);
+    return () => {
+      unsubscribe();
+      unsubscribeCompletion();
+    };
+  }, [movies, toast]);
 
   const handleMovieClick = (movie: Movie) => {
     setSelectedMovie(movie);
@@ -67,9 +80,11 @@ const EnhancedMovieApp = () => {
   const handleMovieAdded = () => {
     loadMovies();
     setIsAddDialogOpen(false);
+    // Force update of population status
+    setPopulationUpdate(prev => prev + 1);
     toast({
-      title: "Success",
-      description: "Movie added to your collection!",
+      title: "🎬 Series Added!",
+      description: "Your series is being curated with all episodes and seasons. This may take 1-2 minutes.",
     });
   };
 

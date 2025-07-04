@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Star, Calendar, Play, Eye, Clock, ChevronDown, ChevronRight, Check, X, RefreshCw, Film, Edit, Save, Trash2 } from "lucide-react";
+import { Star, Calendar, Play, Eye, Clock, ChevronDown, ChevronRight, Check, X, RefreshCw, Film, Edit, Save, Trash2, Monitor, PlayCircle } from "lucide-react";
 import { Movie } from "./MovieCard";
 import { SeriesSeason, SeriesEpisode, seriesService, EpisodeStats } from "@/services/seriesService";
 import { tmdbService } from "@/services/tmdbService";
@@ -39,6 +39,7 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
   const [seasonRating, setSeasonRating] = useState<number>(5);
   const [seasonNotes, setSeasonNotes] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [tmdbSeasons, setTmdbSeasons] = useState<any[]>([]);
 
   // Get current season's poster or fallback to series poster
   const getCurrentPoster = () => {
@@ -46,14 +47,20 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
     
     // Find the current season being watched (priority: watching > latest watched)
     const watchingSeason = seasons.find(s => s.status === 'watching');
-    if (watchingSeason?.posterPath) {
-      return `https://image.tmdb.org/t/p/w500${watchingSeason.posterPath}`;
+    if (watchingSeason) {
+      const tmdbSeason = tmdbSeasons.find(ts => ts.seasonNumber === watchingSeason.seasonNumber);
+      if (tmdbSeason?.posterPath) {
+        return `https://image.tmdb.org/t/p/w500${tmdbSeason.posterPath}`;
+      }
     }
     
     // If no watching season, find the latest completed season
     const completedSeasons = seasons.filter(s => s.status === 'completed').sort((a, b) => b.seasonNumber - a.seasonNumber);
-    if (completedSeasons.length > 0 && completedSeasons[0].posterPath) {
-      return `https://image.tmdb.org/t/p/w500${completedSeasons[0].posterPath}`;
+    if (completedSeasons.length > 0) {
+      const tmdbSeason = tmdbSeasons.find(ts => ts.seasonNumber === completedSeasons[0].seasonNumber);
+      if (tmdbSeason?.posterPath) {
+        return `https://image.tmdb.org/t/p/w500${tmdbSeason.posterPath}`;
+      }
     }
     
     // Fallback to series poster
@@ -124,6 +131,16 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
           statsMap[season.id] = statsResults[index];
         });
         setEpisodeStats(statsMap);
+      }
+
+      // Fetch TMDB season data if tmdbId is available
+      if (series.tmdbId) {
+        try {
+          const tmdbData = await tmdbService.getTVShowDetails(series.tmdbId);
+          setTmdbSeasons(tmdbData.seasons || []);
+        } catch (tmdbError) {
+          console.error('Error fetching TMDB season data:', tmdbError);
+        }
       }
       
     } catch (error) {
@@ -369,33 +386,59 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="pb-6">
+          <div className="flex items-start gap-6">
             {getCurrentPoster() && (
-              <img 
-                src={getCurrentPoster()} 
-                alt={series.title}
-                className="w-12 h-12 rounded object-cover"
-              />
+              <div className="shrink-0">
+                <img 
+                  src={getCurrentPoster()} 
+                  alt={series.title}
+                  className="w-24 h-36 rounded-lg object-cover shadow-lg ring-2 ring-border/50 transition-all duration-300 hover:ring-primary/50"
+                />
+              </div>
             )}
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold">{series.title}</h2>
-              <p className="text-sm text-muted-foreground">{series.genre}</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between">
+                <div>
+                  <DialogTitle className="text-2xl font-bold mb-2">{series.title}</DialogTitle>
+                  <p className="text-muted-foreground mb-3">{series.genre}</p>
+                  
+                  {/* Status, Year, Platform */}
+                  <div className="flex items-center gap-4 mb-3 text-sm">
+                    <div className="flex items-center gap-1">
+                      {getStatusIcon(series.status)}
+                      <span className="capitalize">{series.status.replace('-', ' ')}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span>{series.releaseYear}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Monitor className="h-4 w-4 text-muted-foreground" />
+                      <span>{series.platform}</span>
+                    </div>
+                  </div>
+                  
+                  {series.overallNotes && (
+                    <p className="text-sm text-muted-foreground line-clamp-3">{series.overallNotes}</p>
+                  )}
+                </div>
+                {onDelete && (
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleDelete} 
+                    size="sm"
+                    disabled={isDeleting}
+                    className="p-2 mr-8"
+                    title={isDeleting ? "Deleting..." : "Delete"}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
-            {onDelete && (
-              <Button 
-                variant="destructive" 
-                onClick={handleDelete} 
-                size="sm"
-                disabled={isDeleting}
-                className="p-2"
-                title={isDeleting ? "Deleting..." : "Delete"}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </DialogTitle>
+          </div>
         </DialogHeader>
 
         {error && (
@@ -410,31 +453,36 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
           </div>
         )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col min-h-0 flex-1">
+          <TabsList className="grid w-full grid-cols-3 shrink-0">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="seasons">Seasons</TabsTrigger>
             <TabsTrigger value="episodes">Episodes</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-6 overflow-y-auto min-h-0 flex-1 pr-2">
             {/* Header Stats Cards */}
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-muted/30 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
                   {seasons.filter(s => s.status === 'completed').length}
                 </div>
                 <div className="text-sm text-muted-foreground">Seasons Completed</div>
               </div>
               <div className="bg-muted/30 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-2xl font-bold bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
                   {Object.values(episodeStats).reduce((acc, stats) => acc + stats.watchedEpisodes, 0)}
                 </div>
                 <div className="text-sm text-muted-foreground">Episodes Watched</div>
               </div>
               <div className="bg-muted/30 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-primary">
-                  {series.overallRating || 'N/A'}
+                <div className="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
+                  {(() => {
+                    const ratedSeasons = seasons.filter(s => s.rating && s.rating > 0);
+                    if (ratedSeasons.length === 0) return 'N/A';
+                    const avgRating = ratedSeasons.reduce((acc, s) => acc + (s.rating || 0), 0) / ratedSeasons.length;
+                    return avgRating.toFixed(1);
+                  })()}
                 </div>
                 <div className="text-sm text-muted-foreground">Overall Rating</div>
               </div>
@@ -456,7 +504,7 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                   </div>
                   <Progress 
                     value={seasons.length > 0 ? (seasons.filter(s => s.status === 'completed').length / seasons.length) * 100 : 0} 
-                    className="h-3"
+                    className="h-3 [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-purple-600"
                   />
                   
                   <div className="flex justify-between items-center">
@@ -473,61 +521,41 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                            Object.values(episodeStats).reduce((acc, stats) => acc + stats.totalEpisodes, 0)) * 100
                         : 0
                     } 
-                    className="h-3"
+                    className="h-3 [&>div]:bg-gradient-to-r [&>div]:from-purple-500 [&>div]:to-pink-600"
                   />
                 </div>
               </div>
             )}
 
-            {/* Series Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
+            {/* Season Status Breakdown */}
+            {seasons.length > 0 && (
+              <div className="space-y-3 max-w-md">
                 <h3 className="font-medium flex items-center gap-2">
-                  <Film className="h-4 w-4" />
-                  Series Information
+                  <Calendar className="h-4 w-4" />
+                  Season Status
                 </h3>
-                <div className="bg-muted/20 rounded-lg p-4 space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Status:</span>
-                    <Badge className={
-                      series.status === 'watched' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
-                      series.status === 'watching' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
-                      'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                    }>
-                      {series.status.replace('-', ' ')}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Release Year:</span>
-                    <span className="text-sm font-medium">{series.releaseYear}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Platform:</span>
-                    <span className="text-sm font-medium">{series.platform}</span>
-                  </div>
+                <div className="bg-muted/20 rounded-lg p-4 space-y-3">
+                  {/* Total and Latest Season Info */}
                   {series.totalSeasonsAvailable && (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Total Seasons:</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <PlayCircle className="h-4 w-4 text-blue-400" />
+                        <span className="text-sm">Total Seasons</span>
+                      </div>
                       <span className="text-sm font-medium">{series.totalSeasonsAvailable}</span>
                     </div>
                   )}
                   {series.latestSeasonWatched && (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Latest Season Watched:</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-green-400" />
+                        <span className="text-sm">Latest Watched</span>
+                      </div>
                       <span className="text-sm font-medium">Season {series.latestSeasonWatched}</span>
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* Season Status Breakdown */}
-              {seasons.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="font-medium flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Season Status
-                  </h3>
-                  <div className="bg-muted/20 rounded-lg p-4 space-y-3">
+                  
+                  <div className="border-t border-border/40 pt-3 mt-3">
                     {[
                       { status: 'completed', label: 'Completed', icon: Eye, color: 'text-green-400' },
                       { status: 'watching', label: 'Watching', icon: Play, color: 'text-blue-400' },
@@ -547,8 +575,8 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                     })}
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
             
             {series.overallNotes && (
               <div className="space-y-3">
@@ -560,7 +588,7 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
             )}
           </TabsContent>
 
-          <TabsContent value="seasons" className="space-y-4">
+          <TabsContent value="seasons" className="space-y-4 overflow-y-auto min-h-0 flex-1 pr-2">
             {loading ? (
               <div className="text-center py-4">Loading seasons...</div>
             ) : seasons.length === 0 ? (
@@ -594,27 +622,19 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                 {seasons.map((season) => {
                   const stats = episodeStats[season.id];
                   return (
-                    <div key={season.id} className="bg-muted/20 rounded-lg p-4 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-3">
-                            <h4 className="font-medium text-lg">{season.seasonName}</h4>
-                            <Badge className={getStatusColor(season.status)}>
-                              {getStatusIcon(season.status)}
-                              <span className="ml-1 capitalize">{season.status.replace('-', ' ')}</span>
-                            </Badge>
-                          </div>
-                          
-                          {stats && (
-                            <div className="text-sm text-muted-foreground">
-                              {stats.watchedEpisodes} of {stats.totalEpisodes} episodes watched
-                            </div>
-                          )}
+                    <div key={season.id} className="bg-muted/20 rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <h4 className="font-medium">{season.seasonName}</h4>
+                          <Badge className={`${getStatusColor(season.status)} text-xs`}>
+                            {getStatusIcon(season.status)}
+                            <span className="ml-1 capitalize">{season.status.replace('-', ' ')}</span>
+                          </Badge>
                         </div>
                         
-                        <div className="flex gap-2">
+                        <div className="flex gap-1">
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={() => {
                               if (editingSeasonId === season.id) {
@@ -623,20 +643,27 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                                 handleSeasonEdit(season);
                               }
                             }}
-                            className="shrink-0"
+                            className="h-8 w-8 p-0"
+                            title="Edit season"
                           >
-                            {editingSeasonId === season.id ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
+                            {editingSeasonId === season.id ? <X className="h-3 w-3" /> : <Edit className="h-3 w-3" />}
                           </Button>
                           <Button
                             variant={season.status === 'completed' ? 'secondary' : 'default'}
                             size="sm"
                             onClick={() => handleMarkSeasonWatched(season.id, season.status !== 'completed')}
-                            className="shrink-0"
+                            className="h-8 px-3 text-xs"
                           >
-                            {season.status === 'completed' ? 'Mark Unwatched' : 'Mark Watched'}
+                            {season.status === 'completed' ? 'Unwatch' : 'Watch'}
                           </Button>
                         </div>
                       </div>
+                      
+                      {stats && (
+                        <div className="text-xs text-muted-foreground">
+                          {stats.watchedEpisodes} of {stats.totalEpisodes} episodes watched
+                        </div>
+                      )}
                       
                       {stats && stats.totalEpisodes > 0 && (
                         <div className="space-y-2">
@@ -644,7 +671,7 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                             <span className="font-medium">Progress</span>
                             <span className="text-muted-foreground">{stats.watchedPercentage}%</span>
                           </div>
-                          <Progress value={stats.watchedPercentage} className="h-2" />
+                          <Progress value={stats.watchedPercentage} className="h-2 [&>div]:bg-gradient-to-r [&>div]:from-purple-500 [&>div]:to-indigo-600" />
                         </div>
                       )}
 
@@ -712,8 +739,7 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
             )}
           </TabsContent>
 
-          <TabsContent value="episodes" className="space-y-4">
-            <div className="max-h-96 overflow-y-auto pr-2">
+          <TabsContent value="episodes" className="space-y-4 overflow-y-auto min-h-0 flex-1 pr-2">
             {loading ? (
               <div className="text-center py-4">Loading episodes...</div>
             ) : (
@@ -797,7 +823,6 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                 })}
               </div>
             )}
-             </div>
               </TabsContent>
          </Tabs>
       </DialogContent>

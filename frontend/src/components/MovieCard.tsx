@@ -1,5 +1,6 @@
-import { Star, Calendar, Play, Eye, Clock, Film, Loader2 } from "lucide-react";
+import { Star, Calendar, Play, Eye, Clock, Film, Loader2, Monitor } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
 
 export interface Movie {
   id: string;
@@ -31,6 +32,8 @@ interface MovieCardProps {
 }
 
 const MovieCard = ({ movie, onClick, showWatchedDate = true }: MovieCardProps) => {
+  const [currentInfoIndex, setCurrentInfoIndex] = useState(0);
+  
   // Get current season's poster for series
   const getCurrentPoster = () => {
     if (movie.category !== 'Series') return movie.poster;
@@ -40,6 +43,94 @@ const MovieCard = ({ movie, onClick, showWatchedDate = true }: MovieCardProps) =
     // For now, use the main poster, but this could be enhanced with cached season data
     return movie.poster;
   };
+
+  // Generate dynamic series information
+  const getSeriesInfo = () => {
+    if (movie.category !== 'Series') return null;
+    
+    const infos = [];
+    
+    // Add status-based info
+    if (movie.status === 'watching') {
+      infos.push({
+        icon: <Play className="h-3 w-3 shrink-0" />,
+        text: "Currently Watching",
+        color: "text-blue-400/80"
+      });
+    } else if (movie.status === 'watched') {
+      infos.push({
+        icon: <Eye className="h-3 w-3 shrink-0" />,
+        text: "Completed",
+        color: "text-green-400/80"
+      });
+    } else if (movie.status === 'want-to-watch') {
+      infos.push({
+        icon: <Clock className="h-3 w-3 shrink-0" />,
+        text: "Want to Watch",
+        color: "text-yellow-400/80"
+      });
+    }
+    
+    // Add season info if available
+    if (movie.latestSeasonWatched && movie.totalSeasonsAvailable) {
+      infos.push({
+        icon: <Film className="h-3 w-3 shrink-0" />,
+        text: `Season ${movie.latestSeasonWatched}/${movie.totalSeasonsAvailable}`,
+        color: "text-purple-400/80"
+      });
+    }
+    
+    // Add episode count if available (estimated)
+    if (movie.totalSeasonsAvailable) {
+      const estimatedEpisodes = movie.totalSeasonsAvailable * 10; // rough estimate
+      infos.push({
+        icon: <Play className="h-3 w-3 shrink-0" />,
+        text: `~${estimatedEpisodes} Episodes`,
+        color: "text-cyan-400/80"
+      });
+    }
+
+    // Add rating info if available
+    if (movie.rating && movie.rating > 0) {
+      infos.push({
+        icon: <Star className="h-3 w-3 shrink-0" />,
+        text: `${movie.rating}/10 Rated`,
+        color: "text-yellow-400/80"
+      });
+    }
+
+    // Add platform info
+    if (movie.platform) {
+      infos.push({
+        icon: <Monitor className="h-3 w-3 shrink-0" />,
+        text: `${movie.platform}`,
+        color: "text-indigo-400/80"
+      });
+    }
+
+    // Add release year
+    if (movie.releaseYear) {
+      infos.push({
+        icon: <Calendar className="h-3 w-3 shrink-0" />,
+        text: `${movie.releaseYear}`,
+        color: "text-orange-400/80"
+      });
+    }
+    
+    return infos.length > 0 ? infos : null;
+  };
+
+  // Rotate info every 3 seconds
+  useEffect(() => {
+    const seriesInfos = getSeriesInfo();
+    if (!seriesInfos || seriesInfos.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setCurrentInfoIndex(prev => (prev + 1) % seriesInfos.length);
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, [movie.id, movie.latestSeasonWatched, movie.totalSeasonsAvailable, movie.status]);
   const getStatusIcon = () => {
     switch (movie.status) {
       case "watched":
@@ -91,10 +182,20 @@ const MovieCard = ({ movie, onClick, showWatchedDate = true }: MovieCardProps) =
         
         {/* Loading overlay for series being populated */}
         {movie.isPopulating && (
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center">
-            <div className="text-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
-              <p className="text-white text-sm">Loading episodes...</p>
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-10">
+            <div className="text-center p-4">
+              <div className="relative">
+                <Loader2 className="h-10 w-10 animate-spin text-transparent mx-auto mb-3" style={{
+                  background: 'linear-gradient(45deg, #8b5cf6, #06b6d4, #10b981)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text'
+                }} />
+                <div className="absolute inset-0 h-10 w-10 mx-auto animate-pulse">
+                  <div className="h-full w-full rounded-full bg-gradient-to-r from-purple-500 via-blue-500 to-green-500 opacity-20"></div>
+                </div>
+              </div>
+              <p className="text-white text-sm font-medium mb-1">🎬 Curating your series...</p>
+              <p className="text-white/70 text-xs">Fetching episodes & seasons</p>
             </div>
           </div>
         )}
@@ -144,13 +245,19 @@ const MovieCard = ({ movie, onClick, showWatchedDate = true }: MovieCardProps) =
           </span>
         </div>
         
-        {/* Season info for Series */}
-        {movie.category === "Series" && movie.season && (
-          <div className="flex items-center gap-1 text-xs text-primary/80 min-w-0">
-            <Play className="h-3 w-3 shrink-0" />
-            <span className="truncate min-w-0">{movie.season}</span>
-          </div>
-        )}
+        {/* Dynamic Series Info */}
+        {(() => {
+          const seriesInfos = getSeriesInfo();
+          if (!seriesInfos) return null;
+          
+          const currentInfo = seriesInfos[currentInfoIndex % seriesInfos.length];
+          return (
+            <div className={`flex items-center gap-1 text-xs ${currentInfo.color} min-w-0 transition-all duration-300`}>
+              {currentInfo.icon}
+              <span className="truncate min-w-0">{currentInfo.text}</span>
+            </div>
+          );
+        })()}
         
         {/* Watch date for watched movies */}
         {showWatchedDate && movie.status === "watched" && movie.watchDate && (
