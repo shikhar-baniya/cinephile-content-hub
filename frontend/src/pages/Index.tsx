@@ -5,7 +5,7 @@ import MovieGrid from "@/components/MovieGrid";
 import StatsCards from "@/components/StatsCards";
 import FilterBar from "@/components/FilterBar";
 import GenreCollections from "@/components/GenreCollections";
-import AddMovieDialog from "@/components/AddMovieDialog";
+import AddMovieDialog from "@/components/AddMovieDialog.api";
 import MovieDetailDialog from "@/components/MovieDetailDialog";
 import MobileNavigation from "@/components/MobileNavigation";
 import AuthComponent from "@/components/AuthComponent";
@@ -19,9 +19,12 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import PageTransition from "@/components/PageTransition";
 import LoadingBar from "@/components/LoadingBar";
 import FuturisticBackground from "@/components/FuturisticBackground";
+import { seriesPopulationService } from "@/services/seriesPopulationService";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const { user, signOut } = useAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("home");
   const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
@@ -30,6 +33,7 @@ const Index = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedGenre, setSelectedGenre] = useState("All");
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+  const [populationUpdate, setPopulationUpdate] = useState(0);
   
   // Filter states
   const [statusFilter, setStatusFilter] = useState("all");
@@ -41,6 +45,29 @@ const Index = () => {
     // Set loading to false since auth state is managed by useAuth hook
     setLoading(false);
   }, []);
+
+  // Series population service subscriptions
+  useEffect(() => {
+    // Subscribe to population changes
+    const unsubscribe = seriesPopulationService.subscribe(() => {
+      setPopulationUpdate(prev => prev + 1);
+    });
+
+    // Subscribe to completion notifications
+    const unsubscribeCompletion = seriesPopulationService.subscribeToCompletion((seriesId) => {
+      // Find the series name for the notification
+      const completedSeries = movies.find(m => m.id === seriesId);
+      toast({
+        title: "🎉 Series Ready!",
+        description: `${completedSeries?.title || 'Your series'} has been fully curated with all episodes and seasons!`,
+      });
+    });
+    
+    return () => {
+      unsubscribe();
+      unsubscribeCompletion();
+    };
+  }, [movies, toast]);
 
   // Fetch movies data
   const { data: movies = [], isLoading: moviesLoading, refetch } = useQuery({
@@ -56,13 +83,20 @@ const Index = () => {
       return;
     }
 
-    // Filter out any invalid/undefined movies first
+    // Filter out any invalid/undefined movies first and add population state
     let filtered = movies.filter(movie => 
       movie && 
       typeof movie === 'object' && 
       movie.id && 
       movie.title
-    );
+    ).map(movie => {
+      const isPopulating = seriesPopulationService.isPopulating(movie.id);
+      console.log(`MovieCard: ${movie.title} isPopulating=${isPopulating}`);
+      return {
+        ...movie,
+        isPopulating
+      };
+    });
 
     // Apply search filter
     if (searchQuery) {
@@ -109,11 +143,13 @@ const Index = () => {
     }
 
     setFilteredMovies(filtered);
-  }, [movies, searchQuery, activeTab, statusFilter, genreFilter, platformFilter, selectedGenre]);
+  }, [movies, searchQuery, activeTab, statusFilter, genreFilter, platformFilter, selectedGenre, populationUpdate]);
 
   const handleAddMovie = async () => {
     await refetch();
     setShowAddDialog(false);
+    // Force update of population status
+    setPopulationUpdate(prev => prev + 1);
   };
 
   const handleDeleteMovie = async () => {

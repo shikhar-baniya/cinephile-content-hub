@@ -44,6 +44,7 @@ export const enhancedSeriesService = {
       console.log('Series created:', createdSeries);
 
       // Step 2: Mark as populating and start background process
+      console.log('🔄 Marking series as populating:', createdSeries.id);
       seriesPopulationService.addPopulatingId(createdSeries.id);
       this.populateSeriesInBackground(createdSeries.id, request.selectedSeason, request.status, request.watchDate);
 
@@ -66,6 +67,7 @@ export const enhancedSeriesService = {
       console.error('TMDB population failed for series:', seriesId, tmdbError);
     } finally {
       // Remove from populating list
+      console.log('✅ Removing series from populating list:', seriesId);
       seriesPopulationService.removePopulatingId(seriesId);
     }
   },
