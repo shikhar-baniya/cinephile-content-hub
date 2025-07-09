@@ -20,7 +20,7 @@ export interface CreateSeriesRequest {
 export const enhancedSeriesService = {
   async createSeriesWithAutoPopulation(request: CreateSeriesRequest) {
     try {
-      console.log('Creating series with auto-population:', request);
+
 
       // Step 1: Create the basic series entry
       const seriesData = {
@@ -41,10 +41,8 @@ export const enhancedSeriesService = {
       };
 
       const createdSeries = await movieService.addMovie(seriesData);
-      console.log('Series created:', createdSeries);
 
       // Step 2: Mark as populating and start background process
-      console.log('🔄 Marking series as populating:', createdSeries.id);
       seriesPopulationService.addPopulatingId(createdSeries.id);
       this.populateSeriesInBackground(createdSeries.id, request.selectedSeason, request.status, request.watchDate);
 
@@ -58,7 +56,6 @@ export const enhancedSeriesService = {
   async populateSeriesInBackground(seriesId: string, selectedSeason: number, status: string, watchDate?: string) {
     try {
       await tmdbService.populateSeriesWithTMDBData(seriesId);
-      console.log('TMDB data populated successfully for series:', seriesId);
       
       // Apply season logic after population
       await this.applySeasonLogic(seriesId, selectedSeason, status, watchDate);
@@ -67,20 +64,18 @@ export const enhancedSeriesService = {
       console.error('TMDB population failed for series:', seriesId, tmdbError);
     } finally {
       // Remove from populating list
-      console.log('✅ Removing series from populating list:', seriesId);
       seriesPopulationService.removePopulatingId(seriesId);
     }
   },
 
   async applySeasonLogic(seriesId: string, selectedSeason: number, status: string, watchDate?: string) {
     try {
-      console.log('Applying season logic:', { seriesId, selectedSeason, status });
+
 
       // Get current seasons
       const seasons = await seriesService.seasons.getSeriesSeasons(seriesId);
       
       if (seasons.length === 0) {
-        console.log('No seasons found, skipping season logic');
         return;
       }
 
@@ -127,7 +122,7 @@ export const enhancedSeriesService = {
         }
       }
 
-      console.log('Season logic applied successfully');
+
     } catch (error) {
       console.error('Error applying season logic:', error);
       throw error;
@@ -167,7 +162,7 @@ export const enhancedSeriesService = {
         latestSeasonWatched: completedSeasons > 0 ? Math.max(...seasons.filter(s => s.status === 'completed').map(s => s.seasonNumber)) : undefined
       });
 
-      console.log('Series status updated to:', seriesStatus);
+
     } catch (error) {
       console.error('Error updating series status:', error);
       throw error;

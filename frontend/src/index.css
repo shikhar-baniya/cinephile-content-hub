@@ -197,6 +197,10 @@
     animation: glowVertical 10s ease-in-out infinite;
   }
 
+  .animate-text-blur {
+    animation: textBlur 1.2s infinite alternate;
+  }
+
   @keyframes pulseSlow {
     0%, 100% {
       opacity: 0.3;
@@ -278,6 +282,17 @@
     50% {
       opacity: 0.4;
       transform: translateY(-50%) scaleY(1.2);
+    }
+  }
+
+  @keyframes textBlur {
+    0% {
+      filter: blur(0);
+      opacity: 1;
+    }
+    100% {
+      filter: blur(2px);
+      opacity: 0.3;
     }
   }
 

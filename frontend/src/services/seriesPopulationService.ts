@@ -5,24 +5,18 @@ class SeriesPopulationService {
   private completionListeners = new Set<(seriesId: string) => void>();
 
   addPopulatingId(seriesId: string) {
-    console.log('📝 Adding series to populating list:', seriesId);
     this.populatingSeriesIds.add(seriesId);
-    console.log('📝 Current populating series:', Array.from(this.populatingSeriesIds));
     this.notifyListeners();
   }
 
   removePopulatingId(seriesId: string) {
-    console.log('🗑️ Removing series from populating list:', seriesId);
     this.populatingSeriesIds.delete(seriesId);
-    console.log('🗑️ Remaining populating series:', Array.from(this.populatingSeriesIds));
     this.notifyListeners();
     this.notifyCompletionListeners(seriesId);
   }
 
   isPopulating(seriesId: string): boolean {
-    const result = this.populatingSeriesIds.has(seriesId);
-    console.log(`🔍 Checking if ${seriesId} is populating:`, result, 'Current set:', Array.from(this.populatingSeriesIds));
-    return result;
+    return this.populatingSeriesIds.has(seriesId);
   }
 
   subscribe(listener: () => void) {

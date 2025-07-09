@@ -89,16 +89,10 @@ const Index = () => {
       typeof movie === 'object' && 
       movie.id && 
       movie.title
-    ).map(movie => {
-      const isPopulating = seriesPopulationService.isPopulating(movie.id);
-      if (movie.category === 'Series') {
-        console.log(`[Index] Series: ${movie.title} isPopulating=${isPopulating}`);
-      }
-      return {
-        ...movie,
-        isPopulating
-      };
-    });
+    ).map(movie => ({
+      ...movie,
+      isPopulating: seriesPopulationService.isPopulating(movie.id)
+    }));
 
     // Apply search filter
     if (searchQuery) {

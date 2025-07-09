@@ -184,18 +184,21 @@ const MovieCard = ({ movie, onClick, showWatchedDate = true }: MovieCardProps) =
         {movie.isPopulating && (
           <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-10">
             <div className="text-center p-4">
-              <div className="relative">
-                <Loader2 className="h-10 w-10 animate-spin text-transparent mx-auto mb-3" style={{
-                  background: 'linear-gradient(45deg, #8b5cf6, #06b6d4, #10b981)',
-                  WebkitBackgroundClip: 'text',
-                  backgroundClip: 'text'
-                }} />
-                <div className="absolute inset-0 h-10 w-10 mx-auto animate-pulse">
-                  <div className="h-full w-full rounded-full bg-gradient-to-r from-purple-500 via-blue-500 to-green-500 opacity-20"></div>
-                </div>
+              <div className="text-white text-sm font-medium mb-1">
+                🎬 
+                <span className="ml-1 curating-text">
+                  {"Curating your series...".split("").map((char, index) => (
+                    <span
+                      key={index}
+                      className="animate-text-blur"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      {char === " " ? "\u00A0" : char}
+                    </span>
+                  ))}
+                </span>
               </div>
-              <p className="text-white text-sm font-medium mb-1">🎬 Curating your series...</p>
-              <p className="text-white/70 text-xs">Fetching episodes & seasons</p>
+              <p className="text-white/70 text-xs">Setting up watchlist</p>
             </div>
           </div>
         )}
