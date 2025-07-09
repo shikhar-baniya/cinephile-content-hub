@@ -21,7 +21,7 @@ class SeriesPopulationService {
 
   isPopulating(seriesId: string): boolean {
     const result = this.populatingSeriesIds.has(seriesId);
-    console.log(`🔍 Checking if ${seriesId} is populating:`, result);
+    console.log(`🔍 Checking if ${seriesId} is populating:`, result, 'Current set:', Array.from(this.populatingSeriesIds));
     return result;
   }
 

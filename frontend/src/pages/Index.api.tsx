@@ -19,8 +19,11 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import PageTransition from "@/components/PageTransition";
 import LoadingBar from "@/components/LoadingBar";
 import FuturisticBackground from "@/components/FuturisticBackground";
+import { seriesPopulationService } from "@/services/seriesPopulationService";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
+  const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("home");
@@ -29,6 +32,7 @@ const Index = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedGenre, setSelectedGenre] = useState("All");
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+  const [populationUpdate, setPopulationUpdate] = useState(0);
   
   // Filter states
   const [statusFilter, setStatusFilter] = useState("all");
@@ -59,6 +63,29 @@ const Index = () => {
     return unsubscribe;
   }, []); // Empty dependency array to run only once
 
+  // Series population service subscriptions
+  useEffect(() => {
+    // Subscribe to population changes
+    const unsubscribe = seriesPopulationService.subscribe(() => {
+      setPopulationUpdate(prev => prev + 1);
+    });
+
+    // Subscribe to completion notifications
+    const unsubscribeCompletion = seriesPopulationService.subscribeToCompletion((seriesId) => {
+      // Find the series name for the notification
+      const completedSeries = movies.find(m => m.id === seriesId);
+      toast({
+        title: "🎉 Series Ready!",
+        description: `${completedSeries?.title || 'Your series'} has been fully curated with all episodes and seasons!`,
+      });
+    });
+    
+    return () => {
+      unsubscribe();
+      unsubscribeCompletion();
+    };
+  }, [movies, toast]);
+
   // Fetch movies data
   const { data: movies = [], isLoading: moviesLoading, refetch } = useQuery({
     queryKey: ['movies'],
@@ -76,7 +103,16 @@ const Index = () => {
       typeof movie === 'object' &&
       movie.id &&
       movie.title
-    );
+    ).map(movie => {
+      const isPopulating = seriesPopulationService.isPopulating(movie.id);
+      if (movie.category === 'Series') {
+        console.log(`[Index.api] Series: ${movie.title} isPopulating=${isPopulating}`);
+      }
+      return {
+        ...movie,
+        isPopulating
+      };
+    });
     if (searchQuery) {
       filtered = filtered.filter(movie => 
         movie?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -110,11 +146,13 @@ const Index = () => {
         break;
     }
     return filtered;
-  }, [movies, searchQuery, activeTab, statusFilter, genreFilter, platformFilter, selectedGenre]);
+  }, [movies, searchQuery, activeTab, statusFilter, genreFilter, platformFilter, selectedGenre, populationUpdate]);
 
   const handleAddMovie = async () => {
     await refetch();
     setShowAddDialog(false);
+    // Force update of population status
+    setPopulationUpdate(prev => prev + 1);
   };
 
   const handleDeleteMovie = async () => {

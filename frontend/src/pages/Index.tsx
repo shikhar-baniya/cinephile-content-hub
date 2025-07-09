@@ -91,7 +91,9 @@ const Index = () => {
       movie.title
     ).map(movie => {
       const isPopulating = seriesPopulationService.isPopulating(movie.id);
-      console.log(`MovieCard: ${movie.title} isPopulating=${isPopulating}`);
+      if (movie.category === 'Series') {
+        console.log(`[Index] Series: ${movie.title} isPopulating=${isPopulating}`);
+      }
       return {
         ...movie,
         isPopulating
