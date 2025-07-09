@@ -183,11 +183,11 @@ const MovieCard = ({ movie, onClick, showWatchedDate = true }: MovieCardProps) =
         {/* Loading overlay for series being populated */}
         {movie.isPopulating && (
           <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-10">
-            <div className="text-center p-4">
-              <div className="text-white text-sm font-medium mb-1">
+            <div className="text-center p-2 max-w-[80%]">
+              <div className="text-white text-xs font-medium mb-1 leading-tight">
                 🎬 
                 <span className="ml-1 curating-text">
-                  {"Curating your series...".split("").map((char, index) => (
+                  {"Curating series...".split("").map((char, index) => (
                     <span
                       key={index}
                       className="animate-text-blur"
@@ -198,7 +198,7 @@ const MovieCard = ({ movie, onClick, showWatchedDate = true }: MovieCardProps) =
                   ))}
                 </span>
               </div>
-              <p className="text-white/70 text-xs">Setting up watchlist</p>
+              <p className="text-white/70 text-xs">This may take a few minutes</p>
             </div>
           </div>
         )}

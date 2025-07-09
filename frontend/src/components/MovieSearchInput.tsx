@@ -40,7 +40,6 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
 
     setIsLoading(true);
     try {
-      console.log('Searching for:', searchValue);
       const { movies, shows } = await searchMoviesAndShows(searchValue);
       
       // Format and combine results
@@ -71,7 +70,6 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
       });
 
       const results = [...formattedMovies, ...formattedShows];
-      console.log('Search results:', results);
       setSearchResults(results);
       
       if (results.length > 0) {
@@ -124,13 +122,7 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
       if (movie.type === "series" && movie.id) {
         try {
           // Fetch seasons for the selected series
-          console.log('=== SERIES SELECTED ===');
-          console.log('Movie object:', movie);
-          console.log('Fetching TV show details for ID:', movie.id);
-
           const details = await fetchTVShowDetails(movie.id);
-          console.log('TV show details received:', details);
-          console.log('Raw seasons from API:', details?.seasons);
 
           if (!details) {
             console.error('No details received from API');
@@ -145,12 +137,8 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
             poster_path: s.poster_path,
             vote_average: s.vote_average
           })) || [];
-          console.log('Processed seasons for dropdown:', seasons);
-          console.log('Number of processed seasons:', seasons.length);
 
           const movieWithSeasons = { ...movie, seasons };
-          console.log('Final movie object with seasons:', movieWithSeasons);
-          console.log('=== CALLING onMovieSelect ===');
           onChange(movie.title); // Update the input with selected title
           onMovieSelect(movieWithSeasons);
         } catch (error) {
@@ -160,9 +148,6 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
           onMovieSelect(movie); // Fallback to movie without seasons
         }
       } else {
-        console.log('Selected item is not a series or has no ID, passing as-is');
-        console.log('Movie type:', movie.type);
-        console.log('Movie ID:', movie.id);
         onChange(movie.title); // Update the input with selected title
         onMovieSelect(movie);
       }
@@ -202,9 +187,10 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
         className="w-full p-0 bg-card/95 backdrop-blur-lg border-border/40 z-50" 
         align="start"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        style={{ maxHeight: 'min(300px, 40vh)' }}
       >
         <Command>
-          <CommandList>
+          <CommandList className="max-h-[min(250px, 35vh)] overflow-y-auto">
             {isLoading && (
               <div className="py-6 text-center text-sm text-muted-foreground">
                 Searching...
@@ -226,18 +212,18 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
                         <img 
                           src={movie.poster} 
                           alt={movie.title}
-                          className="w-10 h-15 object-cover rounded"
+                          className="w-10 h-15 object-cover rounded flex-shrink-0"
                         />
                       )}
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">{movie.title}</span>
-                          <span className="text-sm text-muted-foreground">({movie.year})</span>
-                          <Badge variant="outline" className="text-xs">
+                          <span className="font-medium truncate">{movie.title}</span>
+                          <span className="text-sm text-muted-foreground flex-shrink-0">({movie.year})</span>
+                          <Badge variant="outline" className="text-xs flex-shrink-0">
                             {movie.type}
                           </Badge>
                         </div>
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 flex-wrap">
                           {movie.genre.slice(0, 2).map((g) => (
                             <Badge key={g} variant="secondary" className="text-xs">
                               {g}

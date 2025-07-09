@@ -112,9 +112,7 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
     setError(null);
     
     try {
-      console.log('Fetching series data for:', series.id, series.title);
       const data = await seriesService.getCompleteSeriesData(series.id);
-      console.log('Series data received:', data);
       
       setSeasons(data.seasons);
       setEpisodesBySeason(data.episodesBySeasonId);
@@ -161,13 +159,10 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
     setError(null);
 
     try {
-      console.log('Populating TMDB data for series:', series.id, 'TMDB ID:', series.tmdbId);
       await tmdbService.populateSeriesWithTMDBData(series.id);
       
       // Refresh the series data after population
       await fetchSeriesData();
-      
-      console.log('TMDB population completed successfully');
     } catch (error) {
       console.error('Error populating TMDB data:', error);
       setError(error instanceof Error ? error.message : 'Failed to populate TMDB data');

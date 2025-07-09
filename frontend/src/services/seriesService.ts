@@ -83,15 +83,12 @@ export interface EpisodeStats {
 export const seasonService = {
   async getSeriesSeasons(seriesId: string): Promise<SeriesSeason[]> {
     try {
-      console.log('Fetching seasons for series:', seriesId);
       const response = await fetch(`${apiClient.baseURL}/series/${seriesId}/seasons`, {
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
           'Content-Type': 'application/json',
         },
       });
-
-      console.log('Seasons response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -100,7 +97,6 @@ export const seasonService = {
       }
 
       const data = await response.json();
-      console.log('Seasons data:', data);
       return data;
     } catch (error) {
       console.error('Error fetching series seasons:', error);
@@ -219,15 +215,12 @@ export const seasonService = {
 
   async getSeriesOverview(seriesId: string): Promise<SeriesWithSeasons> {
     try {
-      console.log('Fetching series overview for:', seriesId);
       const response = await fetch(`${apiClient.baseURL}/series/${seriesId}/overview`, {
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
           'Content-Type': 'application/json',
         },
       });
-
-      console.log('Series overview response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -236,7 +229,6 @@ export const seasonService = {
       }
 
       const data = await response.json();
-      console.log('Series overview data:', data);
       return data;
     } catch (error) {
       console.error('Error fetching series overview:', error);

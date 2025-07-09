@@ -59,6 +59,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
   const [availableSeasons, setAvailableSeasons] = useState<{ season_number: number; name: string; poster_path?: string; vote_average?: number }[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<MovieSearchResult | null>(null);
   const [customPlatform, setCustomPlatform] = useState("");
+  const [showFullForm, setShowFullForm] = useState(false);
 
   // Reset form when dialog closes
   useEffect(() => {
@@ -66,6 +67,7 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
       setSelectedMovie(null);
       setAvailableSeasons([]);
       setCustomPlatform("");
+      setShowFullForm(false);
       setFormData({
         title: "",
         genre: [],
@@ -83,10 +85,8 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
   }, [open]);
 
   const handleMovieSelect = (movie: MovieSearchResult) => {
-    console.log('Movie selected in AddMovieDialog.api:', movie);
-    console.log('Movie type:', movie.type);
-    console.log('Movie seasons:', movie.seasons);
     setSelectedMovie(movie);
+    setShowFullForm(true);
     setFormData(prev => ({
       ...prev,
       title: movie.title,
@@ -249,7 +249,9 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New {formData.category}</DialogTitle>
+          <DialogTitle>
+            {!showFullForm ? "Search Movies & Series" : `Add New ${formData.category}`}
+          </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -262,217 +264,223 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Enter title..."
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Genre *</Label>
-            <MultiSelectGenre 
-              selectedGenres={formData.genre}
-              onGenreChange={handleGenreChange}
-              availableGenres={genres}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select 
-                value={formData.category} 
-                onValueChange={(value: Movie['category']) => 
-                  setFormData(prev => ({ ...prev, category: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Movie">Movie</SelectItem>
-                  <SelectItem value="Series">Series</SelectItem>
-                  <SelectItem value="Short-Film">Short Film</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              {formData.category === "Series" ? (
-                <>
-                  <Label htmlFor="season">Season</Label>
-                  {availableSeasons.length > 0 ? (
-                    <Select
-                      value={formData.season}
-                      onValueChange={handleSeasonChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select season" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableSeasons.map((season) => (
-                          <SelectItem key={season.season_number} value={season.season_number.toString()}>
-                            <div className="flex items-center justify-between w-full">
-                              <span>{season.name}</span>
-                              {season.vote_average && (
-                                <span className="text-xs text-muted-foreground ml-2">
-                                  ⭐ {season.vote_average.toFixed(1)}
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input
-                      id="season"
-                      value={formData.season}
-                      onChange={(e) => setFormData(prev => ({ ...prev, season: e.target.value }))}
-                      placeholder="e.g., Season 1, S1"
-                    />
-                  )}
-                </>
-              ) : (
-                <>
-                  <Label htmlFor="year">Release Year</Label>
-                  <Input
-                    id="year"
-                    type="number"
-                    value={formData.releaseYear}
-                    onChange={(e) => setFormData(prev => ({ ...prev, releaseYear: parseInt(e.target.value) || new Date().getFullYear() }))}
-                    min="1900"
-                    max={new Date().getFullYear() + 5}
-                  />
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="platform">Platform *</Label>
-            <Select 
-              value={formData.platform} 
-              onValueChange={(value) => {
-                setFormData(prev => ({ ...prev, platform: value }));
-                if (value !== "Other") {
-                  setCustomPlatform("");
-                }
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select platform" />
-              </SelectTrigger>
-              <SelectContent>
-                {platforms.map((platform) => (
-                  <SelectItem key={platform} value={platform}>
-                    {platform}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {formData.platform === "Other" && (
-              <Input
-                value={customPlatform}
-                onChange={(e) => setCustomPlatform(e.target.value)}
-                placeholder="Enter custom platform name"
-                className="mt-2"
-              />
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="rating">Rating (1-10)</Label>
-              <Input
-                id="rating"
-                type="number"
-                value={formData.rating}
-                onChange={(e) => setFormData(prev => ({ ...prev, rating: parseFloat(e.target.value) || 5 }))}
-                min="1"
-                max="10"
-                step="0.1"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select 
-                value={formData.status} 
-                onValueChange={(value: Movie['status']) => {
-                  setFormData(prev => ({ 
-                    ...prev, 
-                    status: value,
-                    // Set watch date to today if status is "watched" and no date is set
-                    watchDate: value === 'watched' && !prev.watchDate 
-                      ? new Date().toISOString().split('T')[0] 
-                      : prev.watchDate
-                  }));
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="want-to-watch">Want to Watch</SelectItem>
-                  <SelectItem value="watching">Currently Watching</SelectItem>
-                  <SelectItem value="watched">Watched</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Watch Date (only show if status is "watched") */}
-            {formData.status === 'watched' && (
+          {showFullForm && (
+            <div className="space-y-4 animate-fade-in">
+              <div className="h-px bg-border/50 my-4" />
+              
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="watchDate">Watch Date</Label>
-                  <span className="text-xs text-muted-foreground">
-                    {formData.watchDate === new Date().toISOString().split('T')[0] 
-                      ? 'Today' 
-                      : 'Custom date'
-                    }
-                  </span>
-                </div>
+                <Label htmlFor="title">Title *</Label>
                 <Input
-                  id="watchDate"
-                  type="date"
-                  value={formData.watchDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, watchDate: e.target.value }))}
-                  className="text-sm"
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Enter title..."
+                  required
                 />
-                <p className="text-xs text-muted-foreground">
-                  Leave as today's date or change to when you actually watched it
-                </p>
               </div>
-            )}
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="poster">Poster URL</Label>
-            <Input
-              id="poster"
-              value={formData.poster}
-              onChange={(e) => setFormData(prev => ({ ...prev, poster: e.target.value }))}
-              placeholder="https://..."
-              type="url"
-            />
-          </div>
+              <div className="space-y-2">
+                <Label>Genre *</Label>
+                <MultiSelectGenre 
+                  selectedGenres={formData.genre}
+                  onGenreChange={handleGenreChange}
+                  availableGenres={genres}
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              placeholder="Add your notes..."
-              rows={3}
-            />
-          </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select 
+                    value={formData.category} 
+                    onValueChange={(value: Movie['category']) => 
+                      setFormData(prev => ({ ...prev, category: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Movie">Movie</SelectItem>
+                      <SelectItem value="Series">Series</SelectItem>
+                      <SelectItem value="Short-Film">Short Film</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  {formData.category === "Series" ? (
+                    <>
+                      <Label htmlFor="season">Season</Label>
+                      {availableSeasons.length > 0 ? (
+                        <Select
+                          value={formData.season}
+                          onValueChange={handleSeasonChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select season" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableSeasons.map((season) => (
+                              <SelectItem key={season.season_number} value={season.season_number.toString()}>
+                                <div className="flex items-center justify-between w-full">
+                                  <span>{season.name}</span>
+                                  {season.vote_average && (
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                      ⭐ {season.vote_average.toFixed(1)}
+                                    </span>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id="season"
+                          value={formData.season}
+                          onChange={(e) => setFormData(prev => ({ ...prev, season: e.target.value }))}
+                          placeholder="e.g., Season 1, S1"
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <Label htmlFor="year">Release Year</Label>
+                      <Input
+                        id="year"
+                        type="number"
+                        value={formData.releaseYear}
+                        onChange={(e) => setFormData(prev => ({ ...prev, releaseYear: parseInt(e.target.value) || new Date().getFullYear() }))}
+                        min="1900"
+                        max={new Date().getFullYear() + 5}
+                      />
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="platform">Platform *</Label>
+                <Select 
+                  value={formData.platform} 
+                  onValueChange={(value) => {
+                    setFormData(prev => ({ ...prev, platform: value }));
+                    if (value !== "Other") {
+                      setCustomPlatform("");
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select platform" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {platforms.map((platform) => (
+                      <SelectItem key={platform} value={platform}>
+                        {platform}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formData.platform === "Other" && (
+                  <Input
+                    value={customPlatform}
+                    onChange={(e) => setCustomPlatform(e.target.value)}
+                    placeholder="Enter custom platform name"
+                    className="mt-2"
+                  />
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="rating">Rating (1-10)</Label>
+                  <Input
+                    id="rating"
+                    type="number"
+                    value={formData.rating}
+                    onChange={(e) => setFormData(prev => ({ ...prev, rating: parseFloat(e.target.value) || 5 }))}
+                    min="1"
+                    max="10"
+                    step="0.1"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select 
+                    value={formData.status} 
+                    onValueChange={(value: Movie['status']) => {
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        status: value,
+                        // Set watch date to today if status is "watched" and no date is set
+                        watchDate: value === 'watched' && !prev.watchDate 
+                          ? new Date().toISOString().split('T')[0] 
+                          : prev.watchDate
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="want-to-watch">Want to Watch</SelectItem>
+                      <SelectItem value="watching">Currently Watching</SelectItem>
+                      <SelectItem value="watched">Watched</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Watch Date (only show if status is "watched") */}
+                {formData.status === 'watched' && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="watchDate">Watch Date</Label>
+                      <span className="text-xs text-muted-foreground">
+                        {formData.watchDate === new Date().toISOString().split('T')[0] 
+                          ? 'Today' 
+                          : 'Custom date'
+                        }
+                      </span>
+                    </div>
+                    <Input
+                      id="watchDate"
+                      type="date"
+                      value={formData.watchDate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, watchDate: e.target.value }))}
+                      className="text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Leave as today's date or change to when you actually watched it
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="poster">Poster URL</Label>
+                <Input
+                  id="poster"
+                  value={formData.poster}
+                  onChange={(e) => setFormData(prev => ({ ...prev, poster: e.target.value }))}
+                  placeholder="https://..."
+                  type="url"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Add your notes..."
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-2 pt-4">
             <Button 
@@ -483,18 +491,21 @@ const AddMovieDialog = ({ open, onOpenChange, onAddMovie }: AddMovieDialogProps)
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-              className="flex-1"
-            >
-              {isSubmitting ? "Adding..." : `Add ${formData.category}`}
-            </Button>
+            {showFullForm && (
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="flex-1"
+              >
+                {isSubmitting ? "Adding..." : `Add ${formData.category}`}
+              </Button>
+            )}
           </div>
         </form>
       </DialogContent>
     </Dialog>
   );
+
 };
 
 export default AddMovieDialog;

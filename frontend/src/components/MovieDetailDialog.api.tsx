@@ -75,9 +75,7 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
     setIsFetchingSeasons(true);
     try {
       if (movie.tmdbId) {
-        console.log('Fetching seasons for TMDB ID:', movie.tmdbId);
         const details = await fetchTVShowDetails(movie.tmdbId);
-        console.log('TV show details received:', details);
         
         if (details && details.seasons) {
           const seasons = details.seasons.map((s: any) => ({
@@ -86,11 +84,9 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
             poster_path: s.poster_path,
             vote_average: s.vote_average
           }));
-          console.log('Processed seasons:', seasons);
           setAvailableSeasons(seasons);
         }
       } else {
-        console.log('No TMDB ID available for season fetching');
         setAvailableSeasons([]);
       }
     } catch (error) {

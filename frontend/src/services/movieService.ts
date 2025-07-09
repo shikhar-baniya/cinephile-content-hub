@@ -110,30 +110,16 @@ export const formatTVData = (show: TMDbTVShow) => ({
  */
 export const fetchTVShowDetails = async (tvId: number) => {
   try {
-    console.log('Fetching TV show details for ID:', tvId);
-    console.log('Config values:', {
-      baseUrl: config.tmdb.baseUrl,
-      apiKey: config.tmdb.apiKey ? 'SET' : 'NOT SET',
-      imageBaseUrl: config.tmdb.imageBaseUrl
-    });
-    console.log('API URL will be:', `${config.tmdb.baseUrl}/tv/${tvId}?api_key=${config.tmdb.apiKey}`);
-
     const data = await apiClient.fetch<any>(`/tv/${tvId}`);
-    console.log('Raw TV show data received:', data);
-    console.log('Seasons in response:', data?.seasons);
-    console.log('Number of seasons:', data?.seasons?.length);
 
     // Filter out season 0 (specials) and ensure we have valid seasons
     if (data?.seasons) {
       const validSeasons = data.seasons.filter((season: any) =>
         season.season_number > 0 && season.episode_count > 0
       );
-      console.log('Valid seasons after filtering:', validSeasons);
-      console.log('Number of valid seasons:', validSeasons.length);
       return { ...data, seasons: validSeasons };
     }
 
-    console.log('No seasons found in response');
     return data; // includes 'seasons' array
   } catch (error) {
     console.error('Error in fetchTVShowDetails:', error);
