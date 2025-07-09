@@ -63,6 +63,13 @@ const Index = () => {
     return unsubscribe;
   }, []); // Empty dependency array to run only once
 
+  // Fetch movies data
+  const { data: movies = [], isLoading: moviesLoading, refetch } = useQuery({
+    queryKey: ['movies'],
+    queryFn: movieService.getMovies,
+    enabled: !!user, // Only fetch when user is authenticated
+  });
+
   // Series population service subscriptions
   useEffect(() => {
     // Subscribe to population changes
@@ -73,7 +80,7 @@ const Index = () => {
     // Subscribe to completion notifications
     const unsubscribeCompletion = seriesPopulationService.subscribeToCompletion((seriesId) => {
       // Find the series name for the notification
-      const completedSeries = movies.find(m => m.id === seriesId);
+      const completedSeries = movies?.find(m => m.id === seriesId);
       toast({
         title: "🎉 Series Ready!",
         description: `${completedSeries?.title || 'Your series'} has been fully curated with all episodes and seasons!`,
@@ -85,13 +92,6 @@ const Index = () => {
       unsubscribeCompletion();
     };
   }, [movies, toast]);
-
-  // Fetch movies data
-  const { data: movies = [], isLoading: moviesLoading, refetch } = useQuery({
-    queryKey: ['movies'],
-    queryFn: movieService.getMovies,
-    enabled: !!user, // Only fetch when user is authenticated
-  });
 
   // Filter movies based on search and tab (useMemo instead of useEffect)
   const filteredMovies = useMemo(() => {
