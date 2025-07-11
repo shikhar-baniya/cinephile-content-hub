@@ -183,20 +183,31 @@ const MovieCard = ({ movie, onClick, showWatchedDate = true }: MovieCardProps) =
         {/* Loading overlay for series being populated */}
         {movie.isPopulating && (
           <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-10">
-            <div className="text-center p-2 max-w-[80%]">
-              <div className="text-white text-xs font-medium mb-1 leading-tight">
-                🎬 
-                <span className="ml-1 curating-text">
-                  {"Curating series...".split("").map((char, index) => (
+            <div className="text-center p-3 max-w-[90%]">
+              <div className="text-white text-xs font-medium mb-2 leading-tight">
+                <div className="mb-1">🎬</div>
+                <div className="curating-text">
+                  {"Curating".split("").map((char, index) => (
                     <span
                       key={index}
                       className="animate-text-blur"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      {char === " " ? "\u00A0" : char}
+                      {char}
                     </span>
                   ))}
-                </span>
+                </div>
+                <div className="curating-text">
+                  {"series...".split("").map((char, index) => (
+                    <span
+                      key={index + 8}
+                      className="animate-text-blur"
+                      style={{ animationDelay: `${(index + 8) * 0.1}s` }}
+                    >
+                      {char}
+                    </span>
+                  ))}
+                </div>
               </div>
               <p className="text-white/70 text-xs">This may take a few minutes</p>
             </div>

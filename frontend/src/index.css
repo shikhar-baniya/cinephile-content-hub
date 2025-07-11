@@ -119,6 +119,19 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Mobile-friendly scrolling */
+  .touch-pan-y {
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Smooth scrolling for mobile */
+  @media (max-width: 768px) {
+    .overscroll-contain {
+      overscroll-behavior: contain;
+    }
+  }
 }
 
 @layer utilities {
