@@ -28,6 +28,10 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Google OAuth credentials
+public/client_secret*.json
+supabase/GoogleClient/client_secret*.json
+
 # Testing
 coverage
 .nyc_output
