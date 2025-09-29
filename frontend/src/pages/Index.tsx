@@ -276,6 +276,7 @@ const Index = () => {
           onSearchChange={setSearchQuery}
           onAddMovie={() => setShowAddDialog(true)}
           onSignOut={handleSignOut}
+          user={user}
         />
         
         <PageTransition triggerKey={activeTab}>

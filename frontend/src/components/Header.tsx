@@ -1,16 +1,23 @@
 
-import { Film, Search, Plus, LogOut } from "lucide-react";
+import { Film, Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import ProfileDropdown from "./ProfileDropdown";
 
 interface HeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onAddMovie: () => void;
   onSignOut: () => void;
+  user: {
+    id: string;
+    email: string;
+    name?: string;
+    avatar?: string;
+  };
 }
 
-const Header = ({ searchQuery, onSearchChange, onAddMovie, onSignOut }: HeaderProps) => {
+const Header = ({ searchQuery, onSearchChange, onAddMovie, onSignOut, user }: HeaderProps) => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 glass-effect">
       <div className="container mx-auto px-4 py-4">
@@ -36,9 +43,7 @@ const Header = ({ searchQuery, onSearchChange, onAddMovie, onSignOut }: HeaderPr
             <Button onClick={onAddMovie} size="icon" className="bg-primary hover:bg-primary/90 hidden md:flex">
               <Plus className="h-4 w-4" />
             </Button>
-            <Button onClick={onSignOut} size="icon" variant="outline">
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <ProfileDropdown user={user} onSignOut={onSignOut} />
           </div>
         </div>
       </div>
