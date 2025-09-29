@@ -11,34 +11,59 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        const code = searchParams.get('code');
+        // First check for errors in query params
         const error = searchParams.get('error');
-
         if (error) {
           setError(`Authentication failed: ${error}`);
           setStatus('error');
           return;
         }
 
-        if (!code) {
-          setError('No authorization code received');
-          setStatus('error');
-          return;
-        }
+        // Check for authorization code (traditional OAuth flow)
+        const code = searchParams.get('code');
+        
+        // Check for tokens in hash fragment (Supabase implicit flow)
+        const hash = window.location.hash.substring(1);
+        const hashParams = new URLSearchParams(hash);
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
 
-        // Call backend to handle the callback using authService
-        const response = await authService.handleGoogleCallback(code);
+        if (code) {
+          // Handle authorization code flow
+          const response = await authService.handleGoogleCallback(code);
+          
+          if (response.session && response.user) {
+            setStatus('success');
+            setTimeout(() => {
+              navigate('/', { replace: true });
+              window.location.reload();
+            }, 1500);
+          } else {
+            throw new Error('Invalid response from server');
+          }
+        } else if (accessToken && refreshToken) {
+          // Handle token-based flow from Supabase
+          console.log('Handling Supabase token callback');
+          
+          // Create a session object from the tokens
+          const session = {
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            expires_at: parseInt(hashParams.get('expires_at') || '0'),
+            token_type: hashParams.get('token_type') || 'bearer'
+          };
 
-        if (response.session && response.user) {
+          // Save session and redirect
+          authService.handleTokenCallback(session);
           setStatus('success');
           
-          // Redirect to home page after a short delay
           setTimeout(() => {
             navigate('/', { replace: true });
-            window.location.reload(); // Force reload to update auth state
+            window.location.reload();
           }, 1500);
         } else {
-          throw new Error('Invalid response from server');
+          setError('No authorization code or tokens received');
+          setStatus('error');
         }
       } catch (err: any) {
         console.error('Auth callback error:', err);

@@ -153,6 +153,27 @@ class AuthService {
     }
   }
 
+  handleTokenCallback(session: any): void {
+    try {
+      // Create a user object from the session (we'll need to fetch user details)
+      const user = {
+        id: session.user?.id || 'temp-id',
+        email: session.user?.email || '',
+        name: session.user?.user_metadata?.name || session.user?.user_metadata?.full_name || '',
+        avatar: session.user?.user_metadata?.avatar_url || session.user?.user_metadata?.picture || null
+      };
+
+      this.currentSession = session;
+      this.currentUser = user;
+      this.saveToStorage(session);
+      apiClient.setToken(session.access_token);
+      this.notifyAuthChange(user);
+    } catch (error) {
+      console.error('Token callback error:', error);
+      throw error;
+    }
+  }
+
   async getUser(): Promise<User | null> {
     if (!this.currentSession) {
       return null;
