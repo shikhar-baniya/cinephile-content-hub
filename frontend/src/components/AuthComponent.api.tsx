@@ -53,9 +53,17 @@ const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
 
     try {
       const response = await authService.signInWithGoogle();
-      // The user will be redirected to Google, so we don't need to handle the response here
-      // The callback will be handled by the AuthCallback component
+      console.log('Google OAuth response:', response);
+      
+      // Redirect to Google OAuth URL
+      if (response.url) {
+        console.log('Redirecting to:', response.url);
+        window.location.href = response.url;
+      } else {
+        throw new Error('No OAuth URL received');
+      }
     } catch (error: any) {
+      console.error('Google OAuth error:', error);
       setError(error.message || "An error occurred during Google authentication");
       setLoading(false);
     }
