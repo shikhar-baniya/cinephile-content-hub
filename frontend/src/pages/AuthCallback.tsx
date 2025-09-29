@@ -44,6 +44,8 @@ const AuthCallback = () => {
         } else if (accessToken && refreshToken) {
           // Handle token-based flow from Supabase
           console.log('Handling Supabase token callback');
+          console.log('Access token:', accessToken.substring(0, 50) + '...');
+          console.log('Refresh token:', refreshToken.substring(0, 50) + '...');
           
           // Create a session object from the tokens
           const session = {
@@ -53,13 +55,17 @@ const AuthCallback = () => {
             token_type: hashParams.get('token_type') || 'bearer'
           };
 
+          console.log('Created session object:', { ...session, access_token: session.access_token.substring(0, 50) + '...' });
+
           // Save session and redirect
           authService.handleTokenCallback(session);
           setStatus('success');
           
+          console.log('Authentication successful, redirecting in 1.5 seconds');
           setTimeout(() => {
             navigate('/', { replace: true });
-            window.location.reload();
+            // Remove the hash from URL to prevent re-processing
+            window.history.replaceState({}, document.title, window.location.pathname);
           }, 1500);
         } else {
           setError('No authorization code or tokens received');

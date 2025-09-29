@@ -155,14 +155,37 @@ class AuthService {
 
   handleTokenCallback(session: any): void {
     try {
-      // Create a user object from the session (we'll need to fetch user details)
-      const user = {
-        id: session.user?.id || 'temp-id',
-        email: session.user?.email || '',
-        name: session.user?.user_metadata?.name || session.user?.user_metadata?.full_name || '',
-        avatar: session.user?.user_metadata?.avatar_url || session.user?.user_metadata?.picture || null
+      // Decode the access token to get user information
+      let user: User = {
+        id: 'temp-id',
+        email: '',
+        name: '',
+        avatar: null
       };
 
+      try {
+        // JWT tokens have 3 parts separated by dots
+        const tokenParts = session.access_token.split('.');
+        if (tokenParts.length === 3) {
+          // Decode the payload (middle part)
+          const payload = JSON.parse(atob(tokenParts[1]));
+          
+          user = {
+            id: payload.sub || payload.user_id || 'temp-id',
+            email: payload.email || '',
+            name: payload.user_metadata?.name || payload.user_metadata?.full_name || payload.name || payload.email?.split('@')[0] || '',
+            avatar: payload.user_metadata?.avatar_url || payload.user_metadata?.picture || payload.picture || null
+          };
+        }
+      } catch (decodeError) {
+        console.warn('Could not decode token, using minimal user info:', decodeError);
+        // Fallback to basic user info
+        user.email = session.user?.email || '';
+        user.name = session.user?.name || user.email.split('@')[0] || 'User';
+      }
+
+      console.log('Setting user from token callback:', user);
+      
       this.currentSession = session;
       this.currentUser = user;
       this.saveToStorage(session);
