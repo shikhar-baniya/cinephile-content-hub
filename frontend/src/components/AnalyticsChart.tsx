@@ -6,7 +6,7 @@
  * - Hidden scrollbar with maintained scroll functionality
  * - Click-based tooltip interaction
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -28,8 +28,8 @@ type TimeRange = keyof typeof RANGE_CONFIG;
 
 const AnalyticsChart = ({ movies }: AnalyticsChartProps) => {
   const [timeRange, setTimeRange] = useState<TimeRange>("days");
-
-
+  const [filterCategory, setFilterCategory] = useState<"all" | "Movie" | "Series">("all");
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Generate all chart data for the selected range
   const generateChartData = () => {
@@ -157,7 +157,16 @@ const AnalyticsChart = ({ movies }: AnalyticsChartProps) => {
     return data;
   };
 
-  const chartData = generateChartData();
+  const allChartData = generateChartData();
+  
+  const chartData = filterCategory === "all" 
+    ? allChartData 
+    : allChartData.map(item => ({
+        ...item,
+        movies: filterCategory === "Movie" ? item.movies : 0,
+        series: filterCategory === "Series" ? item.series : 0,
+      }));
+  
   const chartConfig = {
     movies: {
       label: "Movies",
@@ -216,15 +225,22 @@ const AnalyticsChart = ({ movies }: AnalyticsChartProps) => {
     setTimeRange(range);
   };
 
-  // Debug: log allChartData and chartData after generation
   useEffect(() => {
-    // Check for valid watchDate
     movies.forEach(m => {
       if (m.status === "watched" && (!m.watchDate || isNaN(new Date(m.watchDate).getTime()))) {
         // Movie with invalid watchDate - handled silently
       }
     });
   }, [movies, chartData]);
+
+  useEffect(() => {
+    if (scrollContainerRef.current && chartData.length > 0) {
+      const container = scrollContainerRef.current;
+      const scrollWidth = container.scrollWidth;
+      const clientWidth = container.clientWidth;
+      container.scrollLeft = scrollWidth - clientWidth;
+    }
+  }, [chartData, timeRange]);
 
   return (
     <Card className="bg-card/50 border-border/60">
@@ -248,16 +264,26 @@ const AnalyticsChart = ({ movies }: AnalyticsChartProps) => {
             ))}
           </div>
           
-          {/* Legend */}
+          {/* Legend - Clickable filters */}
           <div className="flex items-center gap-6 text-sm">
-            <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setFilterCategory(filterCategory === "Movie" ? "all" : "Movie")}
+              className={`flex items-center gap-2 transition-opacity hover:opacity-100 cursor-pointer ${
+                filterCategory === "Series" ? "opacity-30" : "opacity-100"
+              }`}
+            >
               <div className="w-3 h-3 rounded-full bg-[#8b5cf6]" />
               <span className="text-muted-foreground">Movies</span>
-            </div>
-            <div className="flex items-center gap-2">
+            </button>
+            <button 
+              onClick={() => setFilterCategory(filterCategory === "Series" ? "all" : "Series")}
+              className={`flex items-center gap-2 transition-opacity hover:opacity-100 cursor-pointer ${
+                filterCategory === "Movie" ? "opacity-30" : "opacity-100"
+              }`}
+            >
               <div className="w-3 h-3 rounded-full bg-[#ec4899]" />
               <span className="text-muted-foreground">Series</span>
-            </div>
+            </button>
           </div>
         </div>
       </CardHeader>
@@ -267,7 +293,7 @@ const AnalyticsChart = ({ movies }: AnalyticsChartProps) => {
             No data available for this range.
           </div>
         ) : (
-          <div className="overflow-x-auto scrollbar-hide w-full">
+          <div ref={scrollContainerRef} className="overflow-x-auto scrollbar-hide w-full">
             <ChartContainer 
               config={chartConfig} 
               className="!aspect-auto min-w-[800px]" 

@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Film } from "lucide-react";
 import { authService, User } from "@/services/authService";
@@ -13,49 +11,17 @@ interface AuthComponentProps {
 }
 
 const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      if (isSignUp) {
-        const response = await authService.signUp(email, password);
-        if (response.user) {
-          setSuccess("Account created successfully! Please check your email to verify your account.");
-          onAuthChange(response.user);
-        }
-      } else {
-        const response = await authService.signIn(email, password);
-        if (response.user) {
-          onAuthChange(response.user);
-        }
-      }
-    } catch (error: any) {
-      setError(error.message || "An error occurred during authentication");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleGoogleAuth = async () => {
     setLoading(true);
     setError(null);
-    setSuccess(null);
 
     try {
       const response = await authService.signInWithGoogle();
       console.log('Google OAuth response:', response);
       
-      // Redirect to Google OAuth URL
       if (response.url) {
         console.log('Redirecting to:', response.url);
         window.location.href = response.url;
@@ -67,14 +33,6 @@ const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
       setError(error.message || "An error occurred during Google authentication");
       setLoading(false);
     }
-  };
-
-  const toggleMode = () => {
-    setIsSignUp(!isSignUp);
-    setError(null);
-    setSuccess(null);
-    setEmail("");
-    setPassword("");
   };
 
   return (
@@ -89,12 +47,10 @@ const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">
-            {isSignUp ? "Create Account" : "Welcome Back"}
+            Welcome
           </CardTitle>
           <CardDescription>
-            {isSignUp 
-              ? "Create your account to start tracking movies" 
-              : "Sign in to your cinematic universe"}
+            Sign in to your cinematic universe
           </CardDescription>
         </CardHeader>
         
@@ -104,55 +60,6 @@ const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
-          {success && (
-            <Alert>
-              <AlertDescription>{success}</AlertDescription>
-            </Alert>
-          )}
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-                minLength={6}
-              />
-            </div>
-            
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isSignUp ? "Sign Up" : "Sign In"}
-            </Button>
-          </form>
-          
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border/60" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
 
           <Button 
             type="button" 
@@ -173,14 +80,6 @@ const AuthComponent = ({ onAuthChange }: AuthComponentProps) => {
             )}
             Continue with Google
           </Button>
-          
-          <div className="text-center">
-            <Button variant="link" onClick={toggleMode} disabled={loading}>
-              {isSignUp 
-                ? "Already have an account? Sign in" 
-                : "Don't have an account? Sign up"}
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>
