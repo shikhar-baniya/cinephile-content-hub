@@ -160,7 +160,13 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
     }
   };
 
-  const handleInputBlur = () => {
+  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Don't close if clicking inside the popover content
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (relatedTarget && relatedTarget.closest('[data-radix-popper-content-wrapper]')) {
+      return;
+    }
+    
     // Delay closing to allow for item selection
     setTimeout(() => {
       setOpen(false);
@@ -168,7 +174,7 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={false}>
       <PopoverTrigger asChild>
         <div className="relative">
           <Input
@@ -187,13 +193,25 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
         className="w-full p-0 bg-card/95 backdrop-blur-lg border-border/40 z-50" 
         align="start"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onInteractOutside={(e) => {
+          // Prevent closing when interacting with the input
+          const target = e.target as HTMLElement;
+          if (inputRef.current?.contains(target)) {
+            e.preventDefault();
+          }
+        }}
         style={{ maxHeight: 'min(300px, 40vh)' }}
       >
         <Command>
-          <div className="max-h-[min(280px, 38vh)] overflow-y-auto overscroll-contain touch-pan-y" style={{
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'thin'
-          }}>
+          <div 
+            className="max-h-[min(280px, 38vh)] overflow-y-auto overscroll-contain touch-pan-y" 
+            style={{
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'thin'
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+          >
             <CommandList>
               {isLoading && (
                 <div className="py-6 text-center text-sm text-muted-foreground">
