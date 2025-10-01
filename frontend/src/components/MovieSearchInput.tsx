@@ -200,66 +200,55 @@ const MovieSearchInput = ({ value, onChange, onMovieSelect, placeholder = "Searc
             e.preventDefault();
           }
         }}
-        style={{ maxHeight: 'min(300px, 40vh)' }}
       >
         <Command>
-          <div 
-            className="max-h-[min(280px, 38vh)] overflow-y-auto overscroll-contain touch-pan-y" 
-            style={{
-              WebkitOverflowScrolling: 'touch',
-              scrollbarWidth: 'thin'
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-          >
-            <CommandList>
-              {isLoading && (
-                <div className="py-6 text-center text-sm text-muted-foreground">
-                  Searching...
-                </div>
-              )}
-              {!isLoading && searchResults.length === 0 && value.length >= 3 && (
-                <CommandEmpty>No movies/series found.</CommandEmpty>
-              )}
-              {!isLoading && searchResults.length > 0 && (
-                <CommandGroup>
-                  {searchResults.map((movie, index) => (
-                    <CommandItem
-                      key={`${movie.title}-${index}`}
-                      onSelect={() => handleSelect(movie)}
-                      className="cursor-pointer p-3 hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3 w-full">
-                        {movie.poster && (
-                          <img 
-                            src={movie.poster} 
-                            alt={movie.title}
-                            className="w-10 h-15 object-cover rounded flex-shrink-0"
-                          />
-                        )}
-                        <div className="flex flex-col gap-1 min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium truncate">{movie.title}</span>
-                            <span className="text-sm text-muted-foreground flex-shrink-0">({movie.year})</span>
-                            <Badge variant="outline" className="text-xs flex-shrink-0">
-                              {movie.type}
+          <CommandList className="max-h-[300px] overflow-y-auto">
+            {isLoading && (
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                Searching...
+              </div>
+            )}
+            {!isLoading && searchResults.length === 0 && value.length >= 3 && (
+              <CommandEmpty>No movies/series found.</CommandEmpty>
+            )}
+            {!isLoading && searchResults.length > 0 && (
+              <CommandGroup>
+                {searchResults.map((movie, index) => (
+                  <CommandItem
+                    key={`${movie.title}-${index}`}
+                    onSelect={() => handleSelect(movie)}
+                    className="cursor-pointer p-3 hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      {movie.poster && (
+                        <img 
+                          src={movie.poster} 
+                          alt={movie.title}
+                          className="w-10 h-15 object-cover rounded flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex flex-col gap-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium truncate">{movie.title}</span>
+                          <span className="text-sm text-muted-foreground flex-shrink-0">({movie.year})</span>
+                          <Badge variant="outline" className="text-xs flex-shrink-0">
+                            {movie.type}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-1 flex-wrap">
+                          {movie.genre.slice(0, 2).map((g) => (
+                            <Badge key={g} variant="secondary" className="text-xs">
+                              {g}
                             </Badge>
-                          </div>
-                          <div className="flex gap-1 flex-wrap">
-                            {movie.genre.slice(0, 2).map((g) => (
-                              <Badge key={g} variant="secondary" className="text-xs">
-                                {g}
-                              </Badge>
-                            ))}
-                          </div>
+                          ))}
                         </div>
                       </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-            </CommandList>
-          </div>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
