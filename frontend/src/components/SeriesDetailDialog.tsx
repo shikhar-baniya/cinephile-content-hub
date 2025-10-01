@@ -382,7 +382,7 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="pb-6">
+        <DialogHeader className="pb-6 pr-10">
           <div className="flex items-start gap-6">
             {getCurrentPoster() && (
               <div className="shrink-0">

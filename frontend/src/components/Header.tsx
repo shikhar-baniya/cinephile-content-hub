@@ -19,7 +19,7 @@ interface HeaderProps {
 
 const Header = ({ searchQuery, onSearchChange, onAddMovie, onSignOut, user }: HeaderProps) => {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 glass-effect">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 glass-effect rounded-b-2xl">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">

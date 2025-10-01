@@ -279,9 +279,11 @@ const Index = () => {
           user={user}
         />
         
-        <PageTransition triggerKey={activeTab}>
-          {renderContent()}
-        </PageTransition>
+        <div className="mt-6">
+          <PageTransition triggerKey={activeTab}>
+            {renderContent()}
+          </PageTransition>
+        </div>
         
         <MobileNavigation 
           activeTab={activeTab} 

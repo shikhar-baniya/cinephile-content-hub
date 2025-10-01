@@ -283,7 +283,7 @@ const MovieDetailDialog = ({ movie, open, onOpenChange, onEdit, onDelete, onUpda
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] bg-card/95 backdrop-blur-lg border-border/40 max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="space-y-0">
+        <DialogHeader className="space-y-0 pr-10">
           <div className="flex items-start gap-4">
             <div className="aspect-[2/3] w-32 bg-gradient-to-br from-secondary to-secondary/50 rounded-lg overflow-hidden flex-shrink-0">
               {(isEditingDetails ? editedPoster : movie.poster) ? (
