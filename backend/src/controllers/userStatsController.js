@@ -1,9 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+import { getSupabase } from '../config/database.js';
 
 export const getUserStats = async (req, res) => {
   try {
@@ -12,6 +7,8 @@ export const getUserStats = async (req, res) => {
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
+
+    const supabase = getSupabase();
 
     // Get user stats, create if doesn't exist
     let { data: userStats, error } = await supabase
