@@ -4,6 +4,7 @@ import { Movie } from "./MovieCard";
 import AnalyticsChart from "./AnalyticsChart";
 import SeasonsCompletedChart from "./SeasonsCompletedChart";
 import EpisodesWatchedChart from "./EpisodesWatchedChart";
+import TimeStatsWidgets from "./TimeStatsWidgets";
 
 interface StatsCardsProps {
   movies: Movie[];
@@ -72,6 +73,8 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
           </div>
         ))}
       </div>
+      
+      <TimeStatsWidgets movies={movies} />
       
       <AnalyticsChart movies={movies} />
       <SeasonsCompletedChart />

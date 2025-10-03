@@ -16,6 +16,7 @@ export interface Movie {
   season?: string;
   tmdbId?: number;
   watchDate?: string;
+  runtime?: number;
   latestSeasonWatched?: number;
   totalSeasonsAvailable?: number;
   overallRating?: number;
