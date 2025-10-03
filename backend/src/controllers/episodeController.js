@@ -11,6 +11,7 @@ const transformToResponse = (data) => {
     watch_date: watchDate,
     duration_minutes: durationMinutes,
     tmdb_episode_id: tmdbEpisodeId,
+    tmdb_rating: tmdbRating,
     created_at: createdAt,
     updated_at: updatedAt,
     ...rest
@@ -24,6 +25,7 @@ const transformToResponse = (data) => {
     watchDate,
     durationMinutes,
     tmdbEpisodeId,
+    tmdbRating,
     createdAt,
     updatedAt
   };
@@ -38,6 +40,7 @@ const transformToDatabase = (data) => {
     watchDate,
     durationMinutes,
     tmdbEpisodeId,
+    tmdbRating,
     createdAt,
     updatedAt,
     ...rest
@@ -51,6 +54,7 @@ const transformToDatabase = (data) => {
     ...(watchDate !== undefined && { watch_date: watchDate }),
     ...(durationMinutes !== undefined && { duration_minutes: durationMinutes }),
     ...(tmdbEpisodeId !== undefined && { tmdb_episode_id: tmdbEpisodeId }),
+    ...(tmdbRating !== undefined && { tmdb_rating: tmdbRating }),
     ...(createdAt !== undefined && { created_at: createdAt }),
     ...(updatedAt !== undefined && { updated_at: updatedAt })
   };

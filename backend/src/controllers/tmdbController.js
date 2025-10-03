@@ -267,6 +267,7 @@ export const autoPopulateNewSeries = async (req, res) => {
           season_name: seasonData.name,
           episode_count: seasonData.episodes.length,
           tmdb_season_id: seasonData.id,
+          tmdb_rating: seasonData.voteAverage,
           status: 'not-started'
         })
         .select()
@@ -279,6 +280,7 @@ export const autoPopulateNewSeries = async (req, res) => {
         episode_name: episodeData.name,
         duration_minutes: episodeData.runtime,
         tmdb_episode_id: episodeData.id,
+        tmdb_rating: episodeData.voteAverage,
         watched: false
       }));
 

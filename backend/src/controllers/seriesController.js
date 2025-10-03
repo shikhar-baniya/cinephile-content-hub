@@ -13,6 +13,7 @@ const transformToResponse = (data) => {
     watch_date: watchDate,
     started_date: startedDate,
     tmdb_season_id: tmdbSeasonId,
+    tmdb_rating: tmdbRating,
     created_at: createdAt,
     updated_at: updatedAt,
     ...rest
@@ -28,6 +29,7 @@ const transformToResponse = (data) => {
     watchDate,
     startedDate,
     tmdbSeasonId,
+    tmdbRating,
     createdAt,
     updatedAt
   };
@@ -44,6 +46,7 @@ const transformToDatabase = (data) => {
     watchDate,
     startedDate,
     tmdbSeasonId,
+    tmdbRating,
     createdAt,
     updatedAt,
     ...rest
@@ -59,6 +62,7 @@ const transformToDatabase = (data) => {
     ...(watchDate !== undefined && { watch_date: watchDate }),
     ...(startedDate !== undefined && { started_date: startedDate }),
     ...(tmdbSeasonId !== undefined && { tmdb_season_id: tmdbSeasonId }),
+    ...(tmdbRating !== undefined && { tmdb_rating: tmdbRating }),
     ...(createdAt !== undefined && { created_at: createdAt }),
     ...(updatedAt !== undefined && { updated_at: updatedAt })
   };
@@ -73,22 +77,17 @@ export const getAllSeasons = async (req, res) => {
 
     const supabase = getSupabase();
 
-    // Get all seasons for the user's series
+    // Get all seasons for the user's series using inner join
     const { data, error } = await supabase
       .from('series_seasons')
-      .select('*')
-      .in('series_id', 
-        supabase
-          .from('movies')
-          .select('id')
-          .eq('user_id', req.user.id)
-          .eq('category', 'Series')
-      )
+      .select('*, movies!inner(user_id)')
+      .eq('movies.user_id', req.user.id)
       .order('watch_date', { ascending: false, nullsFirst: false });
 
     if (error) throw error;
 
-    const seasons = data?.map(transformToResponse) || [];
+    // Remove the nested movies object from each season
+    const seasons = (data || []).map(({ movies, ...row }) => transformToResponse(row));
     res.json(seasons);
   } catch (error) {
     console.error('Get all seasons error:', error);
