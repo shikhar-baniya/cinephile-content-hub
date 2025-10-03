@@ -13,6 +13,7 @@ export interface SeriesSeason {
   watchDate?: string;
   startedDate?: string;
   rating?: number;
+  tmdbRating?: number;
   notes?: string;
   tmdbSeasonId?: number;
   posterPath?: string;
@@ -28,6 +29,7 @@ export interface SeriesEpisode {
   watched: boolean;
   watchDate?: string;
   rating?: number;
+  tmdbRating?: number;
   notes?: string;
   durationMinutes?: number;
   tmdbEpisodeId?: number;
@@ -81,6 +83,29 @@ export interface EpisodeStats {
 // ============= SEASON SERVICES =============
 
 export const seasonService = {
+  async getAllSeasons(): Promise<SeriesSeason[]> {
+    try {
+      const response = await fetch(`${apiClient.baseURL}/series/seasons/all`, {
+        headers: {
+          'Authorization': `Bearer ${apiClient.getToken()}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('All seasons error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching all seasons:', error);
+      throw error;
+    }
+  },
+
   async getSeriesSeasons(seriesId: string): Promise<SeriesSeason[]> {
     try {
       const response = await fetch(`${apiClient.baseURL}/series/${seriesId}/seasons`, {

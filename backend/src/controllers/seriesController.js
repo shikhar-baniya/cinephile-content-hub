@@ -64,6 +64,38 @@ const transformToDatabase = (data) => {
   };
 };
 
+// Get all seasons across all series for the authenticated user
+export const getAllSeasons = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const supabase = getSupabase();
+
+    // Get all seasons for the user's series
+    const { data, error } = await supabase
+      .from('series_seasons')
+      .select('*')
+      .in('series_id', 
+        supabase
+          .from('movies')
+          .select('id')
+          .eq('user_id', req.user.id)
+          .eq('category', 'Series')
+      )
+      .order('watch_date', { ascending: false, nullsFirst: false });
+
+    if (error) throw error;
+
+    const seasons = data?.map(transformToResponse) || [];
+    res.json(seasons);
+  } catch (error) {
+    console.error('Get all seasons error:', error);
+    res.status(500).json({ error: 'Failed to fetch all seasons' });
+  }
+};
+
 // Get all seasons for a series
 export const getSeriesSeasons = async (req, res) => {
   try {

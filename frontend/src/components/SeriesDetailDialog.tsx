@@ -473,9 +473,9 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
               <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <div className="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
                   {(() => {
-                    const ratedSeasons = seasons.filter(s => s.rating && s.rating > 0);
+                    const ratedSeasons = seasons.filter(s => (s.rating && s.rating > 0) || (s.tmdbRating && s.tmdbRating > 0));
                     if (ratedSeasons.length === 0) return 'N/A';
-                    const avgRating = ratedSeasons.reduce((acc, s) => acc + (s.rating || 0), 0) / ratedSeasons.length;
+                    const avgRating = ratedSeasons.reduce((acc, s) => acc + ((s.rating && s.rating > 0 ? s.rating : s.tmdbRating) || 0), 0) / ratedSeasons.length;
                     return avgRating.toFixed(1);
                   })()}
                 </div>
@@ -706,10 +706,13 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                       ) : (
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-4">
-                            {season.rating && (
+                            {(season.rating || season.tmdbRating) && (
                               <div className="flex items-center gap-1">
-                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                <span>{season.rating}/10</span>
+                                <Star className={`h-4 w-4 ${season.rating ? 'fill-yellow-400 text-yellow-400' : 'fill-blue-400 text-blue-400'}`} />
+                                <span>{season.rating || season.tmdbRating}/10</span>
+                                <span className="text-xs text-muted-foreground ml-1">
+                                  ({season.rating ? 'You' : 'TMDB'})
+                                </span>
                               </div>
                             )}
                             
@@ -801,10 +804,13 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                                       {new Date(episode.watchDate).toLocaleDateString()}
                                     </span>
                                   )}
-                                  {episode.rating && (
+                                  {(episode.rating || episode.tmdbRating) && (
                                     <div className="flex items-center gap-1">
-                                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                      <span className="text-xs">{episode.rating}</span>
+                                      <Star className={`h-3 w-3 ${episode.rating ? 'fill-yellow-400 text-yellow-400' : 'fill-blue-400 text-blue-400'}`} />
+                                      <span className="text-xs">{episode.rating || episode.tmdbRating}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        ({episode.rating ? 'You' : 'TMDB'})
+                                      </span>
                                     </div>
                                   )}
                                 </div>

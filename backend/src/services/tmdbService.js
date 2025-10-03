@@ -73,6 +73,7 @@ export async function getSeasonDetails(tmdbId, seasonNumber) {
       seasonNumber: data.season_number,
       airDate: data.air_date,
       posterPath: data.poster_path,
+      voteAverage: data.vote_average,
       episodes: data.episodes?.map(episode => ({
         id: episode.id,
         name: episode.name,

@@ -2,6 +2,8 @@
 import { Film, Star, Calendar, TrendingUp } from "lucide-react";
 import { Movie } from "./MovieCard";
 import AnalyticsChart from "./AnalyticsChart";
+import SeasonsCompletedChart from "./SeasonsCompletedChart";
+import EpisodesWatchedChart from "./EpisodesWatchedChart";
 
 interface StatsCardsProps {
   movies: Movie[];
@@ -72,6 +74,8 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
       </div>
       
       <AnalyticsChart movies={movies} />
+      <SeasonsCompletedChart />
+      <EpisodesWatchedChart />
     </div>
   );
 };

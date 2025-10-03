@@ -1,6 +1,7 @@
 import express from 'express';
 import { 
-  getSeriesSeasons, 
+  getSeriesSeasons,
+  getAllSeasons, 
   getSeason, 
   createSeason, 
   updateSeason, 
@@ -32,6 +33,9 @@ router.use(authenticateUser);
 router.get('/:seriesId/overview', getSeriesWithSeasons);
 
 // ============= SEASON ROUTES =============
+
+// GET /api/series/seasons/all - Get all seasons across all series for the authenticated user
+router.get('/seasons/all', getAllSeasons);
 
 // GET /api/series/:seriesId/seasons - Get all seasons for a series
 router.get('/:seriesId/seasons', getSeriesSeasons);
