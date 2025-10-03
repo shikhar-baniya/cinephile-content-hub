@@ -96,14 +96,24 @@ export async function calculateWatchTime(
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   let filteredMovies = movies.filter(m => m.status === 'watched');
+  console.log('📊 [WatchTime] Total watched movies:', filteredMovies.length);
   
   if (timeframe === 'thisYear') {
-    filteredMovies = filteredMovies.filter(m => m.releaseYear === currentYear);
-  } else if (timeframe === 'last30Days' && filteredMovies[0]?.watchDate) {
+    // Filter by watch date year, not release year
+    filteredMovies = filteredMovies.filter(m => {
+      if (!m.watchDate) return false;
+      const watchYear = new Date(m.watchDate).getFullYear();
+      return watchYear === currentYear;
+    });
+    console.log('📊 [WatchTime] Movies this year:', filteredMovies.length);
+  } else if (timeframe === 'last30Days') {
     filteredMovies = filteredMovies.filter(m => {
       if (!m.watchDate) return false;
       return new Date(m.watchDate) >= thirtyDaysAgo;
     });
+    console.log('📊 [WatchTime] Movies last 30 days:', filteredMovies.length);
+  } else {
+    console.log('📊 [WatchTime] All time movies:', filteredMovies.length);
   }
 
   // Calculate movie watch time (assume average 120 min if no runtime)
@@ -112,12 +122,21 @@ export async function calculateWatchTime(
   }, 0);
 
   // Get all episodes across all series
-  const allSeasons = await seriesService.seasons.getAllSeasons();
-  const episodePromises = allSeasons.map(season => 
-    seriesService.episodes.getEpisodesBySeason(season.id)
-  );
-  const episodeArrays = await Promise.all(episodePromises);
-  const allEpisodes = episodeArrays.flat();
+  let allEpisodes: SeriesEpisode[] = [];
+  try {
+    const allSeasons = await seriesService.seasons.getAllSeasons();
+    console.log('📊 [WatchTime] Found seasons:', allSeasons.length);
+    
+    const episodePromises = allSeasons.map(season => 
+      seriesService.episodes.getEpisodesBySeason(season.id)
+    );
+    const episodeArrays = await Promise.all(episodePromises);
+    allEpisodes = episodeArrays.flat();
+    console.log('📊 [WatchTime] Total episodes:', allEpisodes.length);
+  } catch (error) {
+    console.error('Error fetching episodes:', error);
+    // Continue with empty episodes array
+  }
 
   // Filter episodes based on timeframe
   let watchedEpisodes = allEpisodes.filter(e => e.watched && e.watchDate);

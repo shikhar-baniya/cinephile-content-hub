@@ -12,6 +12,7 @@ const TimeStatsWidgets = ({ movies }: TimeStatsWidgetsProps) => {
     const [bingeStats, setBingeStats] = useState<BingeStats | null>(null);
     const [forecastStats, setForecastStats] = useState<CompletionForecastStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [timeframeLabel, setTimeframeLabel] = useState('This year');
 
     const [expandedWidget, setExpandedWidget] = useState<'watchTime' | 'binge' | 'forecast' | null>(null);
 
@@ -22,8 +23,19 @@ const TimeStatsWidgets = ({ movies }: TimeStatsWidgetsProps) => {
     const fetchAllStats = async () => {
         setLoading(true);
         try {
-            const [watchTime, binge, forecast] = await Promise.all([
-                timeStatsService.calculateWatchTime(movies, 'thisYear'),
+            // Try this year first, fallback to all time if no data
+            let watchTime = await timeStatsService.calculateWatchTime(movies, 'thisYear');
+            
+            // If no data this year, try all time
+            if (watchTime.totalMinutes === 0) {
+                console.log('📊 No data for this year, fetching all time...');
+                watchTime = await timeStatsService.calculateWatchTime(movies, 'allTime');
+                setTimeframeLabel('All time');
+            } else {
+                setTimeframeLabel('This year');
+            }
+            
+            const [binge, forecast] = await Promise.all([
                 timeStatsService.calculateBingeStats(),
                 timeStatsService.calculateCompletionForecast(movies)
             ]);
@@ -87,7 +99,7 @@ const TimeStatsWidgets = ({ movies }: TimeStatsWidgetsProps) => {
                             ) : '0h'}
                         </div>
                         <div className="text-xs text-muted-foreground">Watch Time</div>
-                        <div className="text-xs text-muted-foreground">This year</div>
+                        <div className="text-xs text-muted-foreground">{timeframeLabel}</div>
                     </div>
                 </div>
 
