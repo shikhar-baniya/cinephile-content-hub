@@ -128,7 +128,7 @@ export async function calculateWatchTime(
     console.log('📊 [WatchTime] Found seasons:', allSeasons.length);
     
     const episodePromises = allSeasons.map(season => 
-      seriesService.episodes.getEpisodesBySeason(season.id)
+      seriesService.episodes.getSeasonEpisodes(season.id)
     );
     const episodeArrays = await Promise.all(episodePromises);
     allEpisodes = episodeArrays.flat();
@@ -205,7 +205,7 @@ export async function calculateBingeStats(): Promise<BingeStats> {
   // Get all episodes
   const allSeasons = await seriesService.seasons.getAllSeasons();
   const episodePromises = allSeasons.map(season => 
-    seriesService.episodes.getEpisodesBySeason(season.id)
+    seriesService.episodes.getSeasonEpisodes(season.id)
   );
   const episodeArrays = await Promise.all(episodePromises);
   const allEpisodes = episodeArrays.flat();
@@ -318,7 +318,7 @@ export async function calculateCompletionForecast(movies: Movie[]): Promise<Comp
 
   for (const season of watchingSeasons) {
     try {
-      const episodes = await seriesService.episodes.getEpisodesBySeason(season.id);
+      const episodes = await seriesService.episodes.getSeasonEpisodes(season.id);
       const watchedEpisodes = episodes.filter(e => e.watched);
       const totalEpisodes = season.episodeCount;
       const watchedCount = watchedEpisodes.length;
