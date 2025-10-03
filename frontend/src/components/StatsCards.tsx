@@ -1,16 +1,27 @@
 
 import { Film, Star, Calendar, TrendingUp } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Movie } from "./MovieCard";
 import AnalyticsChart from "./AnalyticsChart";
 import SeasonsCompletedChart from "./SeasonsCompletedChart";
 import EpisodesWatchedChart from "./EpisodesWatchedChart";
 import TimeStatsWidgets from "./TimeStatsWidgets";
+import UnlockStatsProgress from "./UnlockStatsProgress";
+import LockedStatsPreview from "./LockedStatsPreview";
+import { userStatsService } from "@/services/userStatsService";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface StatsCardsProps {
   movies: Movie[];
 }
 
 const StatsCards = ({ movies }: StatsCardsProps) => {
+  const { data: userStats, isLoading: userStatsLoading } = useQuery({
+    queryKey: ['userStats'],
+    queryFn: userStatsService.getUserStats,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+  });
   const watchedMovies = movies.filter(m => m.status === "watched");
   const averageRating = watchedMovies.length > 0 
     ? (watchedMovies.reduce((acc, movie) => acc + movie.rating, 0) / watchedMovies.length).toFixed(1)
@@ -56,6 +67,29 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
       color: "text-purple-400"
     }
   ];
+
+  if (userStatsLoading) {
+    return (
+      <div className="grid gap-6">
+        <Card>
+          <CardContent className="flex items-center justify-center h-32">
+            <p className="text-muted-foreground">Loading statistics...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const isStatsUnlocked = userStats?.isUnlocked ?? false;
+
+  if (!isStatsUnlocked) {
+    return (
+      <div className="space-y-6">
+        {userStats && <UnlockStatsProgress stats={userStats} />}
+        <LockedStatsPreview />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
