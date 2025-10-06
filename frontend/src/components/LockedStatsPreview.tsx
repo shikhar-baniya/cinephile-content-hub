@@ -3,9 +3,9 @@ import { Lock, Film, Eye, Star, Play, BarChart3, Calendar, TrendingUp } from "lu
 
 const LockedStatsPreview = () => {
     return (
-        <div className="grid gap-6 relative">
-            <div className="absolute inset-0 z-10 backdrop-blur-sm bg-background/30 flex items-center justify-center rounded-lg">
-                <div className="text-center space-y-4 bg-background/95 p-8 rounded-lg border-2 border-primary/50 shadow-2xl max-w-md">
+        <div className="grid gap-6 relative min-h-[600px]">
+            <div className="absolute inset-0 z-10 backdrop-blur-sm bg-background/50 flex items-center justify-center rounded-lg">
+                <div className="text-center space-y-4 bg-background/95 p-8 rounded-lg border-2 border-primary/50 shadow-2xl max-w-md mx-4">
                     <div className="flex justify-center">
                         <div className="p-4 bg-primary/10 rounded-full">
                             <Lock className="h-12 w-12 text-primary" />

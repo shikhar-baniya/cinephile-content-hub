@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -18,7 +17,7 @@ import {
 import { Movie } from "./MovieCard";
 import UnlockStatsProgress from "./UnlockStatsProgress";
 import LockedStatsPreview from "./LockedStatsPreview";
-import { userStatsService } from "@/services/userStatsService";
+import { calculateStatsUnlockStatus } from "@/utils/statsUnlockHelper";
 
 interface MovieStatsProps {
     movies: Movie[];
@@ -43,12 +42,7 @@ interface YearStats {
 }
 
 const MovieStats = ({ movies }: MovieStatsProps) => {
-    const { data: userStats, isLoading: userStatsLoading } = useQuery({
-        queryKey: ['userStats'],
-        queryFn: userStatsService.getUserStats,
-        refetchOnMount: true,
-        refetchOnWindowFocus: false,
-    });
+    const userStats = useMemo(() => calculateStatsUnlockStatus(movies), [movies]);
 
     const stats = useMemo(() => {
         const total = movies.length;
@@ -194,22 +188,10 @@ const MovieStats = ({ movies }: MovieStatsProps) => {
         };
     }, [movies]);
 
-    if (userStatsLoading) {
-        return (
-            <div className="grid gap-6">
-                <Card>
-                    <CardContent className="flex items-center justify-center h-32">
-                        <p className="text-muted-foreground">Loading statistics...</p>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
-
     if (!stats) {
         return (
             <div className="grid gap-6">
-                {userStats && !userStats.isUnlocked && (
+                {!userStats.isUnlocked && (
                     <UnlockStatsProgress stats={userStats} />
                 )}
                 <Card>
@@ -221,15 +203,13 @@ const MovieStats = ({ movies }: MovieStatsProps) => {
         );
     }
 
-    const isStatsUnlocked = userStats?.isUnlocked ?? false;
-
     return (
         <div className="grid gap-6">
-            {!isStatsUnlocked && userStats && (
+            {!userStats.isUnlocked && (
                 <UnlockStatsProgress stats={userStats} />
             )}
 
-            {!isStatsUnlocked ? (
+            {!userStats.isUnlocked ? (
                 <LockedStatsPreview />
             ) : (
                 <div className="grid gap-6">
