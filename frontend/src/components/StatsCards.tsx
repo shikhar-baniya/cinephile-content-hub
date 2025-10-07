@@ -38,7 +38,10 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
             icon: Film,
             description: `${watchedSeries.length} watched`,
             color: "text-cyan-400"
-        },
+        }
+    ];
+
+    const bottomRowStats = [
         {
             title: "Average Rating",
             value: averageRating,
@@ -59,7 +62,7 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
 
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
                 {topRowStats.map((stat, index) => (
                     <div key={stat.title} className="floating-card rounded-xl p-4 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                         <div className="flex items-center justify-between mb-2">
@@ -75,9 +78,22 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
+                {bottomRowStats.map((stat, index) => (
+                    <div key={stat.title} className="floating-card rounded-xl p-4 animate-fade-in" style={{ animationDelay: `${(topRowStats.length + index) * 0.1}s` }}>
+                        <div className="flex items-center justify-between mb-2">
+                            <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                        </div>
+                        <div className="space-y-1">
+                            <div className="text-2xl font-bold">{stat.value}</div>
+                            <div className="text-xs text-muted-foreground">{stat.title}</div>
+                            <div className="text-xs text-muted-foreground">{stat.description}</div>
+                        </div>
+                    </div>
+                ))}
                 <WatchTimeWidget movies={movies} />
-                <GenreWidget movies={movies} />
             </div>
+
+            <GenreWidget movies={movies} />
 
             <AnalyticsChart movies={movies} />
         </div>

@@ -45,7 +45,7 @@ const WatchTimeWidget = ({ movies }: WatchTimeWidgetProps) => {
 
     if (loading) {
         return (
-            <div className="floating-card rounded-xl p-4 col-span-2 animate-pulse">
+            <div className="floating-card rounded-xl p-4 animate-pulse">
                 <div className="h-5 w-5 bg-muted rounded mb-2"></div>
                 <div className="h-8 w-20 bg-muted rounded mb-1"></div>
                 <div className="h-4 w-24 bg-muted rounded"></div>
@@ -54,7 +54,7 @@ const WatchTimeWidget = ({ movies }: WatchTimeWidgetProps) => {
     }
 
     return (
-        <div className="floating-card rounded-xl p-4 col-span-2">
+        <div className="floating-card rounded-xl p-4">
             <div
                 className="cursor-pointer"
                 onClick={() => setIsExpanded(!isExpanded)}
