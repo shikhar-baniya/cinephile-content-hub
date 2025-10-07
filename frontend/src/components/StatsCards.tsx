@@ -1,12 +1,13 @@
-
-import { Film, Star, Calendar, TrendingUp } from "lucide-react";
+import { Film, Star, Clock } from "lucide-react";
 import { useMemo } from "react";
 import { Movie } from "./MovieCard";
 import AnalyticsChart from "./AnalyticsChart";
-import TimeStatsWidgets from "./TimeStatsWidgets";
+import GenreWidget from "./GenreWidget";
 import UnlockStatsProgress from "./UnlockStatsProgress";
 import LockedStatsPreview from "./LockedStatsPreview";
 import { calculateStatsUnlockStatus } from "@/utils/statsUnlockHelper";
+import { timeStatsService } from "@/services/timeStatsService";
+import { useState, useEffect } from "react";
 
 interface StatsCardsProps {
     movies: Movie[];
@@ -14,6 +15,9 @@ interface StatsCardsProps {
 
 const StatsCards = ({ movies }: StatsCardsProps) => {
     const userStats = useMemo(() => calculateStatsUnlockStatus(movies), [movies]);
+    const [watchTimeHours, setWatchTimeHours] = useState(0);
+    const [timeframeLabel, setTimeframeLabel] = useState('This year');
+
     const watchedMovies = movies.filter(m => m.status === "watched");
     const allMovies = movies.filter(m => m.category === "Movie");
     const allSeries = movies.filter(m => m.category === "Series");
@@ -23,16 +27,34 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
         ? (watchedMovies.reduce((acc, movie) => acc + movie.rating, 0) / watchedMovies.length).toFixed(1)
         : "0";
 
-    const currentYear = new Date().getFullYear();
-    const thisYearMovies = watchedMovies.filter(m => m.category === "Movie" && m.releaseYear === currentYear);
-    const thisYearSeries = watchedSeries.filter(m => m.releaseYear === currentYear);
+    useEffect(() => {
+        const fetchWatchTime = async () => {
+            try {
+                let watchTime = await timeStatsService.calculateWatchTime(movies, 'thisYear');
 
-    const topGenre = movies.reduce((acc, movie) => {
-        acc[movie.genre] = (acc[movie.genre] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
+                if (watchTime.totalMinutes === 0) {
+                    watchTime = await timeStatsService.calculateWatchTime(movies, 'allTime');
+                    setTimeframeLabel('All time');
+                } else {
+                    setTimeframeLabel('This year');
+                }
 
-    const mostWatchedGenre = Object.entries(topGenre).sort(([, a], [, b]) => b - a)[0];
+                setWatchTimeHours(watchTime.totalHours);
+            } catch (error) {
+                console.error('Error fetching watch time:', error);
+            }
+        };
+
+        fetchWatchTime();
+    }, [movies]);
+
+    const formatTime = (hours: number) => {
+        const h = Math.floor(hours);
+        const m = Math.round((hours % 1) * 60);
+        if (h === 0) return `${m}m`;
+        if (m === 0) return `${h}h`;
+        return `${h}h ${m}m`;
+    };
 
     const topRowStats = [
         {
@@ -57,28 +79,11 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
             color: "text-yellow-400"
         },
         {
-            title: "This Year",
-            value: thisYearMovies.length.toString(),
-            icon: Calendar,
-            description: `${currentYear} movies`,
+            title: "Watch Time",
+            value: formatTime(watchTimeHours),
+            icon: Clock,
+            description: timeframeLabel,
             color: "text-green-400"
-        }
-    ];
-
-    const bottomRowStats = [
-        {
-            title: "Series This Year",
-            value: thisYearSeries.length.toString(),
-            icon: Calendar,
-            description: `${currentYear} series`,
-            color: "text-emerald-400"
-        },
-        {
-            title: "Top Genre",
-            value: mostWatchedGenre?.[0] || "None",
-            icon: TrendingUp,
-            description: `${mostWatchedGenre?.[1] || 0} items`,
-            color: "text-purple-400"
         }
     ];
 
@@ -109,21 +114,8 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-                {bottomRowStats.map((stat, index) => (
-                    <div key={stat.title} className="floating-card rounded-xl p-4 animate-fade-in" style={{ animationDelay: `${(index + 4) * 0.1}s` }}>
-                        <div className="flex items-center justify-between mb-2">
-                            <stat.icon className={`h-5 w-5 ${stat.color}`} />
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-2xl font-bold">{stat.value}</div>
-                            <div className="text-xs text-muted-foreground">{stat.title}</div>
-                            <div className="text-xs text-muted-foreground">{stat.description}</div>
-                        </div>
-                    </div>
-                ))}
+                <GenreWidget movies={movies} />
             </div>
-
-            <TimeStatsWidgets movies={movies} />
 
             <AnalyticsChart movies={movies} />
         </div>
