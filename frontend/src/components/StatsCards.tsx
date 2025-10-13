@@ -2,6 +2,7 @@ import { Film, Star } from "lucide-react";
 import { useMemo } from "react";
 import { Movie } from "./MovieCard";
 import AnalyticsChart from "./AnalyticsChart";
+import EpisodeAnalyticsChart from "./EpisodeAnalyticsChart";
 import GenreWidget from "./GenreWidget";
 import WatchTimeWidget from "./WatchTimeWidget";
 import UnlockStatsProgress from "./UnlockStatsProgress";
@@ -96,6 +97,8 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
             <GenreWidget movies={movies} />
 
             <AnalyticsChart movies={movies} />
+
+            <EpisodeAnalyticsChart />
         </div>
     );
 };
