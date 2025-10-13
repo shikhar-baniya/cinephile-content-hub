@@ -8,7 +8,6 @@ import authRoutes from './routes/auth.js';
 import seriesRoutes from './routes/series.js';
 import tmdbRoutes from './routes/tmdb.js';
 import debugRoutes from './routes/debug.js';
-import analyticsRoutes from './routes/analytics.js';
 
 const app = express();
 
@@ -58,8 +57,7 @@ app.get('/', (req, res) => {
       auth: '/api/auth',
       series: '/api/series',
       tmdb: '/api/tmdb',
-      debug: '/api/debug',
-      analytics: '/api/analytics'
+      debug: '/api/debug'
     }
   });
 });
@@ -70,7 +68,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/series', seriesRoutes);
 app.use('/api/tmdb', tmdbRoutes);
 app.use('/api/debug', debugRoutes);
-app.use('/api/analytics', analyticsRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
