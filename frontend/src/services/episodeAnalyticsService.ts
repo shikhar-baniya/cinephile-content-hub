@@ -18,10 +18,28 @@ export interface SeasonAnalyticsData {
 export const episodeAnalyticsService = {
   async getEpisodeWatchData(startDate: Date, endDate: Date): Promise<EpisodeAnalyticsData[]> {
     try {
+      // Get the current session token from localStorage (Supabase stores it there)
+      const sessionData = localStorage.getItem('supabase.auth.token');
+      let accessToken = null;
+
+      if (sessionData) {
+        try {
+          const session = JSON.parse(sessionData);
+          accessToken = session?.currentSession?.access_token || session?.access_token;
+        } catch (e) {
+          console.warn('Could not parse session data');
+        }
+      }
+
+      if (!accessToken) {
+        throw new Error('No authentication token available. Please sign in first.');
+      }
+
       const response = await fetch(`${config.api.baseUrl}/analytics/episodes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           startDate: startDate.toISOString().split('T')[0],
@@ -30,7 +48,8 @@ export const episodeAnalyticsService = {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch episode analytics');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch episode analytics: ${response.status}`);
       }
 
       const data = await response.json();
@@ -49,10 +68,28 @@ export const episodeAnalyticsService = {
 
   async getSeasonCompletionData(startDate: Date, endDate: Date): Promise<SeasonAnalyticsData[]> {
     try {
+      // Get the current session token from localStorage (Supabase stores it there)
+      const sessionData = localStorage.getItem('supabase.auth.token');
+      let accessToken = null;
+
+      if (sessionData) {
+        try {
+          const session = JSON.parse(sessionData);
+          accessToken = session?.currentSession?.access_token || session?.access_token;
+        } catch (e) {
+          console.warn('Could not parse session data');
+        }
+      }
+
+      if (!accessToken) {
+        throw new Error('No authentication token available. Please sign in first.');
+      }
+
       const response = await fetch(`${config.api.baseUrl}/analytics/seasons`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           startDate: startDate.toISOString().split('T')[0],
@@ -61,7 +98,8 @@ export const episodeAnalyticsService = {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch season analytics');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch season analytics: ${response.status}`);
       }
 
       const data = await response.json();
