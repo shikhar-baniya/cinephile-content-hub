@@ -4,6 +4,8 @@ import { Movie } from "./MovieCard";
 import AnalyticsChart from "./AnalyticsChart";
 import GenreWidget from "./GenreWidget";
 import WatchTimeWidget from "./WatchTimeWidget";
+import SeriesProgressWidget from "./SeriesProgressWidget";
+import EpisodeActivityWidget from "./EpisodeActivityWidget";
 import UnlockStatsProgress from "./UnlockStatsProgress";
 import LockedStatsPreview from "./LockedStatsPreview";
 import { calculateStatsUnlockStatus } from "@/utils/statsUnlockHelper";
@@ -61,40 +63,42 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-4">
+            {/* Compact Stats Grid - All in one row */}
+            <div className="grid grid-cols-2 gap-3">
                 {topRowStats.map((stat, index) => (
-                    <div key={stat.title} className="floating-card rounded-xl p-4 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                        <div className="flex items-center justify-between mb-2">
-                            <stat.icon className={`h-5 w-5 ${stat.color}`} />
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-2xl font-bold">{stat.value}</div>
+                    <div key={stat.title} className="floating-card rounded-xl p-3 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                        <div className="flex items-center gap-2 mb-1">
+                            <stat.icon className={`h-4 w-4 ${stat.color}`} />
                             <div className="text-xs text-muted-foreground">{stat.title}</div>
-                            <div className="text-xs text-muted-foreground">{stat.description}</div>
                         </div>
+                        <div className="text-xl font-bold">{stat.value}</div>
+                        <div className="text-[10px] text-muted-foreground">{stat.description}</div>
                     </div>
                 ))}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
                 {bottomRowStats.map((stat, index) => (
-                    <div key={stat.title} className="floating-card rounded-xl p-4 animate-fade-in" style={{ animationDelay: `${(topRowStats.length + index) * 0.1}s` }}>
-                        <div className="flex items-center justify-between mb-2">
-                            <stat.icon className={`h-5 w-5 ${stat.color}`} />
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-2xl font-bold">{stat.value}</div>
+                    <div key={stat.title} className="floating-card rounded-xl p-3 animate-fade-in" style={{ animationDelay: `${(topRowStats.length + index) * 0.1}s` }}>
+                        <div className="flex items-center gap-2 mb-1">
+                            <stat.icon className={`h-4 w-4 ${stat.color}`} />
                             <div className="text-xs text-muted-foreground">{stat.title}</div>
-                            <div className="text-xs text-muted-foreground">{stat.description}</div>
                         </div>
+                        <div className="text-xl font-bold">{stat.value}</div>
+                        <div className="text-[10px] text-muted-foreground">{stat.description}</div>
                     </div>
                 ))}
                 <WatchTimeWidget movies={movies} />
             </div>
 
+            {/* Series Widgets & Genre - Compact 2-column layout */}
+            <div className="grid grid-cols-2 gap-3">
+                <SeriesProgressWidget movies={movies} />
+                <EpisodeActivityWidget />
+            </div>
+
+            {/* Genre Widget - Compact */}
             <GenreWidget movies={movies} />
 
+            {/* Analytics Chart */}
             <AnalyticsChart movies={movies} />
         </div>
     );

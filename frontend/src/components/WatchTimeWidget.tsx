@@ -85,11 +85,10 @@ const WatchTimeWidget = ({ movies }: WatchTimeWidgetProps) => {
     return (
         <div
             ref={widgetRef}
-            className={`floating-card rounded-xl transition-all duration-500 ease-out relative overflow-hidden ${
-                isExpanded
-                    ? 'col-span-2 row-span-2 p-6 shadow-2xl border-2 border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 z-10'
-                    : 'p-4 cursor-pointer hover:bg-card/80 hover:scale-[1.02] hover:shadow-lg hover:border-primary/10 border border-transparent'
-            }`}
+            className={`floating-card rounded-xl transition-all duration-500 ease-out relative overflow-hidden ${isExpanded
+                    ? 'fixed inset-4 p-6 shadow-2xl border-2 border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 z-50 max-h-[90vh] overflow-y-auto'
+                    : 'p-3 cursor-pointer hover:bg-card/80 hover:scale-[1.02] hover:shadow-lg hover:border-primary/10 border border-transparent'
+                }`}
             onClick={!isExpanded ? handleWidgetClick : undefined}
             style={{
                 transformOrigin: 'top left',
@@ -98,19 +97,19 @@ const WatchTimeWidget = ({ movies }: WatchTimeWidgetProps) => {
             {/* Compact Widget View */}
             {!isExpanded && (
                 <>
-                    <div className="flex items-center justify-between mb-2">
-                        <Clock className="h-5 w-5 text-blue-400" />
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex items-center justify-between mb-1">
+                        <Clock className="h-4 w-4 text-blue-400" />
+                        <ChevronDown className="h-3 w-3 text-muted-foreground" />
                     </div>
-                    <div className="space-y-1">
-                        <div className="text-2xl font-bold">
+                    <div className="space-y-0.5">
+                        <div className="text-xl font-bold">
                             {watchTimeStats ? formatTime(
                                 Math.floor(watchTimeStats.totalHours),
                                 Math.round((watchTimeStats.totalHours % 1) * 60)
                             ) : '0h'}
                         </div>
-                        <div className="text-xs text-muted-foreground">Watch Time</div>
-                        <div className="text-xs text-muted-foreground">{timeframeLabel}</div>
+                        <div className="text-[10px] text-muted-foreground">Watch Time</div>
+                        <div className="text-[10px] text-muted-foreground">{timeframeLabel}</div>
                     </div>
                 </>
             )}
@@ -119,9 +118,8 @@ const WatchTimeWidget = ({ movies }: WatchTimeWidgetProps) => {
             {isExpanded && (
                 <div
                     ref={contentRef}
-                    className={`mt-4 space-y-6 animate-in slide-in-from-top-2 duration-500 ${
-                        isAnimating ? 'opacity-100' : 'opacity-0'
-                    } transition-opacity duration-300`}
+                    className={`mt-4 space-y-6 animate-in slide-in-from-top-2 duration-500 ${isAnimating ? 'opacity-100' : 'opacity-0'
+                        } transition-opacity duration-300`}
                 >
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
