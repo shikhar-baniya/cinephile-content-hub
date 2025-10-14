@@ -400,14 +400,31 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                   <p className="text-muted-foreground mb-3">{series.genre}</p>
                   
                   {/* Status, Year, Platform */}
-                  <div className="flex items-center gap-4 mb-3 text-sm">
+                  <div className="flex items-center gap-4 mb-3 text-sm flex-wrap">
                     <div className="flex items-center gap-1">
                       {getStatusIcon(series.status)}
                       <span className="capitalize">{series.status.replace('-', ' ')}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>{series.releaseYear}</span>
+                      <span className="whitespace-nowrap">{(() => {
+                        if (!tmdbSeasons || tmdbSeasons.length === 0) {
+                          return series.releaseYear;
+                        }
+
+                        const sortedSeasons = tmdbSeasons
+                          .filter(season => season.airDate)
+                          .sort((a, b) => new Date(a.airDate).getTime() - new Date(b.airDate).getTime());
+
+                        if (sortedSeasons.length === 0) {
+                          return series.releaseYear;
+                        }
+
+                        const firstSeasonYear = new Date(sortedSeasons[0].airDate).getFullYear();
+                        const lastSeasonYear = new Date(sortedSeasons[sortedSeasons.length - 1].airDate).getFullYear();
+
+                        return firstSeasonYear === lastSeasonYear ? firstSeasonYear : `${firstSeasonYear}-${lastSeasonYear}`;
+                      })()}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Monitor className="h-4 w-4 text-muted-foreground" />
@@ -621,6 +638,11 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           <h4 className="font-medium">{season.seasonName}</h4>
+                          {(() => {
+                            const tmdbSeason = tmdbSeasons.find(ts => ts.seasonNumber === season.seasonNumber);
+                            const year = tmdbSeason?.airDate ? new Date(tmdbSeason.airDate).getFullYear() : null;
+                            return year ? <span className="text-sm text-muted-foreground">({year})</span> : null;
+                          })()}
                           <Badge className={`${getStatusColor(season.status)} text-xs`}>
                             {getStatusIcon(season.status)}
                             <span className="ml-1 capitalize">{season.status.replace('-', ' ')}</span>
