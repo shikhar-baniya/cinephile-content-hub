@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Clock, Tv, Calendar, Sparkles } from "lucide-react";
 import BottomSheet from "./BottomSheet";
 import StoryMode from "./StoryMode";
@@ -25,6 +25,13 @@ const StatsBottomSheet = ({
 }: StatsBottomSheetProps) => {
     const [activeTab, setActiveTab] = useState(initialTab);
     const [isStoryMode, setIsStoryMode] = useState(false);
+
+    // Update activeTab when initialTab changes
+    useEffect(() => {
+        if (isOpen) {
+            setActiveTab(initialTab);
+        }
+    }, [initialTab, isOpen]);
 
     const tabs = [
         {
@@ -96,8 +103,8 @@ const StatsBottomSheet = ({
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all whitespace-nowrap ${activeTab === tab.id
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                                         }`}
                                 >
                                     <Icon className="h-4 w-4" />

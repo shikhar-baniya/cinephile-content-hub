@@ -23,12 +23,21 @@ const StoryMode = ({ isOpen, onClose, stories, initialIndex = 0 }: StoryModeProp
         if (isOpen) {
             setCurrentIndex(initialIndex);
             document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.height = '100%';
         } else {
-            document.body.style.overflow = 'unset';
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.height = '';
         }
 
         return () => {
-            document.body.style.overflow = 'unset';
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.height = '';
         };
     }, [isOpen, initialIndex]);
 
@@ -96,13 +105,25 @@ const StoryMode = ({ isOpen, onClose, stories, initialIndex = 0 }: StoryModeProp
 
     return (
         <div
-            className="fixed inset-0 bg-black z-50 flex flex-col"
+            className="fixed bg-black flex flex-col"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            style={{
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100vw',
+                height: '100vh',
+                minHeight: '100vh',
+                maxHeight: '100vh',
+                zIndex: 10000,
+                position: 'fixed'
+            }}
         >
             {/* Progress bars */}
-            <div className="flex gap-1 p-4 pb-2">
+            <div className="flex gap-1 p-4 pb-2 flex-shrink-0">
                 {stories.map((story, index) => (
                     <div
                         key={story.id}
@@ -110,8 +131,8 @@ const StoryMode = ({ isOpen, onClose, stories, initialIndex = 0 }: StoryModeProp
                     >
                         <div
                             className={`h-full bg-white rounded-full transition-all duration-300 ${index < currentIndex ? 'w-full' :
-                                    index === currentIndex ? 'w-full animate-progress' :
-                                        'w-0'
+                                index === currentIndex ? 'w-full animate-progress' :
+                                    'w-0'
                                 }`}
                         />
                     </div>
@@ -119,7 +140,7 @@ const StoryMode = ({ isOpen, onClose, stories, initialIndex = 0 }: StoryModeProp
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-2">
+            <div className="flex items-center justify-between px-4 py-2 flex-shrink-0">
                 <h2 className="text-white font-semibold text-lg">
                     {stories[currentIndex].title}
                 </h2>
@@ -133,8 +154,13 @@ const StoryMode = ({ isOpen, onClose, stories, initialIndex = 0 }: StoryModeProp
 
             {/* Content */}
             <div
-                className="flex-1 overflow-y-auto px-4 pb-20"
+                className="flex-1 overflow-y-auto px-4 pb-safe"
                 onClick={handleTapNavigation}
+                style={{
+                    maxHeight: 'calc(100vh - 120px)',
+                    overflowY: 'auto',
+                    WebkitOverflowScrolling: 'touch'
+                }}
             >
                 <div className="animate-in fade-in-0 slide-in-from-right-4 duration-300">
                     {stories[currentIndex].content}
@@ -167,8 +193,8 @@ const StoryMode = ({ isOpen, onClose, stories, initialIndex = 0 }: StoryModeProp
                     <div
                         key={story.id}
                         className={`w-2 h-2 rounded-full transition-all ${index === currentIndex
-                                ? 'bg-white w-6'
-                                : 'bg-white/40'
+                            ? 'bg-white w-6'
+                            : 'bg-white/40'
                             }`}
                     />
                 ))}

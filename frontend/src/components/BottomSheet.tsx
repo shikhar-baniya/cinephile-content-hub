@@ -19,13 +19,19 @@ const BottomSheet = ({ isOpen, onClose, children, title, snapPoints = [60, 90] }
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
             setCurrentSnapPoint(0); // Start at first snap point
         } else {
-            document.body.style.overflow = 'unset';
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
         }
 
         return () => {
-            document.body.style.overflow = 'unset';
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
         };
     }, [isOpen]);
 
@@ -116,17 +122,15 @@ const BottomSheet = ({ isOpen, onClose, children, title, snapPoints = [60, 90] }
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/60 z-40 transition-opacity duration-300"
+                className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998] transition-opacity duration-300"
                 onClick={onClose}
-                style={{
-                    opacity: isOpen ? 1 : 0,
-                }}
+                style={{ top: 0, left: 0, right: 0, bottom: 0 }}
             />
 
             {/* Bottom Sheet */}
             <div
                 ref={sheetRef}
-                className="fixed bottom-0 left-0 right-0 bg-card rounded-t-3xl shadow-2xl z-50 transition-all duration-300 ease-out"
+                className="fixed bottom-0 left-0 right-0 bg-card rounded-t-3xl shadow-2xl z-[9999] transition-all duration-300 ease-out"
                 style={{
                     height: `${height}vh`,
                     transform: `translateY(${translateY}px)`,
