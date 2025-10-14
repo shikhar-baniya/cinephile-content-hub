@@ -125,12 +125,12 @@ const ActivityContent = () => {
 
     const getIntensityColor = (intensity: number): string => {
         switch (intensity) {
-            case 0: return 'bg-muted/20';
-            case 1: return 'bg-blue-500/30';
-            case 2: return 'bg-blue-500/50';
-            case 3: return 'bg-blue-500/70';
-            case 4: return 'bg-blue-500';
-            default: return 'bg-muted/20';
+            case 0: return 'bg-slate-700/40 border border-slate-500/60 shadow-sm shadow-slate-900/30';
+            case 1: return 'bg-sky-500/40 border border-sky-400/70 shadow-sm shadow-sky-900/20';
+            case 2: return 'bg-sky-500/60 border border-sky-400/80 shadow shadow-sky-900/30';
+            case 3: return 'bg-sky-500/80 border border-sky-300 shadow-lg shadow-sky-900/30';
+            case 4: return 'bg-sky-400 border border-white/70 shadow-xl shadow-primary/40';
+            default: return 'bg-slate-700/40 border border-slate-500/60 shadow-sm shadow-slate-900/30';
         }
     };
 
@@ -167,6 +167,9 @@ const ActivityContent = () => {
                     <div className="text-3xl font-bold text-orange-400">
                         {stats.currentStreak} days
                     </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Consecutive days you watched at least one episode
+                    </p>
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-xl p-4">
@@ -177,6 +180,9 @@ const ActivityContent = () => {
                     <div className="text-3xl font-bold text-blue-400">
                         {stats.longestStreak} days
                     </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Your longest ever run of daily episode watching
+                    </p>
                 </div>
             </div>
 
@@ -211,17 +217,17 @@ const ActivityContent = () => {
             <div className="grid grid-cols-3 gap-3 text-center">
                 <div className="bg-muted/20 rounded-lg p-3">
                     <div className="text-xl font-bold text-blue-400">{stats.last7Days}</div>
-                    <div className="text-xs text-muted-foreground">Last 7 Days</div>
+                    <div className="text-xs text-muted-foreground">Episodes watched in the last 7 days</div>
                 </div>
                 <div className="bg-muted/20 rounded-lg p-3">
                     <div className="text-xl font-bold text-blue-400">{stats.last30Days}</div>
-                    <div className="text-xs text-muted-foreground">Last 30 Days</div>
+                    <div className="text-xs text-muted-foreground">Episodes watched in the last 30 days</div>
                 </div>
                 <div className="bg-muted/20 rounded-lg p-3">
                     <div className="text-xl font-bold text-blue-400">
                         {stats.averagePerDay.toFixed(1)}
                     </div>
-                    <div className="text-xs text-muted-foreground">Avg/Day</div>
+                    <div className="text-xs text-muted-foreground">Average episodes on active days</div>
                 </div>
             </div>
         </div>

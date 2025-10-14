@@ -35,18 +35,21 @@ const StatsBottomSheet = ({
         {
             id: 'watchTime' as const,
             label: 'Watch Time',
+            subtitle: 'Total hours, averages, and breakdowns',
             icon: Clock,
             content: watchTimeContent
         },
         {
             id: 'seriesProgress' as const,
-            label: 'Series',
+            label: 'Series Progress',
+            subtitle: 'Current season progress and completion',
             icon: Tv,
             content: seriesProgressContent
         },
         {
             id: 'activity' as const,
-            label: 'Activity',
+            label: 'Viewing Activity',
+            subtitle: 'Daily heatmap, streaks, and recent totals',
             icon: Calendar,
             content: activityContent
         }
@@ -59,7 +62,7 @@ const StatsBottomSheet = ({
         >
             {/* Tabs */}
             <div className="sticky top-0 bg-card z-10 -mx-6 px-6 pb-4 border-b border-border/50">
-                <div className="flex gap-2 overflow-x-auto">
+                <div className="flex gap-2 overflow-x-auto pb-2">
                     {tabs.map(tab => {
                         const Icon = tab.icon;
                         return (
@@ -67,8 +70,8 @@ const StatsBottomSheet = ({
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all whitespace-nowrap ${activeTab === tab.id
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/40'
+                                    : 'bg-muted/70 text-muted-foreground hover:bg-muted/90'
                                     }`}
                             >
                                 <Icon className="h-4 w-4" />
@@ -80,8 +83,30 @@ const StatsBottomSheet = ({
             </div>
 
             {/* Tab Content */}
-            <div className="pt-4 animate-in fade-in-0 slide-in-from-top-2 duration-300">
-                {tabs.find(tab => tab.id === activeTab)?.content}
+            <div className="pt-2 animate-in fade-in-0 slide-in-from-top-2 duration-300 space-y-3">
+                {(() => {
+                    const activeTabData = tabs.find(tab => tab.id === activeTab);
+                    if (!activeTabData) return null;
+
+                    const ActiveIcon = activeTabData.icon;
+
+                    return (
+                        <>
+                            <div className="space-y-1">
+                                <h3 className="text-lg font-semibold text-foreground/90 flex items-center gap-2">
+                                    <ActiveIcon className="h-4 w-4 text-primary" />
+                                    {activeTabData.label}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                    {activeTabData.subtitle}
+                                </p>
+                            </div>
+                            <div>
+                                {activeTabData.content}
+                            </div>
+                        </>
+                    );
+                })()}
             </div>
         </BottomSheet>
     );
