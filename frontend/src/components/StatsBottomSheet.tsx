@@ -83,7 +83,7 @@ const StatsBottomSheet = ({
             </div>
 
             {/* Tab Content */}
-            <div className="pt-2 animate-in fade-in-0 slide-in-from-top-2 duration-300 space-y-3">
+            <div className="pt-2 animate-in fade-in-0 slide-in-from-top-2 duration-300 space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto -webkit-overflow-scrolling-touch">
                 {(() => {
                     const activeTabData = tabs.find(tab => tab.id === activeTab);
                     if (!activeTabData) return null;

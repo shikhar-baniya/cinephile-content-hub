@@ -90,7 +90,7 @@ const BottomSheet = ({ isOpen, onClose, children, title }: BottomSheetProps) => 
                 </div>
 
                 {/* Content */}
-                <div className="px-6 pb-6 flex-1 overflow-y-auto overscroll-contain">
+                <div className="px-6 pb-6 flex-1 overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch">
                     {children}
                 </div>
             </div>
