@@ -74,7 +74,6 @@ class EnhancedMovieService {
 
       return transformedResult;
     } catch (error) {
-      console.error('Error fetching paginated movies:', error);
       throw error;
     }
   }
@@ -96,7 +95,6 @@ class EnhancedMovieService {
 
       this.invalidateCache();
     } catch (error) {
-      console.error('Error batch updating movies:', error);
       throw error;
     }
   }
@@ -117,7 +115,6 @@ class EnhancedMovieService {
 
       this.invalidateCache();
     } catch (error) {
-      console.error('Error batch deleting movies:', error);
       throw error;
     }
   }
@@ -152,7 +149,6 @@ class EnhancedMovieService {
 
       return analytics;
     } catch (error) {
-      console.error('Error fetching analytics:', error);
       throw error;
     }
   }
@@ -187,7 +183,6 @@ class EnhancedMovieService {
 
       return stats;
     } catch (error) {
-      console.error('Error fetching genre statistics:', error);
       throw error;
     }
   }
@@ -217,11 +212,10 @@ class EnhancedMovieService {
   subscribeToMovieChanges(callback: (payload: any) => void) {
     // This would need to be implemented with WebSocket or Server-Sent Events
     // depending on your backend implementation
-    console.log('Real-time subscriptions would be implemented here');
     
     // Return a cleanup function
     return () => {
-      console.log('Unsubscribing from movie changes');
+      // Unsubscribe from movie changes
     };
   }
 }

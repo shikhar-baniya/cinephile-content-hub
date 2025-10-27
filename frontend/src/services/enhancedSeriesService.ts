@@ -48,7 +48,6 @@ export const enhancedSeriesService = {
 
             return createdSeries;
         } catch (error) {
-            console.error('Error creating series:', error);
             throw error;
         }
     },
@@ -64,7 +63,7 @@ export const enhancedSeriesService = {
             await this.updateSeriesStatusBasedOnSeasons(seriesId);
 
         } catch (tmdbError) {
-            console.error('TMDB population failed for series:', seriesId, tmdbError);
+            // TMDB population failed, continue without it
         } finally {
             // Remove from populating list
             seriesPopulationService.removePopulatingId(seriesId);
@@ -123,7 +122,6 @@ export const enhancedSeriesService = {
                 }
             }
         } catch (error) {
-            console.error('Error applying season logic:', error);
             throw error;
         }
     },
@@ -163,7 +161,6 @@ export const enhancedSeriesService = {
 
 
         } catch (error) {
-            console.error('Error updating series status:', error);
             throw error;
         }
     }

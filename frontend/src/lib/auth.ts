@@ -121,7 +121,6 @@ export const useAuth = create<AuthState>()(
           });
 
           const data = await response.json();
-          console.log('Google OAuth response:', data);
 
           if (!response.ok) {
             set({ error: data.error || 'Google authentication failed', isLoading: false });
@@ -129,10 +128,8 @@ export const useAuth = create<AuthState>()(
           }
 
           // Redirect to Google OAuth URL
-          console.log('Redirecting to:', data.url);
           window.location.href = data.url;
         } catch (error: any) {
-          console.error('Google OAuth error:', error);
           set({ error: error.message, isLoading: false });
           throw error;
         }

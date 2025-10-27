@@ -37,7 +37,6 @@ app.get('/health', (req, res) => {
     
     res.status(200).json(health);
   } catch (error) {
-    console.error('Health check error:', error);
     res.status(500).json({ 
       status: 'ERROR', 
       error: error.message,
@@ -80,7 +79,6 @@ app.use('*', (req, res) => {
 
 // Error handling
 app.use((err, req, res, next) => {
-  console.error('App error:', err);
   if (res.headersSent) return next(err);
   
   res.status(500).json({ 
