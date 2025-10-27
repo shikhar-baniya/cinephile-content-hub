@@ -5,8 +5,6 @@ import AnalyticsChart from "./AnalyticsChart";
 import GenreWidget from "./GenreWidget";
 import StatsBottomSheet from "./StatsBottomSheet";
 import WatchTimeContent from "./WatchTimeContent";
-import SeriesProgressContent from "./SeriesProgressContent";
-import ActivityContent from "./ActivityContent";
 import UnlockStatsProgress from "./UnlockStatsProgress";
 import LockedStatsPreview from "./LockedStatsPreview";
 import { calculateStatsUnlockStatus } from "@/utils/statsUnlockHelper";
@@ -146,7 +144,7 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
                     </div>
                 ))}
                 {/* Watch Time - Clickable */}
-                <div
+                <div 
                     className="floating-card rounded-xl p-3 cursor-pointer hover:bg-card/80 hover:scale-[1.02] transition-all"
                     onClick={() => handleStatClick('watchTime')}
                 >
@@ -155,8 +153,8 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
                         <div className="text-[10px] text-blue-400">View details →</div>
                     </div>
                     <div className="text-xl font-bold">
-                        {watchTimeStats ?
-                            `${Math.floor(watchTimeStats.totalHours)}h ${Math.round((watchTimeStats.totalHours % 1) * 60)}m`
+                        {watchTimeStats ? 
+                            `${Math.floor(watchTimeStats.totalHours)}h ${Math.round((watchTimeStats.totalHours % 1) * 60)}m` 
                             : '0h'}
                     </div>
                     <div className="text-[10px] text-muted-foreground">Watch Time</div>
@@ -165,7 +163,7 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
 
             {/* Series Widgets - Clickable */}
             <div className="grid grid-cols-2 gap-3">
-                <div
+                <div 
                     className="floating-card rounded-xl p-3 cursor-pointer hover:bg-card/80 hover:scale-[1.02] transition-all"
                     onClick={() => handleStatClick('seriesProgress')}
                 >
@@ -177,7 +175,7 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
                     <div className="text-[10px] text-muted-foreground">Watching</div>
                 </div>
 
-                <div
+                <div 
                     className="floating-card rounded-xl p-3 cursor-pointer hover:bg-card/80 hover:scale-[1.02] transition-all"
                     onClick={() => handleStatClick('activity')}
                 >
@@ -203,16 +201,26 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
                 initialTab={activeStatTab}
                 movies={movies}
                 watchTimeContent={
-                    <WatchTimeContent
-                        stats={watchTimeStats}
+                    <WatchTimeContent 
+                        stats={watchTimeStats} 
                         timeframeLabel={timeframeLabel}
                     />
                 }
                 seriesProgressContent={
-                    <SeriesProgressContent movies={movies} />
+                    <div className="text-center py-8">
+                        <p className="text-muted-foreground">Series progress details</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                            {watchingSeries.length} series currently watching
+                        </p>
+                    </div>
                 }
                 activityContent={
-                    <ActivityContent />
+                    <div className="text-center py-8">
+                        <p className="text-muted-foreground">Episode activity details</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                            Current streak: {activityStats?.currentStreak || 0} days
+                        </p>
+                    </div>
                 }
             />
         </div>

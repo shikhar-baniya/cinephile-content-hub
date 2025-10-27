@@ -32,7 +32,10 @@ const MobileNavigation = ({ activeTab, onTabChange, onAddMovie }: MobileNavigati
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 md:hidden">
+    <div
+      className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 md:hidden"
+      data-mobile-nav
+    >
       <div className="flex items-center gap-1 bg-card/40 backdrop-blur-xl border border-border/30 rounded-full px-3 py-2 shadow-2xl shadow-black/20">
         {navItems.map((item) => (
           <button
