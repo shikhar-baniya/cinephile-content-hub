@@ -114,7 +114,7 @@ const SeriesProgressContent = ({ movies }: SeriesProgressContentProps) => {
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-4">
             <div className="flex items-center justify-between mb-4">
                 <h4 className="text-base font-semibold">Currently Watching</h4>
                 <span className="text-sm text-muted-foreground">{seriesData.length} series</span>

@@ -338,6 +338,24 @@
   body {
     padding-bottom: 100px;
   }
+  
+  /* Bottom sheet mobile optimizations */
+  .bottom-sheet-mobile {
+    height: 100vh !important;
+    height: 100dvh !important; /* Dynamic viewport height for mobile */
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+  }
+  
+  /* Ensure proper scrolling on mobile */
+  .mobile-scroll-container {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    /* Prevent momentum scrolling issues */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
 }
 
 /* Enhanced mobile responsiveness */

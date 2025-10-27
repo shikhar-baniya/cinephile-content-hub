@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { X } from "lucide-react";
+import { useViewportHeight } from "@/hooks/useViewportHeight";
 
 interface BottomSheetProps {
     isOpen: boolean;
@@ -9,6 +10,8 @@ interface BottomSheetProps {
 }
 
 const BottomSheet = ({ isOpen, onClose, children, title }: BottomSheetProps) => {
+    const viewportHeight = useViewportHeight();
+
     useEffect(() => {
         const navElement = typeof document !== 'undefined'
             ? (document.querySelector('[data-mobile-nav]') as HTMLElement | null)
@@ -28,10 +31,14 @@ const BottomSheet = ({ isOpen, onClose, children, title }: BottomSheetProps) => 
                 navElement.style.pointerEvents = 'none';
             }
 
-            // Prevent body scroll
-            document.body.style.overflow = 'hidden';
+            // Prevent body scroll - improved for mobile
+            const scrollY = window.scrollY;
             document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
             document.body.style.width = '100%';
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+            document.body.dataset.scrollY = scrollY.toString();
         } else {
             // Show navigation when bottom sheet closes
             if (navElement) {
@@ -41,10 +48,17 @@ const BottomSheet = ({ isOpen, onClose, children, title }: BottomSheetProps) => 
                 navElement.style.pointerEvents = '';
             }
 
-            // Restore body scroll
-            document.body.style.overflow = '';
+            // Restore body scroll - improved for mobile
+            const scrollY = document.body.dataset.scrollY;
             document.body.style.position = '';
+            document.body.style.top = '';
             document.body.style.width = '';
+            document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+            if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY));
+                delete document.body.dataset.scrollY;
+            }
         }
 
         return () => {
@@ -57,9 +71,18 @@ const BottomSheet = ({ isOpen, onClose, children, title }: BottomSheetProps) => 
                 currentNav.style.opacity = '1';
                 currentNav.style.pointerEvents = '';
             }
-            document.body.style.overflow = '';
+
+            // Cleanup scroll prevention
+            const scrollY = document.body.dataset.scrollY;
             document.body.style.position = '';
+            document.body.style.top = '';
             document.body.style.width = '';
+            document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+            if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY));
+                delete document.body.dataset.scrollY;
+            }
         };
     }, [isOpen]);
 
@@ -71,13 +94,14 @@ const BottomSheet = ({ isOpen, onClose, children, title }: BottomSheetProps) => 
             <div
                 className="fixed bottom-0 left-0 right-0 bg-card/95 rounded-t-3xl border border-primary/20 z-[9999] animate-in slide-in-from-bottom duration-300 flex flex-col backdrop-blur-xl"
                 style={{
-                    top: '60px',
-                    maxHeight: 'calc(100vh - 60px)',
+                    top: 'max(60px, env(safe-area-inset-top, 0px))',
+                    maxHeight: `${viewportHeight - Math.max(60, 0)}px`,
+                    height: `${viewportHeight - Math.max(60, 0)}px`,
                     boxShadow: '0 -20px 45px hsl(var(--primary) / 0.35)'
                 }}
             >
                 {/* Header with close button */}
-                <div className="flex flex-col pt-3 pb-2">
+                <div className="flex flex-col pt-3 pb-2 flex-shrink-0">
                     <div className="flex items-center justify-between px-6 pb-2">
                         {title && <h2 className="text-lg font-bold">{title}</h2>}
                         <button
@@ -90,7 +114,7 @@ const BottomSheet = ({ isOpen, onClose, children, title }: BottomSheetProps) => 
                 </div>
 
                 {/* Content */}
-                <div className="px-6 pb-6 flex-1 overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch">
+                <div className="px-6 pb-6 flex-1 min-h-0 overflow-y-auto overscroll-contain mobile-scroll-container" style={{ WebkitOverflowScrolling: 'touch' }}>
                     {children}
                 </div>
             </div>

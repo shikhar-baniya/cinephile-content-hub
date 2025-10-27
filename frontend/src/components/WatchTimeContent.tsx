@@ -18,7 +18,7 @@ const WatchTimeContent = ({ stats, timeframeLabel }: WatchTimeContentProps) => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-4">
             {/* Main Stats */}
             <div className="bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-xl p-6 text-center border border-blue-500/20">
                 <div className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">

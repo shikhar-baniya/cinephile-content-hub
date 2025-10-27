@@ -156,7 +156,7 @@ const ActivityContent = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-4">
             {/* Stats Cards */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20 rounded-xl p-4">

@@ -83,7 +83,7 @@ const StatsBottomSheet = ({
             </div>
 
             {/* Tab Content */}
-            <div className="pt-2 animate-in fade-in-0 slide-in-from-top-2 duration-300 space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto -webkit-overflow-scrolling-touch">
+            <div className="pt-2 animate-in fade-in-0 slide-in-from-top-2 duration-300 space-y-3 flex-1 min-h-0">
                 {(() => {
                     const activeTabData = tabs.find(tab => tab.id === activeTab);
                     if (!activeTabData) return null;
@@ -92,7 +92,7 @@ const StatsBottomSheet = ({
 
                     return (
                         <>
-                            <div className="space-y-1">
+                            <div className="space-y-1 flex-shrink-0">
                                 <h3 className="text-lg font-semibold text-foreground/90 flex items-center gap-2">
                                     <ActiveIcon className="h-4 w-4 text-primary" />
                                     {activeTabData.label}
@@ -101,7 +101,7 @@ const StatsBottomSheet = ({
                                     {activeTabData.subtitle}
                                 </p>
                             </div>
-                            <div>
+                            <div className="flex-1 min-h-0 overflow-y-auto mobile-scroll-container" style={{ WebkitOverflowScrolling: 'touch' }}>
                                 {activeTabData.content}
                             </div>
                         </>
