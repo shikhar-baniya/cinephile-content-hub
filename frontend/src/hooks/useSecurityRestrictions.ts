@@ -9,6 +9,10 @@ export const useSecurityRestrictions = () => {
       console.log('Security restrictions bypassed for development');
       return;
     }
+    
+    // Temporarily disable security restrictions to fix the infinite loop
+    // TODO: Re-enable after fixing the console override issue
+    return;
     // Console warning message
     const showConsoleWarning = () => {
       console.clear();
@@ -181,23 +185,39 @@ export const useSecurityRestrictions = () => {
     window.addEventListener('contextmenu', handleContextMenu, { capture: true, passive: false });
     window.addEventListener('keydown', handleKeyDown, { capture: true, passive: false });
 
-    // Override console methods to show warning
+    // Store original console methods
     const originalLog = console.log;
     const originalError = console.error;
     const originalWarn = console.warn;
 
+    // Override console methods to show warning (but avoid infinite loops)
+    let warningShown = false;
+    
     console.log = (...args) => {
-      showConsoleWarning();
+      if (!warningShown) {
+        warningShown = true;
+        originalLog(
+          '%cSTOP!',
+          'color: red; font-size: 50px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);'
+        );
+        originalLog(
+          '%cThis is a browser feature intended for developers. Unauthorized access is prohibited.',
+          'color: red; font-size: 16px; font-weight: bold;'
+        );
+        originalLog(
+          '%cIf someone told you to copy-paste something here, it is likely a scam.',
+          'color: orange; font-size: 14px;'
+        );
+        setTimeout(() => { warningShown = false; }, 1000);
+      }
       return originalLog.apply(console, args);
     };
 
     console.error = (...args) => {
-      showConsoleWarning();
       return originalError.apply(console, args);
     };
 
     console.warn = (...args) => {
-      showConsoleWarning();
       return originalWarn.apply(console, args);
     };
 
