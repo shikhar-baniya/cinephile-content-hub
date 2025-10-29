@@ -1,16 +1,18 @@
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import DateFilter, { DateFilterValue } from "./DateFilter";
 
 interface FilterBarProps {
   statusFilter: string;
   genreFilter: string;
   platformFilter: string;
+  dateFilter: DateFilterValue | null;
   onStatusChange: (status: string) => void;
   onGenreChange: (genre: string) => void;
   onPlatformChange: (platform: string) => void;
+  onDateFilterChange: (filter: DateFilterValue | null) => void;
   onClearFilters: () => void;
   genres: string[];
   platforms: string[];
@@ -20,17 +22,19 @@ const FilterBar = ({
   statusFilter,
   genreFilter,
   platformFilter,
+  dateFilter,
   onStatusChange,
   onGenreChange,
   onPlatformChange,
+  onDateFilterChange,
   onClearFilters,
   genres,
   platforms,
 }: FilterBarProps) => {
-  const hasActiveFilters = statusFilter !== "all" || genreFilter !== "all" || platformFilter !== "all";
+  const hasActiveFilters = statusFilter !== "all" || genreFilter !== "all" || platformFilter !== "all" || dateFilter !== null;
 
   return (
-    <div className="bg-card/20 backdrop-blur-xl border border-border/20 rounded-xl p-3 mb-6 animate-slide-up">
+    <div className="bg-card/20 backdrop-blur-xl border border-border/20 rounded-xl p-3 mb-6 animate-slide-up relative z-10">
       <div className="flex flex-wrap items-center gap-2 md:gap-4">
         <div className="hidden md:flex items-center gap-2">
           <span className="text-sm font-medium text-muted-foreground">Filter by:</span>
@@ -75,6 +79,12 @@ const FilterBar = ({
             ))}
           </SelectContent>
         </Select>
+
+        <DateFilter
+          currentFilter={dateFilter}
+          onDateFilter={onDateFilterChange}
+          onClear={() => onDateFilterChange(null)}
+        />
 
         {hasActiveFilters && (
           <Button

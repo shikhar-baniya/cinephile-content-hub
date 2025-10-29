@@ -2,6 +2,7 @@ import { Film, Star, Clock, Tv, Calendar } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import { Movie } from "./MovieCard";
 import AnalyticsChart from "./AnalyticsChart";
+import EnhancedAnalyticsChart from "./EnhancedAnalyticsChart";
 import GenreWidget from "./GenreWidget";
 import StatsBottomSheet from "./StatsBottomSheet";
 import WatchTimeContent from "./WatchTimeContent";
@@ -195,6 +196,9 @@ const StatsCards = ({ movies }: StatsCardsProps) => {
 
             {/* Analytics Chart */}
             <AnalyticsChart movies={movies} />
+
+            {/* Enhanced Analytics Chart */}
+            <EnhancedAnalyticsChart movies={movies} />
 
             {/* Bottom Sheet with all detailed stats */}
             <StatsBottomSheet
