@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>BingeBook - Your Personal Movie & TV Show Tracker</title>
     
     <!-- Favicon -->
@@ -19,6 +19,12 @@
     <meta name="apple-mobile-web-app-title" content="BingeBook">
     <meta name="description" content="Track, organize, and discover your favorite movies and TV shows with BingeBook" />
     <meta name="author" content="BingeBook" />
+    
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
 
     <meta property="og:title" content="BingeBook - Your Personal Movie & TV Show Tracker" />
     <meta property="og:description" content="Track, organize, and discover your favorite movies and TV shows with BingeBook" />
