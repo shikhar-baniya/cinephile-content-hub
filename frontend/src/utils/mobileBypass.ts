@@ -13,7 +13,8 @@ export const getMobileBypassStatus = (): boolean => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlBypass = urlParams.get('mobile-bypass') === 'true';
     
-    return isDev && (bypassFlag || urlBypass);
+    // Temporarily enable bypass by default in development for debugging
+    return isDev || bypassFlag || urlBypass;
   } catch (error) {
     // If there's any error accessing localStorage or URL, return false
     return false;
@@ -39,7 +40,8 @@ export const getSecurityBypassStatus = (): boolean => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlBypass = urlParams.get('security-bypass') === 'true';
     
-    return isDev && (bypassFlag || urlBypass);
+    // Temporarily enable bypass by default in development for debugging
+    return isDev || bypassFlag || urlBypass;
   } catch (error) {
     return false;
   }

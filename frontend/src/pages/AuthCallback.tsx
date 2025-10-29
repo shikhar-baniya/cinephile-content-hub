@@ -11,9 +11,15 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        console.log('Auth callback triggered');
+        console.log('Current URL:', window.location.href);
+        console.log('Search params:', window.location.search);
+        console.log('Hash:', window.location.hash);
+        
         // First check for errors in query params
         const error = searchParams.get('error');
         if (error) {
+          console.error('OAuth error in params:', error);
           setError(`Authentication failed: ${error}`);
           setStatus('error');
           return;
@@ -21,6 +27,7 @@ const AuthCallback = () => {
 
         // Check for authorization code (traditional OAuth flow)
         const code = searchParams.get('code');
+        console.log('Authorization code:', code ? 'present' : 'not found');
         
         // Check for tokens in hash fragment (Supabase implicit flow)
         const hash = window.location.hash.substring(1);

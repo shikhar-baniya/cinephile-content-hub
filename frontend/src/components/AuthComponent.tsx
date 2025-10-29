@@ -24,8 +24,10 @@ const AuthComponent = () => {
   const handleGoogleAuth = async () => {
     try {
       setMessage("");
+      console.log('Starting Google OAuth...');
       await signInWithGoogle();
     } catch (error: any) {
+      console.error('Google OAuth error:', error);
       setMessage(error.message);
     }
   };

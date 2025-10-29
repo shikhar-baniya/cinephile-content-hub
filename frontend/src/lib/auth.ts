@@ -112,6 +112,8 @@ export const useAuth = create<AuthState>()(
         try {
           set({ isLoading: true, error: null });
           
+          console.log('Initiating Google OAuth with origin:', window.location.origin);
+          
           const response = await fetch(`${config.api.baseUrl}/auth/google`, {
             method: 'POST',
             headers: {
@@ -121,15 +123,19 @@ export const useAuth = create<AuthState>()(
           });
 
           const data = await response.json();
+          console.log('Google OAuth response:', data);
 
           if (!response.ok) {
+            console.error('Google OAuth failed:', data);
             set({ error: data.error || 'Google authentication failed', isLoading: false });
             throw new Error(data.error || 'Google authentication failed');
           }
 
+          console.log('Redirecting to Google OAuth URL:', data.url);
           // Redirect to Google OAuth URL
           window.location.href = data.url;
         } catch (error: any) {
+          console.error('Google OAuth error:', error);
           set({ error: error.message, isLoading: false });
           throw error;
         }
