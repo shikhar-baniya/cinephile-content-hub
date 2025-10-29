@@ -87,7 +87,6 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
       }
       onClose();
     } catch (error: any) {
-      console.error('Error deleting series:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to delete series. Please try again.",
@@ -137,12 +136,11 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
           const tmdbData = await tmdbService.getTVShowDetails(series.tmdbId);
           setTmdbSeasons(tmdbData.seasons || []);
         } catch (tmdbError) {
-          console.error('Error fetching TMDB season data:', tmdbError);
+          // TMDB season data is optional, continue without it
         }
       }
       
     } catch (error) {
-      console.error('Error fetching series data:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch series data');
     } finally {
       setLoading(false);
@@ -164,7 +162,6 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
       // Refresh the series data after population
       await fetchSeriesData();
     } catch (error) {
-      console.error('Error populating TMDB data:', error);
       setError(error instanceof Error ? error.message : 'Failed to populate TMDB data');
     } finally {
       setIsPopulatingTMDB(false);
@@ -241,7 +238,6 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
       setTimeout(() => setSuccessMessage(null), 3000);
 
     } catch (error) {
-      console.error('Error toggling episode:', error);
       setError('Failed to update episode status');
       setTimeout(() => setError(null), 5000);
     }
@@ -305,7 +301,6 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
       setTimeout(() => setSuccessMessage(null), 3000);
 
     } catch (error) {
-      console.error('Error marking season as watched:', error);
       setError('Failed to update season status');
       setTimeout(() => setError(null), 5000);
     }
@@ -339,7 +334,6 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
       setSuccessMessage('Season updated successfully');
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
-      console.error('Error updating season:', error);
       setError('Failed to update season');
       setTimeout(() => setError(null), 5000);
     }
@@ -635,21 +629,21 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                   const stats = episodeStats[season.id];
                   return (
                     <div key={season.id} className="bg-muted/20 rounded-lg p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <h4 className="font-medium">{season.seasonName}</h4>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
+                          <h4 className="font-medium truncate">{season.seasonName}</h4>
                           {(() => {
                             const tmdbSeason = tmdbSeasons.find(ts => ts.seasonNumber === season.seasonNumber);
                             const year = tmdbSeason?.airDate ? new Date(tmdbSeason.airDate).getFullYear() : null;
-                            return year ? <span className="text-sm text-muted-foreground">({year})</span> : null;
+                            return year ? <span className="text-sm text-muted-foreground flex-shrink-0">({year})</span> : null;
                           })()}
-                          <Badge className={`${getStatusColor(season.status)} text-xs`}>
+                          <Badge className={`${getStatusColor(season.status)} text-xs flex-shrink-0 hidden sm:flex`}>
                             {getStatusIcon(season.status)}
                             <span className="ml-1 capitalize">{season.status.replace('-', ' ')}</span>
                           </Badge>
                         </div>
                         
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 flex-shrink-0">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -660,7 +654,7 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                                 handleSeasonEdit(season);
                               }
                             }}
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 flex-shrink-0"
                             title="Edit season"
                           >
                             {editingSeasonId === season.id ? <X className="h-3 w-3" /> : <Edit className="h-3 w-3" />}
@@ -669,9 +663,14 @@ const SeriesDetailDialog = ({ series, isOpen, onClose, onSeriesUpdate, onDelete 
                             variant={season.status === 'completed' ? 'secondary' : 'default'}
                             size="sm"
                             onClick={() => handleMarkSeasonWatched(season.id, season.status !== 'completed')}
-                            className="h-8 px-3 text-xs"
+                            className="h-8 px-2 sm:px-3 text-xs flex-shrink-0 min-w-0"
                           >
-                            {season.status === 'completed' ? 'Unwatch' : 'Watch'}
+                            <span className="hidden sm:inline">
+                              {season.status === 'completed' ? 'Unwatch' : 'Watch'}
+                            </span>
+                            <span className="sm:hidden">
+                              {season.status === 'completed' ? 'Unwatch' : 'Watch'}
+                            </span>
                           </Button>
                         </div>
                       </div>

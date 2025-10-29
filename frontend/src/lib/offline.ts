@@ -119,9 +119,9 @@ export class OfflineManager {
       const { outcome } = await deferredPrompt.userChoice;
       
       if (outcome === 'accepted') {
-        console.log('User accepted PWA install');
+        // User accepted PWA install
       } else {
-        console.log('User dismissed PWA install');
+        // User dismissed PWA install
       }
       
       (window as any).deferredPrompt = null;
@@ -135,7 +135,7 @@ export class OfflineManager {
       await Promise.all(
         cacheNames.map(cacheName => caches.delete(cacheName))
       );
-      console.log('All caches cleared');
+      // All caches cleared
     }
   }
 

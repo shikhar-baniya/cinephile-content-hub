@@ -4,8 +4,6 @@ import { toast } from 'sonner';
 
 // Custom error handler for queries
 const queryErrorHandler = (error: unknown) => {
-  console.error('Query error:', error);
-  
   if (error instanceof Error) {
     // Don't show toast for aborted requests
     if (error.name === 'AbortError') return;
@@ -18,8 +16,6 @@ const queryErrorHandler = (error: unknown) => {
 
 // Custom error handler for mutations
 const mutationErrorHandler = (error: unknown) => {
-  console.error('Mutation error:', error);
-  
   if (error instanceof Error) {
     toast.error(`Operation failed: ${error.message}`);
   } else {
@@ -136,8 +132,6 @@ export const backgroundSync = {
     
     if (pendingOperations.length === 0) return;
     
-    console.log(`Syncing ${pendingOperations.length} pending operations...`);
-    
     for (const operation of pendingOperations) {
       try {
         switch (operation.type) {
@@ -154,7 +148,6 @@ export const backgroundSync = {
         
         useDataStore.getState().removePendingOperation(operation.id);
       } catch (error) {
-        console.error(`Failed to sync operation ${operation.id}:`, error);
         // Operation will remain in pending state for next sync attempt
       }
     }

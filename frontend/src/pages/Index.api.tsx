@@ -5,6 +5,8 @@ import MovieGrid from "@/components/MovieGrid";
 import StatsCards from "@/components/StatsCards";
 import FilterBar from "@/components/FilterBar";
 import GenreCollections from "@/components/GenreCollections";
+import FilteredResultsCount from "@/components/FilteredResultsCount";
+import { DateFilterValue } from "@/components/DateFilter";
 import AddMovieDialog from "@/components/AddMovieDialog.api";
 import MovieDetailDialog from "@/components/MovieDetailDialog.api";
 import MobileNavigation from "@/components/MobileNavigation";
@@ -38,6 +40,7 @@ const Index = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [genreFilter, setGenreFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState<DateFilterValue | null>(null);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -107,26 +110,54 @@ const Index = () => {
       ...movie,
       isPopulating: seriesPopulationService.isPopulating(movie.id)
     }));
+    
     if (searchQuery) {
       filtered = filtered.filter(movie => 
         movie?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         movie?.genre?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
+    
     if (activeTab === "home" && selectedGenre !== "All") {
       filtered = filtered.filter(movie => 
         movie?.genre?.toLowerCase().includes(selectedGenre.toLowerCase())
       );
     }
+    
     if (statusFilter !== "all") {
       filtered = filtered.filter(movie => movie?.status === statusFilter);
     }
+    
     if (genreFilter !== "all") {
       filtered = filtered.filter(movie => movie?.genre === genreFilter);
     }
+    
     if (platformFilter !== "all") {
       filtered = filtered.filter(movie => movie?.platform === platformFilter);
     }
+    
+    // Date filter logic
+    if (dateFilter) {
+      filtered = filtered.filter(movie => {
+        if (!movie.watchDate) return false;
+        
+        const movieDate = new Date(movie.watchDate);
+        
+        if (dateFilter.type === 'specific' && dateFilter.date) {
+          const filterDate = new Date(dateFilter.date);
+          return movieDate.toDateString() === filterDate.toDateString();
+        }
+        
+        if (dateFilter.type === 'month' && dateFilter.month) {
+          const [year, month] = dateFilter.month.split('-');
+          return movieDate.getFullYear() === parseInt(year) && 
+                 movieDate.getMonth() === parseInt(month) - 1;
+        }
+        
+        return false;
+      });
+    }
+    
     switch (activeTab) {
       case "movies":
         filtered = filtered.filter(movie => movie?.category === "Movie");
@@ -140,7 +171,7 @@ const Index = () => {
         break;
     }
     return filtered;
-  }, [movies, searchQuery, activeTab, statusFilter, genreFilter, platformFilter, selectedGenre, populationUpdate]);
+  }, [movies, searchQuery, activeTab, statusFilter, genreFilter, platformFilter, dateFilter, selectedGenre, populationUpdate]);
 
   const handleAddMovie = async () => {
     await refetch();
@@ -163,6 +194,7 @@ const Index = () => {
     setStatusFilter("all");
     setGenreFilter("all");
     setPlatformFilter("all");
+    setDateFilter(null);
   };
 
   // Get unique genres and platforms for filter options
@@ -238,13 +270,21 @@ const Index = () => {
               statusFilter={statusFilter}
               genreFilter={genreFilter}
               platformFilter={platformFilter}
+              dateFilter={dateFilter}
               onStatusChange={setStatusFilter}
               onGenreChange={setGenreFilter}
               onPlatformChange={setPlatformFilter}
+              onDateFilterChange={setDateFilter}
               onClearFilters={clearFilters}
               genres={uniqueGenres}
               platforms={uniquePlatforms}
             />
+            {dateFilter && (
+              <FilteredResultsCount 
+                movies={filteredMovies} 
+                dateFilter={dateFilter} 
+              />
+            )}
             <MovieGrid movies={filteredMovies} onMovieClick={setSelectedMovie} />
           </div>
         );

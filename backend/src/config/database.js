@@ -11,7 +11,6 @@ const initializeClients = () => {
 
   // Validate environment variables
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-    console.error('Missing required Supabase environment variables');
     throw new Error('Supabase configuration is incomplete');
   }
 
@@ -47,10 +46,7 @@ const initializeClients = () => {
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY,
       options
     );
-
-    console.log('Supabase clients initialized successfully');
   } catch (error) {
-    console.error('Failed to initialize Supabase clients:', error);
     throw error;
   }
 };
@@ -61,7 +57,6 @@ export const getSupabase = () => {
     initializeClients();
     return supabase;
   } catch (error) {
-    console.error('Error getting Supabase client:', error);
     throw error;
   }
 };
@@ -71,7 +66,6 @@ export const getSupabaseAdmin = () => {
     initializeClients();
     return supabaseAdmin;
   } catch (error) {
-    console.error('Error getting Supabase admin client:', error);
     throw error;
   }
 };
