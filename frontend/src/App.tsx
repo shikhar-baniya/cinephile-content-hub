@@ -7,6 +7,7 @@ import Index from "./pages/Index.api";
 import NotFound from "./pages/NotFound";
 import EmailConfirmation from "./pages/EmailConfirmation";
 import AuthCallback from "./pages/AuthCallback";
+import Welcome from "./pages/Welcome";
 import MobileOnlyWrapper from "./components/MobileOnlyWrapper";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/welcome" element={<Welcome />} />
             <Route path="/email-confirmation" element={<EmailConfirmation />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

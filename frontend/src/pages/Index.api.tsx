@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import MovieGrid from "@/components/MovieGrid";
 import StatsCards from "@/components/StatsCards";
@@ -17,6 +18,7 @@ import GenreFilterBar from "@/components/GenreFilterBar";
 import { Movie } from "@/components/MovieCard";
 import { movieService } from "@/services/databaseService.api";
 import { authService, User } from "@/services/authService";
+import { useAuth } from "@/lib/auth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import PageTransition from "@/components/PageTransition";
 import LoadingBar from "@/components/LoadingBar";
@@ -26,6 +28,8 @@ import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { hasCompletedOnboarding } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("home");
@@ -48,6 +52,12 @@ const Index = () => {
       try {
         const { user: currentUser } = await authService.getSession();
         setUser(currentUser);
+        
+        // If user is authenticated but hasn't completed onboarding, redirect to welcome
+        if (currentUser && !hasCompletedOnboarding) {
+          navigate('/welcome', { replace: true });
+          return;
+        }
       } catch (error) {
         // Session check failed - handled silently
       } finally {
@@ -61,10 +71,15 @@ const Index = () => {
     const unsubscribe = authService.onAuthStateChange((newUser) => {
       setUser(newUser);
       setLoading(false);
+      
+      // If user is authenticated but hasn't completed onboarding, redirect to welcome
+      if (newUser && !hasCompletedOnboarding) {
+        navigate('/welcome', { replace: true });
+      }
     });
 
     return unsubscribe;
-  }, []); // Empty dependency array to run only once
+  }, [hasCompletedOnboarding, navigate]); // Add dependencies
 
   // Fetch movies data
   const { data: movies = [], isLoading: moviesLoading, refetch } = useQuery({
