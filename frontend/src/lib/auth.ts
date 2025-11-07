@@ -14,6 +14,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   requiresEmailConfirmation: boolean;
+  hasCompletedOnboarding: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -21,6 +22,7 @@ interface AuthState {
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   resendConfirmation: (email: string) => Promise<void>;
+  setOnboardingCompleted: () => void;
 }
 
 export const useAuth = create<AuthState>()(
@@ -31,6 +33,7 @@ export const useAuth = create<AuthState>()(
       isLoading: false,
       error: null,
       requiresEmailConfirmation: false,
+      hasCompletedOnboarding: localStorage.getItem('hasCompletedOnboarding') === 'true',
 
       signIn: async (email: string, password: string) => {
         try {
@@ -156,9 +159,9 @@ export const useAuth = create<AuthState>()(
             const cacheNames = await caches.keys();
             await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
           }
-          set({ user: null, session: null, isLoading: false });
+          set({ user: null, session: null, isLoading: false, hasCompletedOnboarding: false });
         } catch (error: any) {
-          set({ user: null, session: null, error: error.message, isLoading: false });
+          set({ user: null, session: null, error: error.message, isLoading: false, hasCompletedOnboarding: false });
         }
       },
 
@@ -240,12 +243,18 @@ export const useAuth = create<AuthState>()(
           throw error;
         }
       },
+
+      setOnboardingCompleted: () => {
+        localStorage.setItem('hasCompletedOnboarding', 'true');
+        set({ hasCompletedOnboarding: true });
+      },
     }),
     {
       name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
         session: state.session,
+        hasCompletedOnboarding: state.hasCompletedOnboarding,
       }),
     }
   )

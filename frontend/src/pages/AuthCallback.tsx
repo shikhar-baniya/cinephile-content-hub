@@ -42,7 +42,13 @@ const AuthCallback = () => {
           if (response.session && response.user) {
             setStatus('success');
             setTimeout(() => {
-              navigate('/', { replace: true });
+              // Check if user has completed onboarding
+              const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding') === 'true';
+              if (hasCompletedOnboarding) {
+                navigate('/', { replace: true });
+              } else {
+                navigate('/welcome', { replace: true });
+              }
               window.location.reload();
             }, 1500);
           } else {
@@ -70,7 +76,13 @@ const AuthCallback = () => {
           
           console.log('Authentication successful, redirecting in 1.5 seconds');
           setTimeout(() => {
-            navigate('/', { replace: true });
+            // Check if user has completed onboarding
+            const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding') === 'true';
+            if (hasCompletedOnboarding) {
+              navigate('/', { replace: true });
+            } else {
+              navigate('/welcome', { replace: true });
+            }
             // Remove the hash from URL to prevent re-processing
             window.history.replaceState({}, document.title, window.location.pathname);
           }, 1500);
