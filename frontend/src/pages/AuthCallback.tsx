@@ -78,6 +78,8 @@ const AuthCallback = () => {
           setTimeout(() => {
             // Check if user has completed onboarding
             const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding') === 'true';
+            console.log('Onboarding completed:', hasCompletedOnboarding);
+            
             if (hasCompletedOnboarding) {
               navigate('/', { replace: true });
             } else {

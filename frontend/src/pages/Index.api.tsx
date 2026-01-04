@@ -25,6 +25,7 @@ import LoadingBar from "@/components/LoadingBar";
 import FuturisticBackground from "@/components/FuturisticBackground";
 import { seriesPopulationService } from "@/services/seriesPopulationService";
 import { useToast } from "@/components/ui/use-toast";
+import "@/utils/sessionDebug"; // Import for dev debugging
 
 const Index = () => {
   const { toast } = useToast();
@@ -50,16 +51,26 @@ const Index = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const { user: currentUser } = await authService.getSession();
-        setUser(currentUser);
+        setLoading(true);
+        const { user: currentUser, session } = await authService.getSession();
         
-        // If user is authenticated but hasn't completed onboarding, redirect to welcome
-        if (currentUser && !hasCompletedOnboarding) {
-          navigate('/welcome', { replace: true });
-          return;
+        console.log('Session check result:', { user: currentUser, session: !!session });
+        
+        if (currentUser && session) {
+          setUser(currentUser);
+          
+          // If user is authenticated but hasn't completed onboarding, redirect to welcome
+          if (!hasCompletedOnboarding) {
+            navigate('/welcome', { replace: true });
+            return;
+          }
+        } else {
+          // No valid session found
+          setUser(null);
         }
       } catch (error) {
-        // Session check failed - handled silently
+        console.error('Session check failed:', error);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -69,8 +80,8 @@ const Index = () => {
 
     // Listen for auth changes
     const unsubscribe = authService.onAuthStateChange((newUser) => {
+      console.log('Auth state changed:', newUser);
       setUser(newUser);
-      setLoading(false);
       
       // If user is authenticated but hasn't completed onboarding, redirect to welcome
       if (newUser && !hasCompletedOnboarding) {
