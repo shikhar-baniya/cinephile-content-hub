@@ -18,7 +18,6 @@ import GenreFilterBar from "@/components/GenreFilterBar";
 import { Movie } from "@/components/MovieCard";
 import { movieService } from "@/services/databaseService.api";
 import { authService, User } from "@/services/authService";
-import { useAuth } from "@/lib/auth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import PageTransition from "@/components/PageTransition";
 import LoadingBar from "@/components/LoadingBar";
@@ -30,7 +29,6 @@ import "@/utils/sessionDebug"; // Import for dev debugging
 const Index = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { hasCompletedOnboarding } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("home");
@@ -59,8 +57,12 @@ const Index = () => {
         if (currentUser && session) {
           setUser(currentUser);
           
+          // Check if user has completed onboarding
+          const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding') === 'true';
+          
           // If user is authenticated but hasn't completed onboarding, redirect to welcome
           if (!hasCompletedOnboarding) {
+            console.log('User needs onboarding, redirecting to welcome');
             navigate('/welcome', { replace: true });
             return;
           }
@@ -83,14 +85,17 @@ const Index = () => {
       console.log('Auth state changed:', newUser);
       setUser(newUser);
       
-      // If user is authenticated but hasn't completed onboarding, redirect to welcome
-      if (newUser && !hasCompletedOnboarding) {
-        navigate('/welcome', { replace: true });
+      // Check onboarding when user changes
+      if (newUser) {
+        const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding') === 'true';
+        if (!hasCompletedOnboarding) {
+          navigate('/welcome', { replace: true });
+        }
       }
     });
 
     return unsubscribe;
-  }, [hasCompletedOnboarding, navigate]); // Add dependencies
+  }, [navigate]); // Remove hasCompletedOnboarding dependency
 
   // Fetch movies data
   const { data: movies = [], isLoading: moviesLoading, refetch } = useQuery({
