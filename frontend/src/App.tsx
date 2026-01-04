@@ -9,6 +9,7 @@ import EmailConfirmation from "./pages/EmailConfirmation";
 import AuthCallback from "./pages/AuthCallback";
 import Welcome from "./pages/Welcome";
 import MobileOnlyWrapper from "./components/MobileOnlyWrapper";
+import AuthDebugOverlay from "./components/AuthDebugOverlay";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +17,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <MobileOnlyWrapper>
+        <AuthDebugOverlay />
         <Toaster />
         <Sonner />
         <BrowserRouter>
